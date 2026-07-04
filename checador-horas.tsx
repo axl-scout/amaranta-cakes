@@ -32,6 +32,18 @@ const FIELD_IDS = {
 
 const EMPLOYEE_NUMBERS_EXCLUDED = [5, 6, 7];
 
+const MESES_ES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+
+function formatFechaLarga(fecha: string): string {
+  const [year, month, day] = fecha.replace(/\//g, '-').split('-');
+  const mes = MESES_ES[parseInt(month ?? '', 10) - 1];
+  if (!year || !day || !mes) return fecha;
+  return `${day} de ${mes} de ${year}`;
+}
+
 function detectDelimiter(text: string): string {
   const firstLine = text.split(/\r?\n/).find(line => line.trim().length > 0) ?? '';
   const commaCount = (firstLine.match(/,/g) ?? []).length;
@@ -258,8 +270,10 @@ function ImportadorChecadorApp(): React.ReactElement {
         const col0 = row[0];
         const col1 = row[1];
         const col3 = row[3];
-        const col4 = row[4];
-        const col7 = row[7];
+        const col4 = row[4]; // AM Entrada
+        const col5 = row[5]; // AM Salida
+        const col6 = row[6]; // PM Entrada
+        const col7 = row[7]; // PM Salida
 
         if (!col0) continue;
 
@@ -269,8 +283,16 @@ function ImportadorChecadorApp(): React.ReactElement {
 
         const employeeName = col1?.trim() ?? '';
         const fecha = col3?.trim() ?? '';
-        const entradaRaw = col4?.trim() || null;
-        const salidaRaw = col7?.trim() || null;
+        const amEntrada = col4?.trim() || null;
+        const amSalida = col5?.trim() || null;
+        const pmEntrada = col6?.trim() || null;
+        const pmSalida = col7?.trim() || null;
+
+        // Algunos empleados solo checan en PM (AM entrada/salida vacíos).
+        // La entrada del empleado es la primera hora registrada (AM u PM)
+        // y la salida es la última hora registrada (PM u AM).
+        const entradaRaw = amEntrada || pmEntrada;
+        const salidaRaw = pmSalida || amSalida;
 
         if (!entradaRaw && !salidaRaw) continue;
 
@@ -839,7 +861,7 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
             <tbody className="divide-y divide-gray-100">
               {group.rows.map(row => (
                 <tr key={row.id} className={row.status === 'not_found' ? 'opacity-50' : ''}>
-                  <td className="py-2 text-gray-800">{row.fecha}</td>
+                  <td className="py-2 text-gray-800">{formatFechaLarga(row.fecha)}</td>
                   <td className="py-2 text-gray-800">{row.entradaRaw ?? '-'}</td>
                   <td className="py-2 text-gray-800">{row.salidaRaw ?? '-'}</td>
                   <td className="py-2">
