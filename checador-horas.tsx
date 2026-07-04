@@ -186,7 +186,10 @@ function ImportadorChecadorApp(): React.ReactElement {
   const controlHorarioRecords = useRecords(controlHorarioTable ?? null);
 
   const [viewState, setViewState] = useState<ViewState>({ stage: 'idle' });
+  const [isAddingMoreFiles, setIsAddingMoreFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const addMoreFileInputRef = useRef<HTMLInputElement>(null);
+  const rowIdCounterRef = useRef(0);
 
   const existingControlHorarioKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -240,29 +243,22 @@ function ImportadorChecadorApp(): React.ReactElement {
     return `${normalizedFecha}T${hora}:00-06:00`;
   };
 
-  const parseChecadorFile = useCallback(async (file: File) => {
-    setViewState({ stage: 'parsing' });
-
-    try {
-      const text = await file.text();
+  const parseFileToRows = useCallback((fileName: string, text: string, seenKeys: Set<string>): ParsedRow[] | { error: string } => {
       const rawRows = parseCSV(text);
 
       if (rawRows.length < 5) {
-        setViewState({ stage: 'error', message: "El archivo no parece tener el formato esperado del reporte de Excepcionales." });
-        return;
+        return { error: `"${fileName}" no parece tener el formato esperado del reporte de Excepcionales.` };
       }
 
       // Validación ligera: la fila de encabezados (índice 2) debe empezar con "No."
       const headerFirstCell = (rawRows[2]?.[0] ?? '').trim();
       if (headerFirstCell !== 'No.') {
-        setViewState({ stage: 'error', message: "El archivo no parece ser el reporte de la hoja 'Excepcional'. Verifica que hayas exportado esa hoja como CSV." });
-        return;
+        return { error: `"${fileName}" no parece ser el reporte de la hoja 'Excepcional'. Verifica que hayas exportado esa hoja como CSV.` };
       }
 
       const dataRows = rawRows.slice(4);
 
       const parsedRows: ParsedRow[] = [];
-      let rowIndex = 0;
 
       for (const row of dataRows) {
         if (!row || row.every(cell => !cell || cell.trim() === '')) continue;
@@ -315,7 +311,8 @@ function ImportadorChecadorApp(): React.ReactElement {
         }
 
         const normalizedFecha = fecha.replace(/\//g, '-');
-        if (employeeRecordId && existingControlHorarioKeys.has(`${employeeRecordId}|${normalizedFecha}`)) {
+        const rowKey = employeeRecordId ? `${employeeRecordId}|${normalizedFecha}` : null;
+        if (rowKey && seenKeys.has(rowKey)) {
           status = 'duplicate';
           statusMessage = 'Ya existe un registro para esta fecha';
         }
@@ -323,8 +320,12 @@ function ImportadorChecadorApp(): React.ReactElement {
         const entradaISO = entradaRaw && fecha ? buildISODateTime(fecha, entradaRaw) : null;
         const salidaISO = salidaRaw && fecha ? buildISODateTime(fecha, salidaRaw) : null;
 
+        if (rowKey && status !== 'duplicate') {
+          seenKeys.add(rowKey);
+        }
+
         parsedRows.push({
-          id: `row-${rowIndex++}`,
+          id: `row-${rowIdCounterRef.current++}`,
           employeeNumber,
           employeeName,
           employeeRecordId,
@@ -340,22 +341,69 @@ function ImportadorChecadorApp(): React.ReactElement {
         });
       }
 
-      setViewState({ stage: 'preview', rows: parsedRows });
-    } catch (error) {
-      console.error('Error parsing CSV file:', error);
-      setViewState({ stage: 'error', message: 'No se pudo leer el archivo. Verifica que sea el CSV exportado de la hoja Excepcional del checador.' });
+      return parsedRows;
+  }, [activeEmployeesMap]);
+
+  const processFiles = useCallback(async (files: File[], mode: 'replace' | 'append') => {
+    if (files.length === 0) return;
+
+    if (mode === 'replace') {
+      setViewState({ stage: 'parsing' });
+    } else {
+      setIsAddingMoreFiles(true);
     }
-  }, [activeEmployeesMap, existingControlHorarioKeys]);
+
+    try {
+      const seenKeys = new Set(existingControlHorarioKeys);
+      const existingRows = mode === 'append' && viewState.stage === 'preview' ? viewState.rows : [];
+      for (const row of existingRows) {
+        if (row.employeeRecordId && row.status !== 'duplicate') {
+          seenKeys.add(`${row.employeeRecordId}|${row.fecha.replace(/\//g, '-')}`);
+        }
+      }
+
+      const allNewRows: ParsedRow[] = [];
+      for (const file of files) {
+        const text = await file.text();
+        const result = parseFileToRows(file.name, text, seenKeys);
+        if ('error' in result) {
+          setViewState({ stage: 'error', message: result.error });
+          return;
+        }
+        allNewRows.push(...result);
+      }
+
+      setViewState({ stage: 'preview', rows: [...existingRows, ...allNewRows] });
+    } catch (error) {
+      console.error('Error parsing CSV file(s):', error);
+      setViewState({ stage: 'error', message: 'No se pudo leer alguno de los archivos. Verifica que sean el CSV exportado de la hoja Excepcional del checador.' });
+    } finally {
+      setIsAddingMoreFiles(false);
+    }
+  }, [existingControlHorarioKeys, parseFileToRows, viewState]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      parseChecadorFile(file);
+    const files = Array.from(e.target.files ?? []);
+    if (files.length > 0) {
+      processFiles(files, 'replace');
     }
-  }, [parseChecadorFile]);
+    e.target.value = '';
+  }, [processFiles]);
+
+  const handleAddMoreFilesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length > 0) {
+      processFiles(files, 'append');
+    }
+    e.target.value = '';
+  }, [processFiles]);
 
   const handleSelectFile = useCallback(() => {
     fileInputRef.current?.click();
+  }, []);
+
+  const handleSelectMoreFiles = useCallback(() => {
+    addMoreFileInputRef.current?.click();
   }, []);
 
   const toggleRowInclusion = useCallback((rowId: string) => {
@@ -576,6 +624,7 @@ function ImportadorChecadorApp(): React.ReactElement {
             ref={fileInputRef}
             type="file"
             accept=".csv"
+            multiple
             onChange={handleFileChange}
             className="hidden"
           />
@@ -583,7 +632,7 @@ function ImportadorChecadorApp(): React.ReactElement {
             onClick={handleSelectFile}
             className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
           >
-            Seleccionar archivo
+            Seleccionar archivo(s)
           </button>
         </div>
       </div>
@@ -680,7 +729,25 @@ function ImportadorChecadorApp(): React.ReactElement {
             ))}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-between gap-3 pt-4 border-t border-gray-200">
+            <input
+              ref={addMoreFileInputRef}
+              type="file"
+              accept=".csv"
+              multiple
+              onChange={handleAddMoreFilesChange}
+              className="hidden"
+            />
+            <button
+              onClick={handleSelectMoreFiles}
+              disabled={isImporting || isAddingMoreFiles}
+              className="bg-white hover:bg-black/5 px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isAddingMoreFiles && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+              {isAddingMoreFiles ? 'Cargando...' : 'Seleccionar más archivos'}
+            </button>
+
+            <div className="flex gap-3">
             <button
               onClick={handleCancel}
               disabled={isImporting}
@@ -696,6 +763,7 @@ function ImportadorChecadorApp(): React.ReactElement {
               {isImporting && <SpinnerIcon className="w-4 h-4 animate-spin" />}
               {isImporting ? 'Creando registros...' : 'Confirmar e Importar'}
             </button>
+            </div>
           </div>
         </div>
       </div>
