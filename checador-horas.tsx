@@ -44,6 +44,37 @@ function formatFechaLarga(fecha: string): string {
   return `${day} de ${mes} de ${year}`;
 }
 
+function parseFechaToDate(fecha: string): Date | null {
+  const [year, month, day] = fecha.replace(/\//g, '-').split('-').map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+// Semana laboral de Amaranta Cakes: lunes a sábado (cerrado domingo).
+function getWeekRange(fecha: string): { key: string; start: Date; end: Date } {
+  const date = parseFechaToDate(fecha) ?? new Date(NaN);
+  const mondayOffset = (date.getDay() + 6) % 7;
+  const start = new Date(date);
+  start.setDate(date.getDate() - mondayOffset);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 5);
+  const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+  return { key, start, end };
+}
+
+function formatFechaCorta(date: Date): string {
+  const mes = MESES_ES[date.getMonth()];
+  return `${String(date.getDate()).padStart(2, '0')} de ${mes}`;
+}
+
+function formatWeekLabel(weekNumber: number, start: Date, end: Date): string {
+  const startLabel = formatFechaCorta(start);
+  const endLabel = start.getFullYear() === end.getFullYear()
+    ? formatFechaCorta(end)
+    : `${formatFechaCorta(end)} de ${end.getFullYear()}`;
+  return `Semana ${weekNumber} - ${startLabel} al ${endLabel}`;
+}
+
 function detectDelimiter(text: string): string {
   const firstLine = text.split(/\r?\n/).find(line => line.trim().length > 0) ?? '';
   const commaCount = (firstLine.match(/,/g) ?? []).length;
@@ -123,6 +154,14 @@ interface EmployeeGroup {
   employeePreferredName: string | null;
   rows: ParsedRow[];
   groupStatus: RowStatus;
+}
+
+interface WeekGroup {
+  key: string;
+  weekNumber: number;
+  start: Date;
+  end: Date;
+  employeeGroups: EmployeeGroup[];
 }
 
 interface ImportResultEmployee {
@@ -672,38 +711,52 @@ function ImportadorChecadorApp(): React.ReactElement {
     const rows = viewState.rows;
     const isImporting = viewState.stage === 'importing';
 
-    const groups: EmployeeGroup[] = [];
-    const groupMap = new Map<string, EmployeeGroup>();
-
+    const weekMap = new Map<string, { start: Date; end: Date; rows: ParsedRow[] }>();
     for (const row of rows) {
-      const key = row.employeeRecordId ?? `notfound-${row.employeeNumber}`;
-      if (!groupMap.has(key)) {
-        groupMap.set(key, {
-          employeeRecordId: row.employeeRecordId,
-          employeeNumber: row.employeeNumber,
-          employeeName: row.employeePreferredName ?? row.employeeName,
-          employeePreferredName: row.employeePreferredName,
-          rows: [],
-          groupStatus: 'ok',
-        });
+      const { key, start, end } = getWeekRange(row.fecha);
+      if (!weekMap.has(key)) {
+        weekMap.set(key, { start, end, rows: [] });
       }
-      groupMap.get(key)!.rows.push(row);
+      weekMap.get(key)!.rows.push(row);
     }
 
-    for (const group of groupMap.values()) {
-      if (group.rows.some(r => r.status === 'not_found')) {
-        group.groupStatus = 'not_found';
-      } else if (group.rows.some(r => r.status === 'duplicate')) {
-        group.groupStatus = 'duplicate';
-      } else if (group.rows.some(r => r.status === 'partial')) {
-        group.groupStatus = 'partial';
-      }
-      groups.push(group);
-    }
+    const weekGroups: WeekGroup[] = Array.from(weekMap.entries())
+      .sort((a, b) => a[1].start.getTime() - b[1].start.getTime())
+      .map(([key, weekData], index) => {
+        const groupMap = new Map<string, EmployeeGroup>();
 
-    groups.sort((a, b) => a.employeeNumber - b.employeeNumber);
+        for (const row of weekData.rows) {
+          const groupKey = row.employeeRecordId ?? `notfound-${row.employeeNumber}`;
+          if (!groupMap.has(groupKey)) {
+            groupMap.set(groupKey, {
+              employeeRecordId: row.employeeRecordId,
+              employeeNumber: row.employeeNumber,
+              employeeName: row.employeePreferredName ?? row.employeeName,
+              employeePreferredName: row.employeePreferredName,
+              rows: [],
+              groupStatus: 'ok',
+            });
+          }
+          groupMap.get(groupKey)!.rows.push(row);
+        }
 
-    const totalEmployees = groups.length;
+        const employeeGroups = Array.from(groupMap.values());
+        for (const group of employeeGroups) {
+          group.rows.sort((a, b) => a.fecha.replace(/\//g, '-').localeCompare(b.fecha.replace(/\//g, '-')));
+          if (group.rows.some(r => r.status === 'not_found')) {
+            group.groupStatus = 'not_found';
+          } else if (group.rows.some(r => r.status === 'duplicate')) {
+            group.groupStatus = 'duplicate';
+          } else if (group.rows.some(r => r.status === 'partial')) {
+            group.groupStatus = 'partial';
+          }
+        }
+        employeeGroups.sort((a, b) => a.employeeNumber - b.employeeNumber);
+
+        return { key, weekNumber: index + 1, start: weekData.start, end: weekData.end, employeeGroups };
+      });
+
+    const totalEmployees = new Set(rows.map(r => r.employeeRecordId ?? `notfound-${r.employeeNumber}`)).size;
     const validRows = rows.filter(r => r.status === 'ok' || r.status === 'partial').length;
     const warningRows = rows.filter(r => r.status === 'duplicate' || r.status === 'partial').length;
     const errorRows = rows.filter(r => r.status === 'not_found').length;
@@ -718,14 +771,23 @@ function ImportadorChecadorApp(): React.ReactElement {
             </p>
           </div>
 
-          <div className="space-y-4 mb-6">
-            {groups.map(group => (
-              <EmployeeGroupComponent
-                key={group.employeeRecordId ?? group.employeeNumber}
-                group={group}
-                onToggleRow={toggleRowInclusion}
-                disabled={isImporting}
-              />
+          <div className="space-y-8 mb-6">
+            {weekGroups.map(week => (
+              <div key={week.key}>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  {formatWeekLabel(week.weekNumber, week.start, week.end)}
+                </h3>
+                <div className="space-y-4">
+                  {week.employeeGroups.map(group => (
+                    <EmployeeGroupComponent
+                      key={group.employeeRecordId ?? group.employeeNumber}
+                      group={group}
+                      onToggleRow={toggleRowInclusion}
+                      disabled={isImporting}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
 
