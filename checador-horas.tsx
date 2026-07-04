@@ -67,6 +67,13 @@ function formatFechaCorta(date: Date): string {
   return `${String(date.getDate()).padStart(2, '0')} de ${mes}`;
 }
 
+function getISOWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 function formatWeekLabel(weekNumber: number, start: Date, end: Date): string {
   const startLabel = formatFechaCorta(start);
   const endLabel = start.getFullYear() === end.getFullYear()
@@ -722,7 +729,7 @@ function ImportadorChecadorApp(): React.ReactElement {
 
     const weekGroups: WeekGroup[] = Array.from(weekMap.entries())
       .sort((a, b) => a[1].start.getTime() - b[1].start.getTime())
-      .map(([key, weekData], index) => {
+      .map(([key, weekData]) => {
         const groupMap = new Map<string, EmployeeGroup>();
 
         for (const row of weekData.rows) {
@@ -753,7 +760,8 @@ function ImportadorChecadorApp(): React.ReactElement {
         }
         employeeGroups.sort((a, b) => a.employeeNumber - b.employeeNumber);
 
-        return { key, weekNumber: index + 1, start: weekData.start, end: weekData.end, employeeGroups };
+        const weekNumber = getISOWeekNumber(weekData.start);
+        return { key, weekNumber, start: weekData.start, end: weekData.end, employeeGroups };
       });
 
     const totalEmployees = new Set(rows.map(r => r.employeeRecordId ?? `notfound-${r.employeeNumber}`)).size;
