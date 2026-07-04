@@ -173,6 +173,7 @@ interface WeekGroup {
 
 interface ImportResultEmployee {
   employeeName: string;
+  weekLabel: string;
   controlHorarioCreated: number;
   nominaCreated: boolean;
   nominaId: string | null;
@@ -487,25 +488,31 @@ function ImportadorChecadorApp(): React.ReactElement {
 
     setViewState({ stage: 'importing', rows: viewState.rows });
 
-    const groupedByEmployee = new Map<string, ParsedRow[]>();
+    // La nómina se paga por semana calendario, así que cada combinación
+    // empleado + semana genera su propio record de Nómina.
+    const groupedByEmployeeWeek = new Map<string, { employeeRecordId: string; rows: ParsedRow[] }>();
     for (const row of rowsToImport) {
-      const key = row.employeeRecordId!;
-      if (!groupedByEmployee.has(key)) {
-        groupedByEmployee.set(key, []);
+      const { key: weekKey } = getWeekRange(row.fecha);
+      const groupKey = `${row.employeeRecordId}|${weekKey}`;
+      if (!groupedByEmployeeWeek.has(groupKey)) {
+        groupedByEmployeeWeek.set(groupKey, { employeeRecordId: row.employeeRecordId!, rows: [] });
       }
-      groupedByEmployee.get(key)!.push(row);
+      groupedByEmployeeWeek.get(groupKey)!.rows.push(row);
     }
 
     const results: ImportResultEmployee[] = [];
     let totalControlHorario = 0;
     let totalNomina = 0;
 
-    for (const [employeeRecordId, rows] of groupedByEmployee) {
+    for (const { employeeRecordId, rows } of groupedByEmployeeWeek.values()) {
       const firstRow = rows[0]!;
       const employeeName = firstRow.employeePreferredName ?? firstRow.employeeName;
-      
+      const { start, end } = getWeekRange(firstRow.fecha);
+      const weekLabel = formatWeekLabel(getISOWeekNumber(start), start, end);
+
       const resultEntry: ImportResultEmployee = {
         employeeName,
+        weekLabel,
         controlHorarioCreated: 0,
         nominaCreated: false,
         nominaId: null,
@@ -856,12 +863,12 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.employees.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Resumen por empleado</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Resumen por empleado y semana</h3>
               <div className="bg-gray-50 rounded-lg border border-gray-200 divide-y divide-gray-200">
                 {result.employees.map((emp, idx) => (
                   <div key={idx} className="p-3 flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-gray-800">{emp.employeeName}</p>
+                      <p className="text-sm text-gray-800">{emp.employeeName} · {emp.weekLabel}</p>
                       <p className="text-xs text-gray-500">
                         {emp.controlHorarioCreated} Control Horario · {emp.nominaCreated ? 'Nómina creada' : 'Sin nómina'}
                       </p>
