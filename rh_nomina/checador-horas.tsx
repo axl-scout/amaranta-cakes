@@ -19,6 +19,7 @@ import {
   SpinnerIcon,
   XIcon,
   CheckIcon,
+  PlusIcon,
 } from '@phosphor-icons/react';
 
 // ─── Rosewood palette: sigue el tema del sistema (claro/oscuro) ──────────────
@@ -1324,8 +1325,10 @@ function ImportadorChecadorApp(): React.ReactElement {
       <NominaManager
         nominaTable={nominaTable}
         controlHorarioTable={controlHorarioTable}
+        empleadosTable={empleadosTable}
         nominaRecords={nominaRecords}
         controlHorarioRecords={controlHorarioRecords}
+        empleadosRecords={empleadosRecords}
         onOpenImport={() => setShowImportModal(true)}
       />
 
@@ -1547,20 +1550,38 @@ interface LinkValue {
 interface NominaManagerProps {
   nominaTable: Table | undefined;
   controlHorarioTable: Table | undefined;
+  empleadosTable: Table | undefined;
   nominaRecords: AirtableRecord[] | null;
   controlHorarioRecords: AirtableRecord[] | null;
+  empleadosRecords: AirtableRecord[] | null;
   onOpenImport: () => void;
 }
+
+const ESTATUS_OPTIONS: FilterDropdownOption[] = [
+  { id: 'Pendiente', name: 'Pendiente' },
+  { id: 'Parcial', name: 'Parcial' },
+  { id: 'Pagado', name: 'Pagado' },
+];
 
 function NominaManager({
   nominaTable,
   controlHorarioTable,
+  empleadosTable,
   nominaRecords,
   controlHorarioRecords,
+  empleadosRecords,
   onOpenImport,
 }: NominaManagerProps): React.ReactElement {
   const [selectedNominaId, setSelectedNominaId] = useState<string | null>(null);
   const [selectedControlHorarioId, setSelectedControlHorarioId] = useState<string | null>(null);
+  const [showAddControlHorarioModal, setShowAddControlHorarioModal] = useState(false);
+
+  const [dateFilterMode, setDateFilterMode] = useState<'controlHorario' | 'nomina'>('controlHorario');
+  const [dateFilterValue, setDateFilterValue] = useState<Date | null>(null);
+  const [showDateFilterCalendar, setShowDateFilterCalendar] = useState(false);
+  const [employeeFilterIds, setEmployeeFilterIds] = useState<string[]>([]);
+  const [estatusFilterValues, setEstatusFilterValues] = useState<string[]>([]);
+
   // Colapsados por default: solo se expande el grupo de semana que el usuario abra.
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
 
@@ -1572,12 +1593,98 @@ function NominaManager({
     });
   }, []);
 
+  const activeEmployeeOptions = useMemo<FilterDropdownOption[]>(() => {
+    if (!empleadosRecords || !empleadosTable) return [];
+    const nombreField = empleadosTable.getFieldIfExists(FIELD_IDS.EMPLEADOS_NOMBRE_PREFERIDO);
+    const estatusField = empleadosTable.getFieldIfExists(FIELD_IDS.EMPLEADOS_ESTATUS);
+    if (!nombreField || !estatusField) return [];
+
+    return empleadosRecords
+      .filter(r => (r.getCellValue(estatusField) as { name: string } | null)?.name === 'Activo')
+      .map(r => ({ id: r.id, name: (r.getCellValue(nombreField) as string | null) ?? 'Sin nombre' }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [empleadosRecords, empleadosTable]);
+
+  // Rango real [inicio, fin] de un record de Nómina, calculado a partir de
+  // los Control Horario vinculados directamente (no de los lookups
+  // Inicio/Fin de Semana, que dependen del orden de vínculo).
+  const getNominaDateRange = useCallback((nomina: AirtableRecord): { start: Date | null; end: Date | null } => {
+    if (!nominaTable || !controlHorarioTable) return { start: null, end: null };
+    const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
+    const entradaField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_ENTRADA);
+    const linkedIds = new Set(
+      (controlHorarioField ? (nomina.getCellValue(controlHorarioField) as LinkValue[] | null) : null)?.map(l => l.id) ?? []
+    );
+    let start: Date | null = null;
+    let end: Date | null = null;
+    for (const ch of controlHorarioRecords ?? []) {
+      if (!linkedIds.has(ch.id)) continue;
+      const iso = entradaField ? (ch.getCellValue(entradaField) as string | null) : null;
+      const key = iso ? isoToMexicoCityDateKey(iso) : null;
+      const d = key ? parseFechaToDate(key) : null;
+      if (!d) continue;
+      if (!start || d < start) start = d;
+      if (!end || d > end) end = d;
+    }
+    return { start, end };
+  }, [nominaTable, controlHorarioTable, controlHorarioRecords]);
+
+  const nominaHasEmployee = useCallback((nomina: AirtableRecord, employeeIds: Set<string>): boolean => {
+    if (!nominaTable || !controlHorarioTable) return false;
+    const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
+    const empleadoField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_EMPLEADO);
+    const linkedIds = new Set(
+      (controlHorarioField ? (nomina.getCellValue(controlHorarioField) as LinkValue[] | null) : null)?.map(l => l.id) ?? []
+    );
+    return (controlHorarioRecords ?? []).some(ch => {
+      if (!linkedIds.has(ch.id)) return false;
+      const emp = empleadoField ? (ch.getCellValue(empleadoField) as LinkValue[] | null)?.[0] : null;
+      return !!emp && employeeIds.has(emp.id);
+    });
+  }, [nominaTable, controlHorarioTable, controlHorarioRecords]);
+
+  const nominaHasControlHorarioOnDate = useCallback((nomina: AirtableRecord, dateKey: string): boolean => {
+    if (!nominaTable || !controlHorarioTable) return false;
+    const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
+    const entradaField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_ENTRADA);
+    const linkedIds = new Set(
+      (controlHorarioField ? (nomina.getCellValue(controlHorarioField) as LinkValue[] | null) : null)?.map(l => l.id) ?? []
+    );
+    return (controlHorarioRecords ?? []).some(ch => {
+      if (!linkedIds.has(ch.id)) return false;
+      const iso = entradaField ? (ch.getCellValue(entradaField) as string | null) : null;
+      const key = iso ? isoToMexicoCityDateKey(iso) : null;
+      return key === dateKey;
+    });
+  }, [nominaTable, controlHorarioTable, controlHorarioRecords]);
+
   const pendingRecords = useMemo<AirtableRecord[]>(() => {
     if (!nominaRecords || !nominaTable) return [];
 
-    const pendientes = nominaRecords.filter(record => getStatusName(record, nominaTable) !== 'Pagado');
+    let records = estatusFilterValues.length > 0
+      ? nominaRecords.filter(record => estatusFilterValues.includes(getStatusName(record, nominaTable) ?? 'Pendiente'))
+      : nominaRecords.filter(record => getStatusName(record, nominaTable) !== 'Pagado');
 
-    pendientes.sort((a, b) => {
+    if (employeeFilterIds.length > 0) {
+      const employeeIdSet = new Set(employeeFilterIds);
+      records = records.filter(record => nominaHasEmployee(record, employeeIdSet));
+    }
+
+    if (dateFilterValue) {
+      const dateKey = formatDateForComparison(dateFilterValue);
+      if (dateFilterMode === 'controlHorario') {
+        records = records.filter(record => nominaHasControlHorarioOnDate(record, dateKey));
+      } else {
+        const target = parseFechaToDate(dateKey);
+        records = records.filter(record => {
+          const { start, end } = getNominaDateRange(record);
+          return !!target && !!start && !!end && target >= start && target <= end;
+        });
+      }
+    }
+
+    records = [...records];
+    records.sort((a, b) => {
       const inicioA = getLookupFirst<string>(a, nominaTable, FIELD_IDS.NOMINA_INICIO_SEMANA);
       const inicioB = getLookupFirst<string>(b, nominaTable, FIELD_IDS.NOMINA_INICIO_SEMANA);
       const sortKeyA = inicioA ? new Date(inicioA).getTime() : -Infinity;
@@ -1588,8 +1695,11 @@ function NominaManager({
       return nameA.localeCompare(nameB);
     });
 
-    return pendientes;
-  }, [nominaRecords, nominaTable]);
+    return records;
+  }, [
+    nominaRecords, nominaTable, estatusFilterValues, employeeFilterIds, dateFilterValue, dateFilterMode,
+    nominaHasEmployee, nominaHasControlHorarioOnDate, getNominaDateRange,
+  ]);
 
   const weekGroups = useMemo<{ label: string; sortKey: number; records: AirtableRecord[] }[]>(() => {
     if (!nominaTable) return [];
@@ -1640,9 +1750,80 @@ function NominaManager({
   if (!nominaTable || !controlHorarioTable) return <></>;
 
   const hasAnyNominaRecords = !!nominaRecords && nominaRecords.length > 0;
+  const hasActiveFilters = employeeFilterIds.length > 0 || estatusFilterValues.length > 0 || !!dateFilterValue;
+
+  const dateModeBtnCls = (mode: 'controlHorario' | 'nomina') =>
+    `px-3 py-2 text-base transition-colors hover:cursor-pointer ${
+      dateFilterMode === mode
+        ? 'bg-rose-500 text-white dark:bg-rose-500'
+        : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-[#251D1F] dark:text-gray-300 dark:hover:bg-white/5'
+    }`;
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto p-6">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-[#E9D9D9] dark:border-[#382C2E] shrink-0 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center rounded-lg border border-gray-300 dark:border-[#382C2E] overflow-hidden">
+            <button className={dateModeBtnCls('controlHorario')} onClick={() => setDateFilterMode('controlHorario')}>
+              Control Horario
+            </button>
+            <button className={dateModeBtnCls('nomina')} onClick={() => setDateFilterMode('nomina')}>
+              Nómina
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowDateFilterCalendar(o => !o)}
+                className="inline-flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50 hover:cursor-pointer"
+              >
+                <CalendarIcon size={16} />
+                {dateFilterValue ? formatFechaLarga(formatDateForComparison(dateFilterValue)) : 'Filtrar por fecha'}
+              </button>
+              {showDateFilterCalendar && (
+                <MiniCalendar
+                  selectedDate={dateFilterValue ?? new Date()}
+                  onSelectDate={date => { setDateFilterValue(date); setShowDateFilterCalendar(false); }}
+                  onClose={() => setShowDateFilterCalendar(false)}
+                />
+              )}
+            </div>
+            {dateFilterValue && (
+              <button
+                type="button"
+                onClick={() => setDateFilterValue(null)}
+                className="text-sm text-gray-500 hover:text-gray-700 underline-offset-2 hover:underline cursor-pointer transition-colors dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
+
+          <FilterDropdown label="Empleado" values={employeeFilterIds} options={activeEmployeeOptions} onChange={setEmployeeFilterIds} />
+          <FilterDropdown label="Estatus" values={estatusFilterValues} options={ESTATUS_OPTIONS} onChange={setEstatusFilterValues} />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenImport}
+            title="Importar"
+            className="bg-gray-900 text-white p-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center justify-center dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+          >
+            <UploadSimpleIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowAddControlHorarioModal(true)}
+            className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-base dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Agregar Control Horario
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-auto p-6">
       <div className="max-w-7xl mx-auto flex gap-6 items-start">
         <div className="flex-1 min-w-0 border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
           {!hasAnyNominaRecords && (
@@ -1655,7 +1836,9 @@ function NominaManager({
 
           {hasAnyNominaRecords && pendingRecords.length === 0 && (
             <p className="text-base text-gray-500 dark:text-gray-500 text-center py-12">
-              No hay registros de Nómina pendientes de pago.
+              {hasActiveFilters
+                ? 'Ningún registro coincide con los filtros seleccionados.'
+                : 'No hay registros de Nómina pendientes de pago.'}
             </p>
           )}
 
@@ -1728,15 +1911,8 @@ function NominaManager({
         </div>
 
         <div className="w-80 shrink-0 border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
-          <div className="flex items-center justify-between p-3 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+          <div className="p-3 border-b border-[#E9D9D9] dark:border-[#382C2E]">
             <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 capitalize">Resumen por empleado</h3>
-            <button
-              onClick={onOpenImport}
-              title="Importar"
-              className="bg-gray-900 text-white p-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center justify-center dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-            >
-              <UploadSimpleIcon className="w-4 h-4" />
-            </button>
           </div>
 
           {employeeSummary.length === 0 ? (
@@ -1782,6 +1958,18 @@ function NominaManager({
           onClose={() => setSelectedControlHorarioId(null)}
         />
       )}
+
+      {showAddControlHorarioModal && (
+        <AddControlHorarioModal
+          employeeOptions={activeEmployeeOptions}
+          controlHorarioTable={controlHorarioTable}
+          nominaTable={nominaTable}
+          nominaRecords={nominaRecords}
+          controlHorarioRecords={controlHorarioRecords}
+          onClose={() => setShowAddControlHorarioModal(false)}
+        />
+      )}
+      </div>
     </div>
   );
 }
@@ -1857,6 +2045,102 @@ function ExtraAutorizadasToggle({ checked, disabled, onToggle }: ExtraAutorizada
     >
       <CheckIcon className="w-3.5 h-3.5" weight="bold" />
     </button>
+  );
+}
+
+interface FilterDropdownOption {
+  id: string;
+  name: string;
+}
+
+interface FilterDropdownProps {
+  label: string;
+  values: string[];
+  options: FilterDropdownOption[];
+  onChange: (values: string[]) => void;
+  multiSelect?: boolean;
+}
+
+// Un solo componente Dropdown para filtros (multi-select con checkboxes) y
+// selección simple (p. ej. el Empleado del formulario de Agregar Control
+// Horario), siguiendo el patrón de Pedidos.
+function FilterDropdown({ label, values, options, onChange, multiSelect = true }: FilterDropdownProps): React.ReactElement {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, []);
+
+  const selectedNames = options.filter(o => values.includes(o.id)).map(o => o.name);
+  const displayText = values.length === 0 ? label : values.length === 1 ? selectedNames[0]! : `${values.length} seleccionados`;
+
+  const selectOption = (id: string) => {
+    if (multiSelect) {
+      onChange(values.includes(id) ? values.filter(v => v !== id) : [...values, id]);
+    } else {
+      onChange([id]);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="relative" ref={containerRef}>
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50"
+        >
+          <span className="truncate">{displayText}</span>
+          <CaretDownIcon size={14} className={`text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {open && (
+          <div className="absolute top-full left-0 mt-1 z-[70] bg-white border border-[#E9D9D9] rounded-lg shadow-lg max-h-[260px] overflow-y-auto w-[220px] py-1 dark:bg-[#251D1F] dark:border-[#382C2E]">
+            {options.length === 0 && (
+              <p className="px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500">Sin opciones</p>
+            )}
+            {options.map(opt => {
+              const sel = values.includes(opt.id);
+              if (multiSelect) {
+                return (
+                  <label key={opt.id} className="flex items-center gap-2 px-3 py-1.5 text-base text-gray-700 hover:bg-gray-50 cursor-pointer dark:text-gray-300 dark:hover:bg-white/5">
+                    <input type="checkbox" checked={sel} onChange={() => selectOption(opt.id)} className="accent-rose-600" />
+                    <span className="truncate">{opt.name}</span>
+                  </label>
+                );
+              }
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => selectOption(opt.id)}
+                  className={`w-full text-left px-3 py-1.5 text-base transition-colors ${
+                    sel
+                      ? 'bg-rose-50 text-rose-700 font-medium dark:bg-rose-500/15 dark:text-rose-300'
+                      : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
+                  }`}
+                >
+                  {opt.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {values.length > 0 && (
+        <button
+          type="button"
+          onClick={() => onChange([])}
+          className="text-sm text-gray-500 hover:text-gray-700 underline-offset-2 hover:underline cursor-pointer transition-colors dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          Limpiar
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -1976,15 +2260,15 @@ function NominaDetailModal({
             <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Horas Ordinarias</p>
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Ordinarias Trabajadas</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Trabajado</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{horasOrdinariasTrabajadasDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto Horas Ordinarias</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{montoHorasOrdinariasDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado Ordinario</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
                   <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                   <input
@@ -2004,15 +2288,15 @@ function NominaDetailModal({
             <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Horas Extra</p>
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Extra Trabajadas</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Trabajado</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{horasExtraTrabajadasDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto Horas Extra</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{montoHorasExtraDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado Extra</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
                   <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                   <input
@@ -2290,6 +2574,223 @@ function ControlHorarioDetailModal({
               </p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AddControlHorarioModalProps {
+  employeeOptions: FilterDropdownOption[];
+  controlHorarioTable: Table;
+  nominaTable: Table;
+  nominaRecords: AirtableRecord[] | null;
+  controlHorarioRecords: AirtableRecord[] | null;
+  onClose: () => void;
+}
+
+// Crea un record de Control Horario manualmente. Si ya existe una Nómina
+// para ese empleado en la semana calendario de la Entrada, se vincula ahí;
+// si no, se crea una Nómina nueva.
+function AddControlHorarioModal({
+  employeeOptions,
+  controlHorarioTable,
+  nominaTable,
+  nominaRecords,
+  controlHorarioRecords,
+  onClose,
+}: AddControlHorarioModalProps): React.ReactElement {
+  const [employeeId, setEmployeeId] = useState<string[]>([]);
+  const now = new Date();
+  const [entradaDate, setEntradaDate] = useState(now);
+  const [entradaTime, setEntradaTime] = useState('09:00');
+  const [salidaDate, setSalidaDate] = useState(now);
+  const [salidaTime, setSalidaTime] = useState('17:00');
+  const [showEntradaCalendar, setShowEntradaCalendar] = useState(false);
+  const [showSalidaCalendar, setShowSalidaCalendar] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const canCreate = controlHorarioTable.hasPermissionToCreateRecords() && nominaTable.hasPermissionToCreateRecords();
+  const canSave = canCreate && employeeId.length > 0 && !isSaving;
+
+  const dateInputCls = 'w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-3 py-2 pr-9 text-base outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors dark:bg-[#1B1517] dark:text-gray-100 cursor-pointer';
+  const labelCls = 'block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2';
+
+  const handleSave = useCallback(async () => {
+    if (!canSave) return;
+    const empId = employeeId[0]!;
+    setIsSaving(true);
+    setError(null);
+    try {
+      const entradaISO = `${formatDateForComparison(entradaDate)}T${entradaTime}:00-06:00`;
+      const salidaISO = `${formatDateForComparison(salidaDate)}T${salidaTime}:00-06:00`;
+
+      const chIds = await controlHorarioTable.createRecordsAsync([{
+        fields: {
+          [FIELD_IDS.CH_EMPLEADO]: [{ id: empId }],
+          [FIELD_IDS.CH_ENTRADA]: entradaISO,
+          [FIELD_IDS.CH_SALIDA]: salidaISO,
+        },
+      }]);
+      const chId = chIds[0];
+      if (!chId) throw new Error('No se pudo crear el record de Control Horario.');
+
+      const fechaKey = formatDateForComparison(entradaDate);
+      const targetWeekKey = getWeekRange(fechaKey).key;
+
+      const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
+      const empleadoField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_EMPLEADO);
+      const entradaField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_ENTRADA);
+
+      let existingNominaId: string | null = null;
+      for (const nomina of nominaRecords ?? []) {
+        const linkedIds = new Set(
+          (controlHorarioField ? (nomina.getCellValue(controlHorarioField) as LinkValue[] | null) : null)?.map(l => l.id) ?? []
+        );
+        const matches = (controlHorarioRecords ?? []).some(ch => {
+          if (!linkedIds.has(ch.id)) return false;
+          const emp = empleadoField ? (ch.getCellValue(empleadoField) as LinkValue[] | null)?.[0] : null;
+          if (!emp || emp.id !== empId) return false;
+          const iso = entradaField ? (ch.getCellValue(entradaField) as string | null) : null;
+          const key = iso ? isoToMexicoCityDateKey(iso) : null;
+          if (!key) return false;
+          return getWeekRange(key).key === targetWeekKey;
+        });
+        if (matches) {
+          existingNominaId = nomina.id;
+          break;
+        }
+      }
+
+      if (existingNominaId) {
+        await controlHorarioTable.updateRecordAsync(chId, { [FIELD_IDS.CH_NOMINA]: [{ id: existingNominaId }] });
+      } else {
+        await nominaTable.createRecordsAsync([{
+          fields: { [FIELD_IDS.NOMINA_CONTROL_HORARIO]: [{ id: chId }] },
+        }]);
+      }
+
+      onClose();
+    } catch (err) {
+      console.error('Error creando Control Horario:', err);
+      setError('No se pudo guardar. Intenta de nuevo.');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [canSave, employeeId, entradaDate, entradaTime, salidaDate, salidaTime, controlHorarioTable, nominaTable, nominaRecords, controlHorarioRecords, onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm p-5"
+      style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
+      onClick={onClose}
+    >
+      <div className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl max-w-[580px] w-full" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-[#F5F3EF]">Agregar Control Horario</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {!canCreate && (
+            <p className="text-sm text-rose-600 dark:text-rose-400">No tienes permisos para crear registros en esta base.</p>
+          )}
+
+          <div>
+            <label className={labelCls}>Empleado</label>
+            <FilterDropdown
+              label="Selecciona un empleado"
+              values={employeeId}
+              options={employeeOptions}
+              onChange={setEmployeeId}
+              multiSelect={false}
+            />
+          </div>
+
+          <div>
+            <label className={labelCls}>Entrada</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  readOnly
+                  value={formatFechaLarga(formatDateForComparison(entradaDate))}
+                  onClick={() => setShowEntradaCalendar(o => !o)}
+                  className={dateInputCls}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEntradaCalendar(o => !o)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-500 transition-colors dark:text-gray-500 dark:hover:text-rose-400"
+                >
+                  <CalendarIcon size={15} />
+                </button>
+                {showEntradaCalendar && (
+                  <MiniCalendar
+                    selectedDate={entradaDate}
+                    onSelectDate={date => { setEntradaDate(date); setShowEntradaCalendar(false); }}
+                    onClose={() => setShowEntradaCalendar(false)}
+                  />
+                )}
+              </div>
+              <div className="w-32 flex-shrink-0">
+                <CustomTimePicker value={entradaTime} onChange={setEntradaTime} />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Salida</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  readOnly
+                  value={formatFechaLarga(formatDateForComparison(salidaDate))}
+                  onClick={() => setShowSalidaCalendar(o => !o)}
+                  className={dateInputCls}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSalidaCalendar(o => !o)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-500 transition-colors dark:text-gray-500 dark:hover:text-rose-400"
+                >
+                  <CalendarIcon size={15} />
+                </button>
+                {showSalidaCalendar && (
+                  <MiniCalendar
+                    selectedDate={salidaDate}
+                    onSelectDate={date => { setSalidaDate(date); setShowSalidaCalendar(false); }}
+                    onClose={() => setShowSalidaCalendar(false)}
+                  />
+                )}
+              </div>
+              <div className="w-32 flex-shrink-0">
+                <CustomTimePicker value={salidaTime} onChange={setSalidaTime} />
+              </div>
+            </div>
+          </div>
+
+          {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
+        </div>
+
+        <div className="flex justify-end gap-3 p-5 border-t border-[#E9D9D9] dark:border-[#382C2E]">
+          <button
+            onClick={onClose}
+            className="bg-white hover:bg-black/5 px-4 py-2 rounded-md shadow-xs hover:shadow-sm border border-[#E9D9D9] dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:bg-white/5 text-base hover:cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 text-base hover:cursor-pointer"
+          >
+            {isSaving ? 'Guardando...' : 'Agregar'}
+          </button>
         </div>
       </div>
     </div>
