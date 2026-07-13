@@ -1576,7 +1576,6 @@ function NominaManager({
   const [selectedControlHorarioId, setSelectedControlHorarioId] = useState<string | null>(null);
   const [showAddControlHorarioModal, setShowAddControlHorarioModal] = useState(false);
 
-  const [dateFilterMode, setDateFilterMode] = useState<'controlHorario' | 'nomina'>('controlHorario');
   const [dateFilterValue, setDateFilterValue] = useState<Date | null>(null);
   const [showDateFilterCalendar, setShowDateFilterCalendar] = useState(false);
   const [employeeFilterIds, setEmployeeFilterIds] = useState<string[]>([]);
@@ -1604,30 +1603,6 @@ function NominaManager({
       .map(r => ({ id: r.id, name: (r.getCellValue(nombreField) as string | null) ?? 'Sin nombre' }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [empleadosRecords, empleadosTable]);
-
-  // Rango real [inicio, fin] de un record de Nómina, calculado a partir de
-  // los Control Horario vinculados directamente (no de los lookups
-  // Inicio/Fin de Semana, que dependen del orden de vínculo).
-  const getNominaDateRange = useCallback((nomina: AirtableRecord): { start: Date | null; end: Date | null } => {
-    if (!nominaTable || !controlHorarioTable) return { start: null, end: null };
-    const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
-    const entradaField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_ENTRADA);
-    const linkedIds = new Set(
-      (controlHorarioField ? (nomina.getCellValue(controlHorarioField) as LinkValue[] | null) : null)?.map(l => l.id) ?? []
-    );
-    let start: Date | null = null;
-    let end: Date | null = null;
-    for (const ch of controlHorarioRecords ?? []) {
-      if (!linkedIds.has(ch.id)) continue;
-      const iso = entradaField ? (ch.getCellValue(entradaField) as string | null) : null;
-      const key = iso ? isoToMexicoCityDateKey(iso) : null;
-      const d = key ? parseFechaToDate(key) : null;
-      if (!d) continue;
-      if (!start || d < start) start = d;
-      if (!end || d > end) end = d;
-    }
-    return { start, end };
-  }, [nominaTable, controlHorarioTable, controlHorarioRecords]);
 
   const nominaHasEmployee = useCallback((nomina: AirtableRecord, employeeIds: Set<string>): boolean => {
     if (!nominaTable || !controlHorarioTable) return false;
@@ -1672,15 +1647,7 @@ function NominaManager({
 
     if (dateFilterValue) {
       const dateKey = formatDateForComparison(dateFilterValue);
-      if (dateFilterMode === 'controlHorario') {
-        records = records.filter(record => nominaHasControlHorarioOnDate(record, dateKey));
-      } else {
-        const target = parseFechaToDate(dateKey);
-        records = records.filter(record => {
-          const { start, end } = getNominaDateRange(record);
-          return !!target && !!start && !!end && target >= start && target <= end;
-        });
-      }
+      records = records.filter(record => nominaHasControlHorarioOnDate(record, dateKey));
     }
 
     records = [...records];
@@ -1697,8 +1664,8 @@ function NominaManager({
 
     return records;
   }, [
-    nominaRecords, nominaTable, estatusFilterValues, employeeFilterIds, dateFilterValue, dateFilterMode,
-    nominaHasEmployee, nominaHasControlHorarioOnDate, getNominaDateRange,
+    nominaRecords, nominaTable, estatusFilterValues, employeeFilterIds, dateFilterValue,
+    nominaHasEmployee, nominaHasControlHorarioOnDate,
   ]);
 
   const weekGroups = useMemo<{ label: string; sortKey: number; records: AirtableRecord[] }[]>(() => {
@@ -1752,26 +1719,10 @@ function NominaManager({
   const hasAnyNominaRecords = !!nominaRecords && nominaRecords.length > 0;
   const hasActiveFilters = employeeFilterIds.length > 0 || estatusFilterValues.length > 0 || !!dateFilterValue;
 
-  const dateModeBtnCls = (mode: 'controlHorario' | 'nomina') =>
-    `px-3 py-2 text-base transition-colors hover:cursor-pointer ${
-      dateFilterMode === mode
-        ? 'bg-rose-500 text-white dark:bg-rose-500'
-        : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-[#251D1F] dark:text-gray-300 dark:hover:bg-white/5'
-    }`;
-
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-[#E9D9D9] dark:border-[#382C2E] shrink-0 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center rounded-lg border border-gray-300 dark:border-[#382C2E] overflow-hidden">
-            <button className={dateModeBtnCls('controlHorario')} onClick={() => setDateFilterMode('controlHorario')}>
-              Control Horario
-            </button>
-            <button className={dateModeBtnCls('nomina')} onClick={() => setDateFilterMode('nomina')}>
-              Nómina
-            </button>
-          </div>
-
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
@@ -1780,7 +1731,7 @@ function NominaManager({
                 className="inline-flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50 hover:cursor-pointer"
               >
                 <CalendarIcon size={16} />
-                {dateFilterValue ? formatFechaLarga(formatDateForComparison(dateFilterValue)) : 'Filtrar por fecha'}
+                {dateFilterValue ? formatFechaLarga(formatDateForComparison(dateFilterValue)) : 'Fecha'}
               </button>
               {showDateFilterCalendar && (
                 <MiniCalendar
