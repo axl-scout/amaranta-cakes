@@ -50,6 +50,7 @@ const FIELD_IDS = {
   CH_HORAS_LABORABLES: 'fldcrVMKD2i0cnRlD',
   CH_HORAS_ORDINARIAS: 'fldueLQHfD1dCEUM9',
   CH_HORAS_EXTRA: 'fldevmTTeZYuI0gLU',
+  CH_HORAS_EXTRA_AUTORIZADAS: 'fldDdRIMpuIQOztDK',
   CH_NOMINA: 'fldynty28KdzwAR1c',
   NOMINA_CONTROL_HORARIO: 'fldRpnEkaWG7nPlei',
   NOMINA_SALARIO_POR_HORA_LOOKUP: 'fldAOqUq8L6YFOk6N',
@@ -58,7 +59,8 @@ const FIELD_IDS = {
   NOMINA_EMPLEADO_LOOKUP: 'fldBa7MqXLRcdjy5w',
   NOMINA_SEMANA_LOOKUP: 'fld4wtM9gjNNvbayk',
   NOMINA_INICIO_SEMANA: 'fldbhJaHQKJI0Rb5J',
-  NOMINA_PAGADO: 'fldLYTNNnSlJmye1d',
+  NOMINA_PAGADO_ORDINARIO: 'fldLYTNNnSlJmye1d',
+  NOMINA_PAGADO_EXTRA: 'flduA2v8kPddieruW',
   NOMINA_FALTANTE: 'flduXrn2ouC5lVmMl',
   NOMINA_STATUS: 'fldtQXgaJaAQ9h7Uu',
   NOMINA_HORAS_ORDINARIAS_TRABAJADAS: 'fld3E5xf6fjMVwRlU',
@@ -1824,11 +1826,14 @@ function NominaDetailModal({
   onClose,
   onSelectControlHorario,
 }: NominaDetailModalProps): React.ReactElement {
-  const pagadoField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_PAGADO);
-  const canEditPagado = !!pagadoField && nominaTable.hasPermissionToUpdateRecords();
+  const pagadoOrdinarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_PAGADO_ORDINARIO);
+  const pagadoExtraField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_PAGADO_EXTRA);
+  const canEditPagado = nominaTable.hasPermissionToUpdateRecords();
 
-  const currentPagado = (pagadoField ? (record.getCellValue(pagadoField) as number | null) : null) ?? 0;
-  const [pagadoValue, setPagadoValue] = useState<string>(String(currentPagado));
+  const currentPagadoOrdinario = (pagadoOrdinarioField ? (record.getCellValue(pagadoOrdinarioField) as number | null) : null) ?? 0;
+  const currentPagadoExtra = (pagadoExtraField ? (record.getCellValue(pagadoExtraField) as number | null) : null) ?? 0;
+  const [pagadoOrdinarioValue, setPagadoOrdinarioValue] = useState<string>(String(currentPagadoOrdinario));
+  const [pagadoExtraValue, setPagadoExtraValue] = useState<string>(String(currentPagadoExtra));
 
   const empleadoName = getEmpleadoName(record, nominaTable);
   const semana = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP);
@@ -1860,15 +1865,35 @@ function NominaDetailModal({
     return da.localeCompare(db);
   });
 
-  const savePagado = useCallback(() => {
-    if (!canEditPagado || !pagadoField) return;
-    const parsed = parseFloat(pagadoValue);
+  const savePagadoOrdinario = useCallback(() => {
+    if (!canEditPagado || !pagadoOrdinarioField) return;
+    const parsed = parseFloat(pagadoOrdinarioValue);
     const nextValue = isNaN(parsed) ? 0 : parsed;
-    if (nextValue === currentPagado) return;
-    nominaTable.updateRecordAsync(record.id, { [FIELD_IDS.NOMINA_PAGADO]: nextValue }).catch(error => {
-      console.error('Error updating Pagado:', error);
+    if (nextValue === currentPagadoOrdinario) return;
+    nominaTable.updateRecordAsync(record.id, { [FIELD_IDS.NOMINA_PAGADO_ORDINARIO]: nextValue }).catch(error => {
+      console.error('Error updating pagado_ordinario:', error);
     });
-  }, [canEditPagado, pagadoField, pagadoValue, currentPagado, nominaTable, record.id]);
+  }, [canEditPagado, pagadoOrdinarioField, pagadoOrdinarioValue, currentPagadoOrdinario, nominaTable, record.id]);
+
+  const savePagadoExtra = useCallback(() => {
+    if (!canEditPagado || !pagadoExtraField) return;
+    const parsed = parseFloat(pagadoExtraValue);
+    const nextValue = isNaN(parsed) ? 0 : parsed;
+    if (nextValue === currentPagadoExtra) return;
+    nominaTable.updateRecordAsync(record.id, { [FIELD_IDS.NOMINA_PAGADO_EXTRA]: nextValue }).catch(error => {
+      console.error('Error updating pagado_extra:', error);
+    });
+  }, [canEditPagado, pagadoExtraField, pagadoExtraValue, currentPagadoExtra, nominaTable, record.id]);
+
+  const horasExtraAutorizadasField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_EXTRA_AUTORIZADAS);
+  const canEditHorasExtraAutorizadas = !!horasExtraAutorizadasField && controlHorarioTable.hasPermissionToUpdateRecords();
+
+  const toggleHorasExtraAutorizadas = useCallback((chRecord: AirtableRecord, current: boolean) => {
+    if (!canEditHorasExtraAutorizadas || !horasExtraAutorizadasField) return;
+    controlHorarioTable.updateRecordAsync(chRecord.id, { [FIELD_IDS.CH_HORAS_EXTRA_AUTORIZADAS]: !current }).catch(error => {
+      console.error('Error updating Horas Extra Autorizadas:', error);
+    });
+  }, [canEditHorasExtraAutorizadas, horasExtraAutorizadasField, controlHorarioTable]);
 
   return (
     <div
@@ -1882,7 +1907,10 @@ function NominaDetailModal({
       >
         <div className="flex items-start justify-between p-5 border-b border-[#E9D9D9] dark:border-[#382C2E]">
           <div>
-            <h2 className="text-2xl font-medium text-gray-800 dark:text-[#F5F3EF]">Pago de Nómina</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-medium text-gray-800 dark:text-[#F5F3EF]">Pago de Nómina</h2>
+              <NominaStatusBadge status={status} />
+            </div>
             <p className="text-lg text-gray-500 dark:text-gray-400">{empleadoName ?? 'Sin empleado'} · {semana}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
@@ -1894,15 +1922,29 @@ function NominaDetailModal({
           <div className="grid grid-cols-3 gap-6">
             <div className="space-y-3">
               <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado</label>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado Ordinario</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
                   <span className="text-gray-500 dark:text-gray-400 text-lg">$</span>
                   <input
                     type="number"
-                    value={pagadoValue}
+                    value={pagadoOrdinarioValue}
                     disabled={!canEditPagado}
-                    onChange={e => setPagadoValue(e.target.value)}
-                    onBlur={savePagado}
+                    onChange={e => setPagadoOrdinarioValue(e.target.value)}
+                    onBlur={savePagadoOrdinario}
+                    className="w-full py-1.5 px-1 text-lg outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado Extra</label>
+                <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
+                  <span className="text-gray-500 dark:text-gray-400 text-lg">$</span>
+                  <input
+                    type="number"
+                    value={pagadoExtraValue}
+                    disabled={!canEditPagado}
+                    onChange={e => setPagadoExtraValue(e.target.value)}
+                    onBlur={savePagadoExtra}
                     className="w-full py-1.5 px-1 text-lg outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
                   />
                 </div>
@@ -1910,12 +1952,6 @@ function NominaDetailModal({
               <div>
                 <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Faltante</label>
                 <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
-              </div>
-              <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Estatus</label>
-                <div className="py-1">
-                  <NominaStatusBadge status={status} />
-                </div>
               </div>
             </div>
 
@@ -1950,6 +1986,7 @@ function NominaDetailModal({
                   <th className="pb-2 font-medium">Fecha</th>
                   <th className="pb-2 font-medium">Horas Ordinarias</th>
                   <th className="pb-2 font-medium">Horas Extra</th>
+                  <th className="pb-2 font-medium text-center">Extra Autorizadas</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -1957,6 +1994,9 @@ function NominaDetailModal({
                   const entrada = entradaField ? (chRecord.getCellValue(entradaField) as string | null) : null;
                   const horasOrdField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_ORDINARIAS);
                   const horasExtraField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_EXTRA);
+                  const horasExtraAutorizadas = horasExtraAutorizadasField
+                    ? !!chRecord.getCellValue(horasExtraAutorizadasField)
+                    : false;
                   return (
                     <tr
                       key={chRecord.id}
@@ -1969,6 +2009,15 @@ function NominaDetailModal({
                       </td>
                       <td className="py-2 text-gray-800 dark:text-gray-200">
                         {horasExtraField ? chRecord.getCellValueAsString(horasExtraField) : '-'}
+                      </td>
+                      <td className="py-2 text-center" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={horasExtraAutorizadas}
+                          disabled={!canEditHorasExtraAutorizadas}
+                          onChange={() => toggleHorasExtraAutorizadas(chRecord, horasExtraAutorizadas)}
+                          className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-400 disabled:opacity-50 dark:border-[#382C2E] dark:bg-[#251D1F] cursor-pointer"
+                        />
                       </td>
                     </tr>
                   );
@@ -2010,12 +2059,14 @@ function ControlHorarioDetailModal({
   const horasLaborablesField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_LABORABLES);
   const horasOrdField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_ORDINARIAS);
   const horasExtraField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_EXTRA);
+  const horasExtraAutorizadasField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_EXTRA_AUTORIZADAS);
 
   const canEdit = controlHorarioTable.hasPermissionToUpdateRecords();
 
   const empleado = empleadoField ? (record.getCellValue(empleadoField) as LinkValue[] | null)?.[0] : null;
   const currentEntrada = entradaField ? (record.getCellValue(entradaField) as string | null) : null;
   const currentSalida = salidaField ? (record.getCellValue(salidaField) as string | null) : null;
+  const currentHorasExtraAutorizadas = horasExtraAutorizadasField ? !!record.getCellValue(horasExtraAutorizadasField) : false;
 
   const entradaParsed = parseISOToDateAndTime(currentEntrada);
   const salidaParsed = parseISOToDateAndTime(currentSalida);
@@ -2043,6 +2094,13 @@ function ControlHorarioDetailModal({
     });
   }, [canEdit, salidaField, controlHorarioTable, record.id]);
 
+  const toggleHorasExtraAutorizadas = useCallback(() => {
+    if (!canEdit || !horasExtraAutorizadasField) return;
+    controlHorarioTable.updateRecordAsync(record.id, { [FIELD_IDS.CH_HORAS_EXTRA_AUTORIZADAS]: !currentHorasExtraAutorizadas }).catch(error => {
+      console.error('Error updating Horas Extra Autorizadas:', error);
+    });
+  }, [canEdit, horasExtraAutorizadasField, currentHorasExtraAutorizadas, controlHorarioTable, record.id]);
+
   const dateInputCls = 'w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-3 py-2 pr-9 text-lg outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5';
   const labelCls = 'block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1';
 
@@ -2060,9 +2118,21 @@ function ControlHorarioDetailModal({
         </div>
 
         <div className="p-4 space-y-3">
-          <div>
-            <label className={labelCls}>Empleado</label>
-            <p className="text-lg text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <label className={labelCls}>Empleado</label>
+              <p className="text-lg text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
+            </div>
+            <label className="flex items-center gap-2 pb-0.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={currentHorasExtraAutorizadas}
+                disabled={!canEdit || !horasExtraAutorizadasField}
+                onChange={toggleHorasExtraAutorizadas}
+                className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-400 disabled:opacity-50 dark:border-[#382C2E] dark:bg-[#251D1F] cursor-pointer"
+              />
+              <span className="text-base text-gray-600 dark:text-gray-400 whitespace-nowrap">Horas Extra Autorizadas</span>
+            </label>
           </div>
 
           <div>
