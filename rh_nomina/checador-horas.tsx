@@ -1164,11 +1164,23 @@ function TabBar({ activeTab, onChange }: TabBarProps): React.ReactElement {
   );
 }
 
+// El cell value de un campo multipleLookupValues siempre viene envuelto como
+// { linkedRecordId, value }[] (nunca los valores planos), sin importar el tipo
+// del campo original. Renderizar el wrapper directo dispara el error de React
+// "Objects are not valid as a React child".
 function getLookupFirst<T>(record: AirtableRecord, table: Table | undefined, fieldId: string): T | null {
   const field = table?.getFieldIfExists(fieldId);
   if (!field) return null;
-  const value = record.getCellValue(field) as T[] | null;
-  return value && value.length > 0 ? (value[0] as T) : null;
+  const value = record.getCellValue(field) as Array<{ linkedRecordId: string; value: T }> | null;
+  return value && value.length > 0 ? (value[0]?.value ?? null) : null;
+}
+
+// NOMINA_EMPLEADO_LOOKUP hace lookup del campo Empleado (multipleRecordLinks)
+// de Control Horario, así que cada entrada trae un value anidado que es a su
+// vez un arreglo de {id, name}.
+function getEmpleadoName(record: AirtableRecord, nominaTable: Table | undefined): string | undefined {
+  const links = getLookupFirst<LinkValue[]>(record, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP);
+  return links && links.length > 0 ? links[0]?.name : undefined;
 }
 
 // Status es un campo de fórmula (singleSelect) directamente en Nómina, no un
@@ -1231,8 +1243,8 @@ function NominaManager({
     groups.sort((a, b) => b.sortKey - a.sortKey);
     for (const group of groups) {
       group.records.sort((a, b) => {
-        const nameA = getLookupFirst<LinkValue>(a, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP)?.name ?? '';
-        const nameB = getLookupFirst<LinkValue>(b, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP)?.name ?? '';
+        const nameA = getEmpleadoName(a, nominaTable) ?? '';
+        const nameB = getEmpleadoName(b, nominaTable) ?? '';
         return nameA.localeCompare(nameB);
       });
     }
@@ -1270,7 +1282,7 @@ function NominaManager({
             <h3 className="text-sm font-semibold text-gray-700 mb-3">{group.label}</h3>
             <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 overflow-hidden">
               {group.records.map(record => {
-                const empleado = getLookupFirst<LinkValue>(record, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP);
+                const empleadoName = getEmpleadoName(record, nominaTable);
                 const status = getStatusName(record, nominaTable);
                 return (
                   <button
@@ -1279,7 +1291,7 @@ function NominaManager({
                     className="w-full flex items-center justify-between p-3 hover:bg-gray-50 text-left hover:cursor-pointer"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{empleado?.name ?? 'Sin empleado'}</p>
+                      <p className="text-sm font-medium text-gray-800">{empleadoName ?? 'Sin empleado'}</p>
                       <p className="text-xs text-gray-500">{group.label}</p>
                     </div>
                     <NominaStatusBadge status={status} />
@@ -1361,7 +1373,7 @@ function NominaDetailModal({
   const currentPagado = (pagadoField ? (record.getCellValue(pagadoField) as number | null) : null) ?? 0;
   const [pagadoValue, setPagadoValue] = useState<string>(String(currentPagado));
 
-  const empleado = getLookupFirst<LinkValue>(record, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP);
+  const empleadoName = getEmpleadoName(record, nominaTable);
   const semana = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP);
   const status = getStatusName(record, nominaTable);
   const faltanteField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_FALTANTE);
@@ -1404,7 +1416,7 @@ function NominaDetailModal({
         <div className="flex items-start justify-between p-5 border-b border-gray-200">
           <div>
             <h2 className="text-lg font-medium text-gray-800">Pago de Nómina</h2>
-            <p className="text-sm text-gray-500">{empleado?.name ?? 'Sin empleado'} · {semana}</p>
+            <p className="text-sm text-gray-500">{empleadoName ?? 'Sin empleado'} · {semana}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
             <XIcon className="w-5 h-5" />
