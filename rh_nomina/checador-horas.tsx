@@ -2010,9 +2010,9 @@ interface FilterDropdownProps {
   multiSelect?: boolean;
 }
 
-// Un solo componente Dropdown para filtros (multi-select con checkboxes) y
-// selección simple (p. ej. el Empleado del formulario de Agregar Control
-// Horario), siguiendo el patrón de Pedidos.
+// Un solo componente Dropdown para filtros (multi-select con filas
+// resaltadas, sin checkboxes) y selección simple (p. ej. el Empleado del
+// formulario de Agregar Control Horario), siguiendo el patrón de Pedidos.
 function FilterDropdown({ label, values, options, onChange, multiSelect = true }: FilterDropdownProps): React.ReactElement {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

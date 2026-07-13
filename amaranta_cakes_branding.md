@@ -176,6 +176,8 @@ Un solo componente `Dropdown` para todos los casos (filtros, edición de campo, 
 **Trigger:**
 - Estado vacío → muestra el nombre del campo/filtro como placeholder.
 - Con valor seleccionado → muestra el valor; el ícono `CaretDown` se **reemplaza** por `X` para limpiar. Nunca ambos íconos a la vez.
+- El limpiado vive **dentro del trigger** (el ícono `X`) — nunca un link de texto "Limpiar" aparte, al lado o debajo del control.
+- Esta misma convención (ícono que se reemplaza por `X` dentro del control, sin link de texto separado) aplica a **cualquier trigger de filtro**, sea o no un Dropdown — p. ej. un selector de fecha standalone también reemplaza su ícono por `X` cuando hay una fecha seleccionada.
 - El caret rota 180° cuando el panel está abierto.
 - Hover: `border-accent_hover_border`, focus: `border-accent_focus_border` + `ring-1 ring-accent_focus_ring`.
 
@@ -183,7 +185,7 @@ Un solo componente `Dropdown` para todos los casos (filtros, edición de campo, 
 - `absolute top-full left-0 mt-1 z-50`
 - `rounded-lg shadow-lg border border_brand`
 - `max-h-[260px] overflow-y-auto`
-- Opción seleccionada: `bg-accent_soft text-accent_selected_text font-medium` — nunca checkbox.
+- Opción seleccionada: `bg-accent_soft text-accent_selected_text font-medium` — nunca checkbox, ni en single-select ni en multi-select. La fila resaltada es el único indicador de selección; no agregar `<input type="checkbox">` a las opciones aunque el dropdown acepte múltiples valores.
 - Hover de opción: `hover:bg-gray-50 dark:hover:bg-white/5`.
 - Nunca agregar opción "Todos" — sin selección ya significa sin filtro aplicado.
 - Linked-record dropdowns incluyen campo de búsqueda interno; el panel usa `z-[70]` (para estar sobre modales).
