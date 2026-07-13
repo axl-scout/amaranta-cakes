@@ -18,6 +18,7 @@ import {
   CalendarIcon,
   SpinnerIcon,
   XIcon,
+  CheckIcon,
 } from '@phosphor-icons/react';
 
 // ─── Rosewood palette: sigue el tema del sistema (claro/oscuro) ──────────────
@@ -67,6 +68,7 @@ const FIELD_IDS = {
   NOMINA_HORAS_EXTRA_TRABAJADAS: 'fldgRNm7KvbbuNfN4',
   NOMINA_MONTO_HORAS_ORDINARIAS: 'fldIwndVNw3FIk9xH',
   NOMINA_MONTO_HORAS_EXTRA: 'fld5Vt19hf3n6396r',
+  NOMINA_PUNTUALIDAD_SEMANA: 'fldgOQPzr0M8UQjdb',
 } as const;
 
 const EMPLOYEE_NUMBERS_EXCLUDED = [5, 6, 7];
@@ -1809,6 +1811,55 @@ function NominaStatusBadge({ status }: { status: string | undefined }): React.Re
   }
 }
 
+function PuntualidadBadge({ value }: { value: boolean | null }): React.ReactElement {
+  if (value === null) {
+    return (
+      <span className="inline-flex items-center gap-1 text-base bg-gray-100 text-gray-500 px-2 py-1 rounded-full border border-gray-200 dark:bg-white/5 dark:text-gray-500 dark:border-[#382C2E]">
+        Sin datos
+      </span>
+    );
+  }
+  if (value) {
+    return (
+      <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
+        <CheckCircleIcon className="w-3 h-3" />
+        Cumplida
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-600 px-2 py-1 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
+      No cumplida
+    </span>
+  );
+}
+
+interface ExtraAutorizadasToggleProps {
+  checked: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+}
+
+// Toggle circular suave (en vez de un checkbox nativo) para marcar si las
+// horas extra de un record de Control Horario cuentan para el pago.
+function ExtraAutorizadasToggle({ checked, disabled, onToggle }: ExtraAutorizadasToggleProps): React.ReactElement {
+  return (
+    <button
+      type="button"
+      title="Horas Extra Autorizadas"
+      disabled={disabled}
+      onClick={onToggle}
+      className={`inline-flex items-center justify-center w-6 h-6 rounded-full border transition-colors ${
+        checked
+          ? 'bg-rose-400 border-rose-400 text-white dark:bg-rose-500 dark:border-rose-500'
+          : 'bg-transparent border-gray-300 text-transparent hover:border-rose-300 dark:border-[#382C2E] dark:hover:border-rose-400/50'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+      <CheckIcon className="w-3.5 h-3.5" weight="bold" />
+    </button>
+  );
+}
+
 interface NominaDetailModalProps {
   record: AirtableRecord;
   nominaTable: Table;
@@ -1849,6 +1900,8 @@ function NominaDetailModal({
   const montoHorasOrdinariasDisplay = montoHorasOrdinariasField ? record.getCellValueAsString(montoHorasOrdinariasField) : '-';
   const montoHorasExtraField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_EXTRA);
   const montoHorasExtraDisplay = montoHorasExtraField ? record.getCellValueAsString(montoHorasExtraField) : '-';
+  const puntualidadField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_PUNTUALIDAD_SEMANA);
+  const puntualidadValue = puntualidadField ? (record.getCellValue(puntualidadField) === null ? null : !!record.getCellValue(puntualidadField)) : null;
 
   const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
   const linkedIds = new Set(
@@ -1918,9 +1971,18 @@ function NominaDetailModal({
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
-          <div className="grid grid-cols-3 gap-6">
-            <div className="space-y-3">
+        <div className="p-5 space-y-5">
+          <div>
+            <p className="text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Ordinarias</p>
+            <div className="grid grid-cols-3 gap-6">
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Ordinarias Trabajadas</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasOrdinariasTrabajadasDisplay}</p>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Ordinarias</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasOrdinariasDisplay}</p>
+              </div>
               <div>
                 <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado Ordinario</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
@@ -1934,6 +1996,20 @@ function NominaDetailModal({
                     className="w-full py-1.5 px-1 text-lg outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Extra</p>
+            <div className="grid grid-cols-3 gap-6">
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Extra Trabajadas</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasExtraTrabajadasDisplay}</p>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Extra</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasExtraDisplay}</p>
               </div>
               <div>
                 <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado Extra</label>
@@ -1949,31 +2025,18 @@ function NominaDetailModal({
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Faltante</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
-              </div>
             </div>
+          </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Ordinarias Trabajadas</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasOrdinariasTrabajadasDisplay}</p>
-              </div>
-              <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Ordinarias</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasOrdinariasDisplay}</p>
-              </div>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Faltante</label>
+              <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
             </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Extra Trabajadas</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasExtraTrabajadasDisplay}</p>
-              </div>
-              <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Extra</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasExtraDisplay}</p>
+            <div>
+              <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Bono de Puntualidad</label>
+              <div className="py-1">
+                <PuntualidadBadge value={puntualidadValue} />
               </div>
             </div>
           </div>
@@ -2011,13 +2074,13 @@ function NominaDetailModal({
                         {horasExtraField ? chRecord.getCellValueAsString(horasExtraField) : '-'}
                       </td>
                       <td className="py-2 text-center" onClick={e => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={horasExtraAutorizadas}
-                          disabled={!canEditHorasExtraAutorizadas}
-                          onChange={() => toggleHorasExtraAutorizadas(chRecord, horasExtraAutorizadas)}
-                          className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-400 disabled:opacity-50 dark:border-[#382C2E] dark:bg-[#251D1F] cursor-pointer"
-                        />
+                        <div className="flex items-center justify-center">
+                          <ExtraAutorizadasToggle
+                            checked={horasExtraAutorizadas}
+                            disabled={!canEditHorasExtraAutorizadas}
+                            onToggle={() => toggleHorasExtraAutorizadas(chRecord, horasExtraAutorizadas)}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -2123,16 +2186,14 @@ function ControlHorarioDetailModal({
               <label className={labelCls}>Empleado</label>
               <p className="text-lg text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
             </div>
-            <label className="flex items-center gap-2 pb-0.5 cursor-pointer">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-2 pb-0.5">
+              <ExtraAutorizadasToggle
                 checked={currentHorasExtraAutorizadas}
                 disabled={!canEdit || !horasExtraAutorizadasField}
-                onChange={toggleHorasExtraAutorizadas}
-                className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-400 disabled:opacity-50 dark:border-[#382C2E] dark:bg-[#251D1F] cursor-pointer"
+                onToggle={toggleHorasExtraAutorizadas}
               />
               <span className="text-base text-gray-600 dark:text-gray-400 whitespace-nowrap">Horas Extra Autorizadas</span>
-            </label>
+            </div>
           </div>
 
           <div>
