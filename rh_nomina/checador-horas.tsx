@@ -14,6 +14,7 @@ import {
   CaretDownIcon,
   CaretRightIcon,
   SpinnerIcon,
+  XIcon,
 } from '@phosphor-icons/react';
 
 const FIELD_IDS = {
@@ -24,10 +25,20 @@ const FIELD_IDS = {
   CH_ENTRADA: 'fld0kpZvjnYuc7xQG',
   CH_SALIDA: 'fldPsPujWCDvZDLfH',
   CH_SALARIO_POR_HORA: 'fldZiyFvrxp9w9jB3',
+  CH_HORAS_LABORABLES: 'fldcrVMKD2i0cnRlD',
+  CH_HORAS_ORDINARIAS: 'fldueLQHfD1dCEUM9',
+  CH_HORAS_EXTRA: 'fldevmTTeZYuI0gLU',
+  CH_NOMINA: 'fldynty28KdzwAR1c',
   NOMINA_CONTROL_HORARIO: 'fldRpnEkaWG7nPlei',
   NOMINA_SALARIO_POR_HORA_LOOKUP: 'fldAOqUq8L6YFOk6N',
   NOMINA_SALARIO_POR_HORA: 'fldcIgwyl0dfYGS1P',
   NOMINA_PAGO_DE_NOMINA: 'fld5cla35OoJhK1xC',
+  NOMINA_EMPLEADO_LOOKUP: 'fldBa7MqXLRcdjy5w',
+  NOMINA_SEMANA_LOOKUP: 'fld4wtM9gjNNvbayk',
+  NOMINA_INICIO_SEMANA: 'fldbhJaHQKJI0Rb5J',
+  NOMINA_PAGADO: 'fldLYTNNnSlJmye1d',
+  NOMINA_FALTANTE: 'flduXrn2ouC5lVmMl',
+  NOMINA_STATUS: 'fldtQXgaJaAQ9h7Uu',
 } as const;
 
 const EMPLOYEE_NUMBERS_EXCLUDED = [5, 6, 7];
@@ -48,6 +59,35 @@ function parseFechaToDate(fecha: string): Date | null {
   const [year, month, day] = fecha.replace(/\//g, '-').split('-').map(Number);
   if (!year || !month || !day) return null;
   return new Date(year, month - 1, day);
+}
+
+// El reporte del checador puede exportar la fecha como YYYY-MM-DD o como
+// DD/MM/YYYY (formato regional), y a veces con un componente de hora pegado.
+// Sin normalizar a YYYY-MM-DD aquí, parseFechaToDate asume el orden equivocado
+// y la semana calculada queda mal, mezclando días de semanas distintas en el
+// mismo record de Nómina.
+function normalizeFecha(raw: string): string | null {
+  const trimmed = raw.trim().split(/[ T]/)[0] ?? '';
+  const parts = trimmed.split(/[\/\-]/).map(p => p.trim());
+  if (parts.length !== 3) return null;
+
+  const [a, b, c] = parts as [string, string, string];
+  let year: string, month: string, day: string;
+  if (a.length === 4) {
+    [year, month, day] = [a, b, c];
+  } else if (c.length === 4) {
+    [day, month, year] = [a, b, c];
+  } else {
+    return null;
+  }
+
+  if (!/^\d+$/.test(year) || !/^\d+$/.test(month) || !/^\d+$/.test(day)) return null;
+
+  const monthNum = parseInt(month, 10);
+  const dayNum = parseInt(day, 10);
+  if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) return null;
+
+  return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
 // Semana laboral de Amaranta Cakes: lunes a sábado (cerrado domingo).
@@ -231,7 +271,9 @@ function ImportadorChecadorApp(): React.ReactElement {
 
   const empleadosRecords = useRecords(empleadosTable ?? null);
   const controlHorarioRecords = useRecords(controlHorarioTable ?? null);
+  const nominaRecords = useRecords(nominaTable ?? null);
 
+  const [activeTab, setActiveTab] = useState<'importar' | 'nomina'>('importar');
   const [viewState, setViewState] = useState<ViewState>({ stage: 'idle' });
   const [isAddingMoreFiles, setIsAddingMoreFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -325,7 +367,9 @@ function ImportadorChecadorApp(): React.ReactElement {
         if (EMPLOYEE_NUMBERS_EXCLUDED.includes(employeeNumber)) continue;
 
         const employeeName = col1?.trim() ?? '';
-        const fecha = col3?.trim() ?? '';
+        const fechaRaw = col3?.trim() ?? '';
+        const fecha = normalizeFecha(fechaRaw) ?? fechaRaw;
+        const fechaValida = normalizeFecha(fechaRaw) !== null;
         const amEntrada = col4?.trim() || null;
         const amSalida = col5?.trim() || null;
         const pmEntrada = col6?.trim() || null;
@@ -346,7 +390,10 @@ function ImportadorChecadorApp(): React.ReactElement {
         let status: RowStatus;
         let statusMessage: string;
 
-        if (!employeeRecordId) {
+        if (!fechaValida) {
+          status = 'partial';
+          statusMessage = 'Fecha inválida';
+        } else if (!employeeRecordId) {
           status = 'not_found';
           statusMessage = 'Empleado no encontrado';
         } else if (!entradaRaw || !salidaRaw) {
@@ -384,7 +431,7 @@ function ImportadorChecadorApp(): React.ReactElement {
           salidaISO,
           status,
           statusMessage,
-          included: status !== 'not_found' && status !== 'duplicate',
+          included: status !== 'not_found' && status !== 'duplicate' && fechaValida,
         });
       }
 
@@ -667,9 +714,25 @@ function ImportadorChecadorApp(): React.ReactElement {
     );
   }
 
+  if (activeTab === 'nomina') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <TabBar activeTab={activeTab} onChange={setActiveTab} />
+        <NominaManager
+          nominaTable={nominaTable}
+          controlHorarioTable={controlHorarioTable}
+          nominaRecords={nominaRecords}
+          controlHorarioRecords={controlHorarioRecords}
+        />
+      </div>
+    );
+  }
+
   if (viewState.stage === 'idle') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+      <div className="min-h-screen bg-white flex flex-col">
+        <TabBar activeTab={activeTab} onChange={setActiveTab} />
+        <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">
           <UploadSimpleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-800 text-lg mb-4">Sube el reporte semanal del checador (.csv)</p>
@@ -688,16 +751,20 @@ function ImportadorChecadorApp(): React.ReactElement {
             Seleccionar archivo(s)
           </button>
         </div>
+        </div>
       </div>
     );
   }
 
   if (viewState.stage === 'parsing') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+      <div className="min-h-screen bg-white flex flex-col">
+        <TabBar activeTab={activeTab} onChange={setActiveTab} />
+        <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">
           <SpinnerIcon className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
           <p className="text-gray-600">Procesando archivo...</p>
+        </div>
         </div>
       </div>
     );
@@ -705,7 +772,9 @@ function ImportadorChecadorApp(): React.ReactElement {
 
   if (viewState.stage === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+      <div className="min-h-screen bg-white flex flex-col">
+        <TabBar activeTab={activeTab} onChange={setActiveTab} />
+        <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-md">
           <XCircleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <p className="text-gray-800 text-lg mb-2">Error</p>
@@ -716,6 +785,7 @@ function ImportadorChecadorApp(): React.ReactElement {
           >
             Volver a intentar
           </button>
+        </div>
         </div>
       </div>
     );
@@ -778,7 +848,9 @@ function ImportadorChecadorApp(): React.ReactElement {
     const includedRows = rows.filter(r => r.included).length;
 
     return (
-      <div className="min-h-screen bg-white p-6">
+      <div className="min-h-screen bg-white flex flex-col">
+        <TabBar activeTab={activeTab} onChange={setActiveTab} />
+        <div className="p-6">
         <div className="max-w-5xl mx-auto">
           <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-sm text-gray-600">
@@ -843,6 +915,7 @@ function ImportadorChecadorApp(): React.ReactElement {
             </div>
           </div>
         </div>
+        </div>
       </div>
     );
   }
@@ -851,7 +924,9 @@ function ImportadorChecadorApp(): React.ReactElement {
     const { result } = viewState;
 
     return (
-      <div className="min-h-screen bg-white p-6">
+      <div className="min-h-screen bg-white flex flex-col">
+        <TabBar activeTab={activeTab} onChange={setActiveTab} />
+        <div className="p-6">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
             <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -919,6 +994,7 @@ function ImportadorChecadorApp(): React.ReactElement {
               Importar otro archivo
             </button>
           </div>
+        </div>
         </div>
       </div>
     );
@@ -1061,6 +1137,461 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
         </span>
       );
   }
+}
+
+interface TabBarProps {
+  activeTab: 'importar' | 'nomina';
+  onChange: (tab: 'importar' | 'nomina') => void;
+}
+
+function TabBar({ activeTab, onChange }: TabBarProps): React.ReactElement {
+  const tabClass = (tab: 'importar' | 'nomina') =>
+    `px-4 py-3 text-sm font-medium border-b-2 hover:cursor-pointer ${
+      activeTab === tab
+        ? 'border-gray-900 text-gray-900'
+        : 'border-transparent text-gray-500 hover:text-gray-700'
+    }`;
+
+  return (
+    <div className="border-b border-gray-200 px-6 flex gap-2 shrink-0">
+      <button className={tabClass('importar')} onClick={() => onChange('importar')}>
+        Importar
+      </button>
+      <button className={tabClass('nomina')} onClick={() => onChange('nomina')}>
+        Nómina
+      </button>
+    </div>
+  );
+}
+
+function getLookupFirst<T>(record: AirtableRecord, table: Table | undefined, fieldId: string): T | null {
+  const field = table?.getFieldIfExists(fieldId);
+  if (!field) return null;
+  const value = record.getCellValue(field) as T[] | null;
+  return value && value.length > 0 ? (value[0] as T) : null;
+}
+
+// Status es un campo de fórmula (singleSelect) directamente en Nómina, no un
+// lookup, así que su valor no viene envuelto en un arreglo como los lookups.
+function getStatusName(record: AirtableRecord, table: Table | undefined): string | undefined {
+  const field = table?.getFieldIfExists(FIELD_IDS.NOMINA_STATUS);
+  if (!field) return undefined;
+  const value = record.getCellValue(field) as { name: string } | null;
+  return value?.name;
+}
+
+interface LinkValue {
+  id: string;
+  name: string;
+}
+
+interface NominaManagerProps {
+  nominaTable: Table | undefined;
+  controlHorarioTable: Table | undefined;
+  nominaRecords: AirtableRecord[] | null;
+  controlHorarioRecords: AirtableRecord[] | null;
+}
+
+interface NominaWeekGroup {
+  label: string;
+  sortKey: number;
+  records: AirtableRecord[];
+}
+
+function NominaManager({
+  nominaTable,
+  controlHorarioTable,
+  nominaRecords,
+  controlHorarioRecords,
+}: NominaManagerProps): React.ReactElement {
+  const [selectedNominaId, setSelectedNominaId] = useState<string | null>(null);
+  const [selectedControlHorarioId, setSelectedControlHorarioId] = useState<string | null>(null);
+
+  const weekGroups = useMemo<NominaWeekGroup[]>(() => {
+    if (!nominaRecords || !nominaTable) return [];
+
+    const pendientes = nominaRecords.filter(record => {
+      const status = getStatusName(record, nominaTable);
+      return status !== 'Pagado';
+    });
+
+    const groupMap = new Map<string, NominaWeekGroup>();
+    for (const record of pendientes) {
+      const label = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP) ?? 'Semana desconocida';
+      const inicio = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_INICIO_SEMANA);
+      const sortKey = inicio ? new Date(inicio).getTime() : Number.MAX_SAFE_INTEGER;
+
+      if (!groupMap.has(label)) {
+        groupMap.set(label, { label, sortKey, records: [] });
+      }
+      groupMap.get(label)!.records.push(record);
+    }
+
+    const groups = Array.from(groupMap.values());
+    groups.sort((a, b) => b.sortKey - a.sortKey);
+    for (const group of groups) {
+      group.records.sort((a, b) => {
+        const nameA = getLookupFirst<LinkValue>(a, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP)?.name ?? '';
+        const nameB = getLookupFirst<LinkValue>(b, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP)?.name ?? '';
+        return nameA.localeCompare(nameB);
+      });
+    }
+    return groups;
+  }, [nominaRecords, nominaTable]);
+
+  const selectedNominaRecord = useMemo(
+    () => nominaRecords?.find(r => r.id === selectedNominaId) ?? null,
+    [nominaRecords, selectedNominaId]
+  );
+
+  const selectedControlHorarioRecord = useMemo(
+    () => controlHorarioRecords?.find(r => r.id === selectedControlHorarioId) ?? null,
+    [controlHorarioRecords, selectedControlHorarioId]
+  );
+
+  const closeNominaModal = useCallback(() => {
+    setSelectedNominaId(null);
+    setSelectedControlHorarioId(null);
+  }, []);
+
+  if (!nominaTable || !controlHorarioTable) return <></>;
+
+  return (
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-3xl mx-auto space-y-8">
+        {weekGroups.length === 0 && (
+          <p className="text-sm text-gray-500 text-center py-12">
+            No hay registros de Nómina pendientes de pago.
+          </p>
+        )}
+
+        {weekGroups.map(group => (
+          <div key={group.label}>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">{group.label}</h3>
+            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 overflow-hidden">
+              {group.records.map(record => {
+                const empleado = getLookupFirst<LinkValue>(record, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP);
+                const status = getStatusName(record, nominaTable);
+                return (
+                  <button
+                    key={record.id}
+                    onClick={() => setSelectedNominaId(record.id)}
+                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 text-left hover:cursor-pointer"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{empleado?.name ?? 'Sin empleado'}</p>
+                      <p className="text-xs text-gray-500">{group.label}</p>
+                    </div>
+                    <NominaStatusBadge status={status} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {selectedNominaRecord && (
+        <NominaDetailModal
+          record={selectedNominaRecord}
+          nominaTable={nominaTable}
+          controlHorarioTable={controlHorarioTable}
+          controlHorarioRecords={controlHorarioRecords}
+          onClose={closeNominaModal}
+          onSelectControlHorario={setSelectedControlHorarioId}
+        />
+      )}
+
+      {selectedControlHorarioRecord && (
+        <ControlHorarioDetailModal
+          record={selectedControlHorarioRecord}
+          controlHorarioTable={controlHorarioTable}
+          onClose={() => setSelectedControlHorarioId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function NominaStatusBadge({ status }: { status: string | undefined }): React.ReactElement {
+  switch (status) {
+    case 'Pagado':
+      return (
+        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+          <CheckCircleIcon className="w-3 h-3" />
+          Pagado
+        </span>
+      );
+    case 'Parcial':
+      return (
+        <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded">
+          <WarningIcon className="w-3 h-3" />
+          Parcial
+        </span>
+      );
+    default:
+      return (
+        <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+          {status ?? 'Pendiente'}
+        </span>
+      );
+  }
+}
+
+interface NominaDetailModalProps {
+  record: AirtableRecord;
+  nominaTable: Table;
+  controlHorarioTable: Table;
+  controlHorarioRecords: AirtableRecord[] | null;
+  onClose: () => void;
+  onSelectControlHorario: (id: string) => void;
+}
+
+function NominaDetailModal({
+  record,
+  nominaTable,
+  controlHorarioTable,
+  controlHorarioRecords,
+  onClose,
+  onSelectControlHorario,
+}: NominaDetailModalProps): React.ReactElement {
+  const pagadoField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_PAGADO);
+  const canEditPagado = !!pagadoField && nominaTable.hasPermissionToUpdateRecords();
+
+  const currentPagado = (pagadoField ? (record.getCellValue(pagadoField) as number | null) : null) ?? 0;
+  const [pagadoValue, setPagadoValue] = useState<string>(String(currentPagado));
+
+  const empleado = getLookupFirst<LinkValue>(record, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP);
+  const semana = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP);
+  const status = getStatusName(record, nominaTable);
+  const faltanteField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_FALTANTE);
+  const faltanteDisplay = faltanteField ? record.getCellValueAsString(faltanteField) : '';
+
+  const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
+  const linkedIds = new Set(
+    (controlHorarioField ? (record.getCellValue(controlHorarioField) as LinkValue[] | null) : null)?.map(
+      l => l.id
+    ) ?? []
+  );
+  const linkedRecords = (controlHorarioRecords ?? []).filter(r => linkedIds.has(r.id));
+
+  const entradaField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_ENTRADA);
+  linkedRecords.sort((a, b) => {
+    const da = entradaField ? ((a.getCellValue(entradaField) as string | null) ?? '') : '';
+    const db = entradaField ? ((b.getCellValue(entradaField) as string | null) ?? '') : '';
+    return da.localeCompare(db);
+  });
+
+  const savePagado = useCallback(() => {
+    if (!canEditPagado || !pagadoField) return;
+    const parsed = parseFloat(pagadoValue);
+    const nextValue = isNaN(parsed) ? 0 : parsed;
+    if (nextValue === currentPagado) return;
+    nominaTable.updateRecordAsync(record.id, { [FIELD_IDS.NOMINA_PAGADO]: nextValue }).catch(error => {
+      console.error('Error updating Pagado:', error);
+    });
+  }, [canEditPagado, pagadoField, pagadoValue, currentPagado, nominaTable, record.id]);
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between p-5 border-b border-gray-200">
+          <div>
+            <h2 className="text-lg font-medium text-gray-800">Pago de Nómina</h2>
+            <p className="text-sm text-gray-500">{empleado?.name ?? 'Sin empleado'} · {semana}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Pagado</label>
+              <div className="flex items-center border border-gray-300 rounded-md px-2">
+                <span className="text-gray-500 text-sm">$</span>
+                <input
+                  type="number"
+                  value={pagadoValue}
+                  disabled={!canEditPagado}
+                  onChange={e => setPagadoValue(e.target.value)}
+                  onBlur={savePagado}
+                  className="w-full py-1.5 px-1 text-sm outline-none disabled:bg-transparent disabled:text-gray-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Faltante</label>
+              <p className="text-sm text-gray-800 py-1.5">{faltanteDisplay}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Estatus</label>
+              <div className="py-1">
+                <NominaStatusBadge status={status} />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-gray-500 mb-2">Control Horario</p>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
+                  <th className="pb-2 font-medium">Fecha</th>
+                  <th className="pb-2 font-medium">Horas Ordinarias</th>
+                  <th className="pb-2 font-medium">Horas Extra</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {linkedRecords.map(chRecord => {
+                  const entrada = entradaField ? (chRecord.getCellValue(entradaField) as string | null) : null;
+                  const horasOrdField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_ORDINARIAS);
+                  const horasExtraField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_EXTRA);
+                  return (
+                    <tr
+                      key={chRecord.id}
+                      onClick={() => onSelectControlHorario(chRecord.id)}
+                      className="cursor-pointer hover:bg-gray-50"
+                    >
+                      <td className="py-2 text-gray-800">{entrada ? formatFechaLarga(entrada.split('T')[0] ?? '') : '-'}</td>
+                      <td className="py-2 text-gray-800">
+                        {horasOrdField ? chRecord.getCellValueAsString(horasOrdField) : '-'}
+                      </td>
+                      <td className="py-2 text-gray-800">
+                        {horasExtraField ? chRecord.getCellValueAsString(horasExtraField) : '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ControlHorarioDetailModalProps {
+  record: AirtableRecord;
+  controlHorarioTable: Table;
+  onClose: () => void;
+}
+
+function ControlHorarioDetailModal({
+  record,
+  controlHorarioTable,
+  onClose,
+}: ControlHorarioDetailModalProps): React.ReactElement {
+  const empleadoField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_EMPLEADO);
+  const entradaField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_ENTRADA);
+  const salidaField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_SALIDA);
+  const horasLaborablesField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_LABORABLES);
+  const horasOrdField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_ORDINARIAS);
+  const horasExtraField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_EXTRA);
+
+  const canEdit = controlHorarioTable.hasPermissionToUpdateRecords();
+
+  const empleado = empleadoField ? (record.getCellValue(empleadoField) as LinkValue[] | null)?.[0] : null;
+  const currentEntrada = entradaField ? (record.getCellValue(entradaField) as string | null) : null;
+  const currentSalida = salidaField ? (record.getCellValue(salidaField) as string | null) : null;
+
+  const [entradaValue, setEntradaValue] = useState(currentEntrada ? currentEntrada.slice(0, 16) : '');
+  const [salidaValue, setSalidaValue] = useState(currentSalida ? currentSalida.slice(0, 16) : '');
+
+  const saveEntrada = useCallback(() => {
+    if (!canEdit || !entradaField || !entradaValue) return;
+    const iso = `${entradaValue}:00-06:00`;
+    if (iso === currentEntrada) return;
+    controlHorarioTable.updateRecordAsync(record.id, { [FIELD_IDS.CH_ENTRADA]: iso }).catch(error => {
+      console.error('Error updating Entrada:', error);
+    });
+  }, [canEdit, entradaField, entradaValue, currentEntrada, controlHorarioTable, record.id]);
+
+  const saveSalida = useCallback(() => {
+    if (!canEdit || !salidaField || !salidaValue) return;
+    const iso = `${salidaValue}:00-06:00`;
+    if (iso === currentSalida) return;
+    controlHorarioTable.updateRecordAsync(record.id, { [FIELD_IDS.CH_SALIDA]: iso }).catch(error => {
+      console.error('Error updating Salida:', error);
+    });
+  }, [canEdit, salidaField, salidaValue, currentSalida, controlHorarioTable, record.id]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-lg shadow-2xl border border-gray-200 max-w-md w-full"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between p-4 border-b border-gray-200">
+          <h3 className="text-sm font-medium text-gray-800">Detalle de Control Horario</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
+            <XIcon className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Empleado</label>
+            <p className="text-sm text-gray-800">{empleado?.name ?? 'Sin empleado'}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Entrada</label>
+              <input
+                type="datetime-local"
+                value={entradaValue}
+                disabled={!canEdit}
+                onChange={e => setEntradaValue(e.target.value)}
+                onBlur={saveEntrada}
+                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm outline-none disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Salida</label>
+              <input
+                type="datetime-local"
+                value={salidaValue}
+                disabled={!canEdit}
+                onChange={e => setSalidaValue(e.target.value)}
+                onBlur={saveSalida}
+                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm outline-none disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Horas Laborables</label>
+              <p className="text-sm text-gray-800">
+                {horasLaborablesField ? record.getCellValueAsString(horasLaborablesField) : '-'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Horas Ordinarias</label>
+              <p className="text-sm text-gray-800">
+                {horasOrdField ? record.getCellValueAsString(horasOrdField) : '-'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Horas Extra</label>
+              <p className="text-sm text-gray-800">
+                {horasExtraField ? record.getCellValueAsString(horasExtraField) : '-'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 initializeBlock({ interface: () => <ImportadorChecadorApp /> });
