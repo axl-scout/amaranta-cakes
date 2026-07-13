@@ -1728,10 +1728,12 @@ function NominaManager({
               <button
                 type="button"
                 onClick={() => setShowDateFilterCalendar(o => !o)}
-                className="inline-flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50 hover:cursor-pointer"
+                className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50 hover:cursor-pointer"
               >
-                <CalendarIcon size={16} />
-                {dateFilterValue ? formatFechaLarga(formatDateForComparison(dateFilterValue)) : 'Fecha'}
+                <span className="flex items-center gap-2 truncate">
+                  <CalendarIcon size={16} className="shrink-0" />
+                  <span className="truncate">{dateFilterValue ? formatFechaLarga(formatDateForComparison(dateFilterValue)) : 'Fecha'}</span>
+                </span>
               </button>
               {showDateFilterCalendar && (
                 <MiniCalendar
@@ -1760,16 +1762,16 @@ function NominaManager({
           <button
             onClick={onOpenImport}
             title="Importar"
-            className="bg-gray-900 text-white p-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center justify-center dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+            className="h-10 w-10 bg-gray-900 text-white rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center justify-center shrink-0 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
           >
             <UploadSimpleIcon className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowAddControlHorarioModal(true)}
-            className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-base dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+            className="h-10 bg-gray-900 text-white px-4 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-base dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
           >
             <PlusIcon className="w-4 h-4" />
-            Agregar Control Horario
+            Agregar
           </button>
         </div>
       </div>
@@ -2056,14 +2058,6 @@ function FilterDropdown({ label, values, options, onChange, multiSelect = true }
             )}
             {options.map(opt => {
               const sel = values.includes(opt.id);
-              if (multiSelect) {
-                return (
-                  <label key={opt.id} className="flex items-center gap-2 px-3 py-1.5 text-base text-gray-700 hover:bg-gray-50 cursor-pointer dark:text-gray-300 dark:hover:bg-white/5">
-                    <input type="checkbox" checked={sel} onChange={() => selectOption(opt.id)} className="accent-rose-600" />
-                    <span className="truncate">{opt.name}</span>
-                  </label>
-                );
-              }
               return (
                 <button
                   key={opt.id}
