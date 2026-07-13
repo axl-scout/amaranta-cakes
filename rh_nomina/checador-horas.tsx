@@ -13,6 +13,9 @@ import {
   XCircleIcon,
   CaretDownIcon,
   CaretRightIcon,
+  CaretLeftIcon,
+  CaretUpIcon,
+  CalendarIcon,
   SpinnerIcon,
   XIcon,
 } from '@phosphor-icons/react';
@@ -58,6 +61,10 @@ const FIELD_IDS = {
   NOMINA_PAGADO: 'fldLYTNNnSlJmye1d',
   NOMINA_FALTANTE: 'flduXrn2ouC5lVmMl',
   NOMINA_STATUS: 'fldtQXgaJaAQ9h7Uu',
+  NOMINA_HORAS_ORDINARIAS_TRABAJADAS: 'fld3E5xf6fjMVwRlU',
+  NOMINA_HORAS_EXTRA_TRABAJADAS: 'fldgRNm7KvbbuNfN4',
+  NOMINA_MONTO_HORAS_ORDINARIAS: 'fldIwndVNw3FIk9xH',
+  NOMINA_MONTO_HORAS_EXTRA: 'fld5Vt19hf3n6396r',
 } as const;
 
 const EMPLOYEE_NUMBERS_EXCLUDED = [5, 6, 7];
@@ -67,11 +74,17 @@ const MESES_ES = [
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ];
 
+const DIAS_SEMANA_ES = [
+  'domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado',
+];
+
 function formatFechaLarga(fecha: string): string {
   const [year, month, day] = fecha.replace(/\//g, '-').split('-');
   const mes = MESES_ES[parseInt(month ?? '', 10) - 1];
   if (!year || !day || !mes) return fecha;
-  return `${day} de ${mes} de ${year}`;
+  const date = parseFechaToDate(fecha);
+  const diaSemana = date ? DIAS_SEMANA_ES[date.getDay()] : null;
+  return diaSemana ? `${diaSemana}, ${day} de ${mes} de ${year}` : `${day} de ${mes} de ${year}`;
 }
 
 function parseFechaToDate(fecha: string): Date | null {
@@ -123,7 +136,236 @@ function getWeekRange(fecha: string): { key: string; start: Date; end: Date } {
 
 function formatFechaCorta(date: Date): string {
   const mes = MESES_ES[date.getMonth()];
-  return `${String(date.getDate()).padStart(2, '0')} de ${mes}`;
+  const diaSemana = DIAS_SEMANA_ES[date.getDay()];
+  return `${diaSemana} ${String(date.getDate()).padStart(2, '0')} de ${mes}`;
+}
+
+function formatDateForComparison(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// ─── Calendario y selector de hora (estilo Pedidos) ──────────────────────────
+function to12h(h24: number): { h: number; p: 'AM' | 'PM' } {
+  if (h24 === 0) return { h: 12, p: 'AM' };
+  if (h24 === 12) return { h: 12, p: 'PM' };
+  if (h24 < 12) return { h: h24, p: 'AM' };
+  return { h: h24 - 12, p: 'PM' };
+}
+
+function to24h(h12: number, p: 'AM' | 'PM'): number {
+  if (p === 'AM') return h12 === 12 ? 0 : h12;
+  return h12 === 12 ? 12 : h12 + 12;
+}
+
+function fmtTimeDisplay(h24: number, m: number): string {
+  const { h, p } = to12h(h24);
+  return `${h}:${String(m).padStart(2, '0')} ${p}`;
+}
+
+function parseTimeValue(v: string): { h24: number; m: number } | null {
+  if (!v) return null;
+  const parts = v.split(':');
+  const h24 = parseInt(parts[0] ?? '0', 10);
+  const m = parseInt(parts[1] ?? '0', 10);
+  if (isNaN(h24) || isNaN(m)) return null;
+  return { h24, m };
+}
+
+const SPIN_HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+const SPIN_MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+const SPIN_PERIODS = ['AM', 'PM'] as const;
+
+interface SpinnerColumnProps {
+  values: readonly string[];
+  index: number;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+function SpinnerColumn({ values, index, onPrev, onNext }: SpinnerColumnProps): React.ReactElement {
+  const colRef = useRef<HTMLDivElement>(null);
+  const prevRef = useRef(onPrev);
+  const nextRef = useRef(onNext);
+  useEffect(() => { prevRef.current = onPrev; nextRef.current = onNext; });
+  useEffect(() => {
+    const el = colRef.current;
+    if (!el) return;
+    const handle = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY > 0) nextRef.current(); else prevRef.current();
+    };
+    el.addEventListener('wheel', handle, { passive: false });
+    return () => el.removeEventListener('wheel', handle);
+  }, []);
+  const btnCls = 'p-0.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors dark:hover:text-rose-300 dark:hover:bg-white/5';
+  const nc = 'text-3xl font-bold text-gray-800 dark:text-gray-200 w-14 text-center tabular-nums select-none';
+  return (
+    <div ref={colRef} className="flex flex-col items-center select-none" style={{ userSelect: 'none' }}>
+      <button type="button" onMouseDown={e => e.preventDefault()} onClick={onPrev} className={btnCls}><CaretUpIcon size={15} /></button>
+      <div className={nc}>{values[index]}</div>
+      <button type="button" onMouseDown={e => e.preventDefault()} onClick={onNext} className={btnCls}><CaretDownIcon size={15} /></button>
+    </div>
+  );
+}
+
+interface MiniCalendarProps {
+  selectedDate: Date;
+  onSelectDate: (date: Date) => void;
+  onClose: () => void;
+}
+
+function MiniCalendar({ selectedDate, onSelectDate, onClose }: MiniCalendarProps): React.ReactElement {
+  const [viewDate, setViewDate] = useState(new Date(selectedDate));
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [onClose]);
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(i);
+  const monthLabel = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(viewDate);
+  const todayStr = formatDateForComparison(new Date());
+  const selectedStr = formatDateForComparison(selectedDate);
+  return (
+    <div ref={containerRef} className="absolute top-full left-0 mt-1 z-50 bg-white border border-[#E9D9D9] rounded-lg shadow-lg p-3 w-96 dark:bg-[#251D1F] dark:border-[#382C2E]">
+      <div className="flex items-center justify-between mb-2">
+        <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} className="p-1 hover:bg-rose-50 rounded transition-colors dark:hover:bg-white/5">
+          <CaretLeftIcon size={18} className="text-gray-600 dark:text-gray-400" />
+        </button>
+        <span className="text-2xl font-medium text-gray-800 capitalize dark:text-gray-200">{monthLabel}</span>
+        <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} className="p-1 hover:bg-rose-50 rounded transition-colors dark:hover:bg-white/5">
+          <CaretRightIcon size={18} className="text-gray-600 dark:text-gray-400" />
+        </button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map(d => (
+          <div key={d} className="text-xl text-gray-500 text-center dark:text-gray-500">{d}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day, idx) => {
+          if (day === null) return <div key={idx} />;
+          const dateStr = formatDateForComparison(new Date(year, month, day));
+          const isToday = dateStr === todayStr;
+          const isSelected = dateStr === selectedStr;
+          let cls = 'text-2xl rounded transition-colors text-center py-1 cursor-pointer hover:bg-rose-50 text-gray-800 dark:text-gray-200 dark:hover:bg-white/5';
+          if (isToday && !isSelected) cls = 'text-2xl rounded transition-colors text-center py-1 cursor-pointer bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300';
+          if (isSelected) cls = 'text-2xl rounded transition-colors text-center py-1 cursor-pointer bg-rose-600 text-white dark:bg-rose-500';
+          return (
+            <button key={idx} type="button" onClick={() => onSelectDate(new Date(year, month, day))} className={cls}>
+              {day}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-2 text-center">
+        <button type="button" onClick={() => onSelectDate(new Date())} className="text-xl text-rose-600 hover:underline dark:text-rose-400">
+          Ir a hoy
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface CustomTimePickerProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
+
+// Selector de hora con precisión de 1 minuto (a diferencia del picker de
+// Pedidos que redondea a cuartos de hora): los checadores registran entradas
+// y salidas en minutos arbitrarios.
+function CustomTimePicker({ value, onChange, placeholder = 'Hora' }: CustomTimePickerProps): React.ReactElement {
+  const initParsed = parseTimeValue(value);
+  const init12 = initParsed ? to12h(initParsed.h24) : null;
+  const [open, setOpen] = useState(false);
+  const [inputText, setInputText] = useState(initParsed ? fmtTimeDisplay(initParsed.h24, initParsed.m) : '');
+  const [selHour12, setSelHour12] = useState<number>(init12?.h ?? 12);
+  const [selMinute, setSelMinute] = useState<number>(initParsed ? initParsed.m : 0);
+  const [selPeriod, setSelPeriod] = useState<'AM' | 'PM'>(init12?.p ?? 'AM');
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const parsed = parseTimeValue(value);
+    if (parsed) {
+      const { h, p } = to12h(parsed.h24);
+      setSelHour12(h); setSelMinute(parsed.m); setSelPeriod(p);
+      setInputText(fmtTimeDisplay(parsed.h24, parsed.m));
+    } else {
+      setInputText('');
+    }
+  }, [value]);
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, []);
+  const hourIdx = selHour12 - 1;
+  const minIdx = selMinute;
+  const periodIdx = selPeriod === 'PM' ? 1 : 0;
+  const emitUpdate = (h12: number, m: number, p: 'AM' | 'PM') => {
+    const h24 = to24h(h12, p);
+    const str = `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    setInputText(fmtTimeDisplay(h24, m));
+    onChange(str);
+  };
+  const prevHour = () => { const n = ((selHour12 - 2 + 12) % 12) + 1; setSelHour12(n); emitUpdate(n, selMinute, selPeriod); };
+  const nextHour = () => { const n = (selHour12 % 12) + 1; setSelHour12(n); emitUpdate(n, selMinute, selPeriod); };
+  const prevMinute = () => { const m = (selMinute - 1 + 60) % 60; setSelMinute(m); emitUpdate(selHour12, m, selPeriod); };
+  const nextMinute = () => { const m = (selMinute + 1) % 60; setSelMinute(m); emitUpdate(selHour12, m, selPeriod); };
+  const togglePeriod = () => { const p: 'AM' | 'PM' = selPeriod === 'AM' ? 'PM' : 'AM'; setSelPeriod(p); emitUpdate(selHour12, selMinute, p); };
+  const handleInputBlur = () => {
+    const text = inputText.trim();
+    if (!text) return;
+    const m12 = text.match(/^(\d{1,2}):(\d{2})\s*(am|pm|AM|PM)?$/i);
+    if (m12) {
+      const h = parseInt(m12[1]!); const m = parseInt(m12[2]!);
+      const pStr = (m12[3] ?? '').toLowerCase();
+      const p: 'AM' | 'PM' = pStr.startsWith('p') ? 'PM' : pStr.startsWith('a') ? 'AM' : selPeriod;
+      if (h >= 1 && h <= 12 && m >= 0 && m < 60) {
+        setSelHour12(h); setSelMinute(m); setSelPeriod(p);
+        emitUpdate(h, m, p);
+        return;
+      }
+    }
+    const prev = parseTimeValue(value);
+    setInputText(prev ? fmtTimeDisplay(prev.h24, prev.m) : '');
+  };
+  return (
+    <div ref={containerRef} className="relative">
+      <input
+        type="text"
+        value={inputText}
+        onChange={e => setInputText(e.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={handleInputBlur}
+        placeholder={placeholder}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xl text-gray-900 outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-100 dark:placeholder-gray-600 dark:focus:border-rose-400"
+      />
+      {open && (
+        <div className="absolute top-full right-0 mt-1 z-[70] bg-white border border-[#E9D9D9] rounded-lg shadow-md p-2 flex items-center gap-0.5 dark:bg-[#251D1F] dark:border-[#382C2E]">
+          <SpinnerColumn values={SPIN_HOURS} index={hourIdx} onPrev={prevHour} onNext={nextHour} />
+          <span className="text-gray-300 text-2xl font-bold mb-0.5 px-0.5 dark:text-gray-600">:</span>
+          <SpinnerColumn values={SPIN_MINUTES} index={minIdx} onPrev={prevMinute} onNext={nextMinute} />
+          <div className="w-px h-6 bg-gray-200 mx-1.5 dark:bg-white/10" />
+          <SpinnerColumn values={SPIN_PERIODS} index={periodIdx} onPrev={togglePeriod} onNext={togglePeriod} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function getISOWeekNumber(date: Date): number {
@@ -741,8 +983,8 @@ function ImportadorChecadorApp(): React.ReactElement {
       <div className="min-h-screen flex items-center justify-center bg-white p-8">
         <div className="text-center">
           <XCircleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-800 text-lg">Error de configuración</p>
-          <p className="text-gray-500 text-sm mt-2">{errorState.message}</p>
+          <p className="text-gray-800 text-2xl">Error de configuración</p>
+          <p className="text-gray-500 text-lg mt-2">{errorState.message}</p>
         </div>
       </div>
     );
@@ -753,8 +995,8 @@ function ImportadorChecadorApp(): React.ReactElement {
       <div className="min-h-screen flex items-center justify-center bg-white p-8">
         <div className="text-center">
           <WarningIcon className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <p className="text-gray-800 text-lg font-medium">Configuración Requerida</p>
-          <p className="text-gray-500 text-sm mt-2">
+          <p className="text-gray-800 text-2xl font-medium">Configuración Requerida</p>
+          <p className="text-gray-500 text-lg mt-2">
             Configura las tablas de Empleados, Control Horario y Nómina en el panel de propiedades.
           </p>
         </div>
@@ -777,8 +1019,8 @@ function ImportadorChecadorApp(): React.ReactElement {
         >
           <div>
             <UploadSimpleIcon className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-800 dark:text-[#F5F3EF] text-lg mb-1">Arrastra el reporte semanal del checador (.csv)</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">o selecciónalo desde tu computadora</p>
+            <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl mb-1">Arrastra el reporte semanal del checador (.csv)</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">o selecciónalo desde tu computadora</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -814,8 +1056,8 @@ function ImportadorChecadorApp(): React.ReactElement {
         <div className="flex items-center justify-center py-16">
           <div className="text-center max-w-md mx-auto">
             <XCircleIcon className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-            <p className="text-gray-800 dark:text-[#F5F3EF] text-lg mb-2">Error</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">{viewState.message}</p>
+            <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl mb-2">Error</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">{viewState.message}</p>
             <button
               onClick={handleReset}
               className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
@@ -886,7 +1128,7 @@ function ImportadorChecadorApp(): React.ReactElement {
       return (
         <div>
           <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-lg border border-[#E9D9D9] dark:border-[#382C2E]">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-lg text-gray-600 dark:text-gray-400">
               {totalEmployees} empleados · {validRows} registros válidos · {warningRows} advertencias · {errorRows} errores
             </p>
           </div>
@@ -894,7 +1136,7 @@ function ImportadorChecadorApp(): React.ReactElement {
           <div className="space-y-8 mb-6">
             {weekGroups.map(week => (
               <div key={week.key}>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   {formatWeekLabel(week.weekNumber, week.start, week.end)}
                 </h3>
                 <div className="space-y-4">
@@ -958,7 +1200,7 @@ function ImportadorChecadorApp(): React.ReactElement {
         <div>
           <div className="text-center mb-8">
             <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-medium text-gray-800 dark:text-[#F5F3EF] mb-2">Importación Completada</h2>
+            <h2 className="text-3xl font-medium text-gray-800 dark:text-[#F5F3EF] mb-2">Importación Completada</h2>
             <p className="text-gray-600 dark:text-gray-400">
               {result.totalControlHorario} registros de Control Horario creados, {result.totalNomina} registros de Nómina creados
             </p>
@@ -966,23 +1208,23 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.employees.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Resumen por empleado y semana</h3>
+              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Resumen por empleado y semana</h3>
               <div className="bg-gray-50 dark:bg-white/5 rounded-lg border border-[#E9D9D9] dark:border-[#382C2E] divide-y divide-[#E9D9D9] dark:divide-[#382C2E]">
                 {result.employees.map((emp, idx) => (
                   <div key={idx} className="p-3 flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-gray-800 dark:text-gray-200">{emp.employeeName} · {emp.weekLabel}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-lg text-gray-800 dark:text-gray-200">{emp.employeeName} · {emp.weekLabel}</p>
+                      <p className="text-base text-gray-500 dark:text-gray-400">
                         {emp.controlHorarioCreated} Control Horario · {emp.nominaCreated ? 'Nómina creada' : 'Sin nómina'}
                       </p>
                     </div>
                     {emp.error && (
-                      <span className="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
+                      <span className="text-base bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
                         Error: {emp.error}
                       </span>
                     )}
                     {emp.salarioPendiente && (
-                      <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+                      <span className="text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
                         Salario pendiente
                       </span>
                     )}
@@ -994,8 +1236,8 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.skippedDuplicates > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Advertencias</h3>
-              <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3 dark:text-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-500/30">
+              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Advertencias</h3>
+              <p className="text-lg text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3 dark:text-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-500/30">
                 {result.skippedDuplicates} registro(s) duplicado(s) omitido(s)
               </p>
             </div>
@@ -1003,10 +1245,10 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.notFoundRows.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Empleados no encontrados</h3>
+              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Empleados no encontrados</h3>
               <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 dark:bg-rose-500/10 dark:border-rose-500/30">
                 {result.notFoundRows.map((row, idx) => (
-                  <p key={idx} className="text-sm text-rose-700 dark:text-rose-300">
+                  <p key={idx} className="text-lg text-rose-700 dark:text-rose-300">
                     #{row.employeeNumber} - {row.employeeName}
                   </p>
                 ))}
@@ -1031,17 +1273,6 @@ function ImportadorChecadorApp(): React.ReactElement {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#1B1517] flex flex-col">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#E9D9D9] dark:border-[#382C2E] shrink-0">
-        <h1 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Nómina</h1>
-        <button
-          onClick={() => setShowImportModal(true)}
-          className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-sm dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-        >
-          <UploadSimpleIcon className="w-4 h-4" />
-          Importar
-        </button>
-      </div>
-
       <NominaManager
         nominaTable={nominaTable}
         controlHorarioTable={controlHorarioTable}
@@ -1061,7 +1292,7 @@ function ImportadorChecadorApp(): React.ReactElement {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-[#E9D9D9] dark:border-[#382C2E] sticky top-0 bg-white dark:bg-[#251D1F]">
-              <h2 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Importar checador</h2>
+              <h2 className="text-2xl font-medium text-gray-800 dark:text-[#F5F3EF]">Importar checador</h2>
               <button onClick={handleCloseImportModal} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
                 <XIcon className="w-5 h-5" />
               </button>
@@ -1087,28 +1318,28 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
     switch (group.groupStatus) {
       case 'ok':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded dark:bg-green-500/15 dark:text-green-300">
+          <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-1 rounded dark:bg-green-500/15 dark:text-green-300">
             <CheckCircleIcon className="w-3 h-3" />
             OK
           </span>
         );
       case 'partial':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+          <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
             <WarningIcon className="w-3 h-3" />
             Parcial
           </span>
         );
       case 'duplicate':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+          <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
             <WarningIcon className="w-3 h-3" />
             Duplicados
           </span>
         );
       case 'not_found':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
+          <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
             <XCircleIcon className="w-3 h-3" />
             No encontrado
           </span>
@@ -1128,10 +1359,10 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
           ) : (
             <CaretRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           )}
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <span className="text-lg font-medium text-gray-800 dark:text-gray-200">
             {group.employeeName}
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-base text-gray-500 dark:text-gray-400">
             #{group.employeeNumber}
           </span>
         </div>
@@ -1140,9 +1371,9 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
 
       {expanded && (
         <div className="p-3">
-          <table className="w-full text-sm">
+          <table className="w-full text-lg">
             <thead>
-              <tr className="text-left text-xs text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+              <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
                 <th className="pb-2 font-medium">Fecha</th>
                 <th className="pb-2 font-medium">Entrada</th>
                 <th className="pb-2 font-medium">Salida</th>
@@ -1187,7 +1418,7 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
   switch (status) {
     case 'ok':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded dark:bg-green-500/15 dark:text-green-300">
+        <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-0.5 rounded dark:bg-green-500/15 dark:text-green-300">
           <CheckCircleIcon className="w-3 h-3" />
           {message}
         </span>
@@ -1195,14 +1426,14 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
     case 'partial':
     case 'duplicate':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+        <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
           <WarningIcon className="w-3 h-3" />
           {message}
         </span>
       );
     case 'not_found':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded dark:bg-rose-500/15 dark:text-rose-300">
+        <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-700 px-2 py-0.5 rounded dark:bg-rose-500/15 dark:text-rose-300">
           <XCircleIcon className="w-3 h-3" />
           {message}
         </span>
@@ -1273,12 +1504,6 @@ interface NominaManagerProps {
   onOpenImport: () => void;
 }
 
-interface NominaWeekGroup {
-  label: string;
-  sortKey: number;
-  records: AirtableRecord[];
-}
-
 function NominaManager({
   nominaTable,
   controlHorarioTable,
@@ -1289,36 +1514,23 @@ function NominaManager({
   const [selectedNominaId, setSelectedNominaId] = useState<string | null>(null);
   const [selectedControlHorarioId, setSelectedControlHorarioId] = useState<string | null>(null);
 
-  const weekGroups = useMemo<NominaWeekGroup[]>(() => {
+  const pendingRecords = useMemo<AirtableRecord[]>(() => {
     if (!nominaRecords || !nominaTable) return [];
 
-    const pendientes = nominaRecords.filter(record => {
-      const status = getStatusName(record, nominaTable);
-      return status !== 'Pagado';
+    const pendientes = nominaRecords.filter(record => getStatusName(record, nominaTable) !== 'Pagado');
+
+    pendientes.sort((a, b) => {
+      const inicioA = getLookupFirst<string>(a, nominaTable, FIELD_IDS.NOMINA_INICIO_SEMANA);
+      const inicioB = getLookupFirst<string>(b, nominaTable, FIELD_IDS.NOMINA_INICIO_SEMANA);
+      const sortKeyA = inicioA ? new Date(inicioA).getTime() : -Infinity;
+      const sortKeyB = inicioB ? new Date(inicioB).getTime() : -Infinity;
+      if (sortKeyA !== sortKeyB) return sortKeyB - sortKeyA;
+      const nameA = getEmpleadoName(a, nominaTable) ?? '';
+      const nameB = getEmpleadoName(b, nominaTable) ?? '';
+      return nameA.localeCompare(nameB);
     });
 
-    const groupMap = new Map<string, NominaWeekGroup>();
-    for (const record of pendientes) {
-      const label = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP) ?? 'Semana desconocida';
-      const inicio = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_INICIO_SEMANA);
-      const sortKey = inicio ? new Date(inicio).getTime() : Number.MAX_SAFE_INTEGER;
-
-      if (!groupMap.has(label)) {
-        groupMap.set(label, { label, sortKey, records: [] });
-      }
-      groupMap.get(label)!.records.push(record);
-    }
-
-    const groups = Array.from(groupMap.values());
-    groups.sort((a, b) => b.sortKey - a.sortKey);
-    for (const group of groups) {
-      group.records.sort((a, b) => {
-        const nameA = getEmpleadoName(a, nominaTable) ?? '';
-        const nameB = getEmpleadoName(b, nominaTable) ?? '';
-        return nameA.localeCompare(nameB);
-      });
-    }
-    return groups;
+    return pendientes;
   }, [nominaRecords, nominaTable]);
 
   const selectedNominaRecord = useMemo(
@@ -1342,51 +1554,79 @@ function NominaManager({
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-3xl mx-auto space-y-8">
-        {!hasAnyNominaRecords && (
-          <div className="text-center py-20">
-            <UploadSimpleIcon className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-300 mb-1">Aún no hay registros de Nómina.</p>
-            <p className="text-gray-500 dark:text-gray-500 text-sm mb-4">Importa el reporte del checador para generar los primeros registros.</p>
+      <div className="max-w-5xl mx-auto">
+        <div className="border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
+          <div className="flex items-center justify-end p-3 border-b border-[#E9D9D9] dark:border-[#382C2E]">
             <button
               onClick={onOpenImport}
-              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer text-sm dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-lg dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
             >
-              Importar checador
+              <UploadSimpleIcon className="w-4 h-4" />
+              Importar
             </button>
           </div>
-        )}
 
-        {hasAnyNominaRecords && weekGroups.length === 0 && (
-          <p className="text-sm text-gray-500 dark:text-gray-500 text-center py-12">
-            No hay registros de Nómina pendientes de pago.
-          </p>
-        )}
-
-        {weekGroups.map(group => (
-          <div key={group.label}>
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{group.label}</h3>
-            <div className="border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg divide-y divide-[#E9D9D9] dark:divide-[#382C2E] overflow-hidden">
-              {group.records.map(record => {
-                const empleadoName = getEmpleadoName(record, nominaTable);
-                const status = getStatusName(record, nominaTable);
-                return (
-                  <button
-                    key={record.id}
-                    onClick={() => setSelectedNominaId(record.id)}
-                    className="w-full flex items-center justify-between p-3 bg-white hover:bg-rose-50 dark:bg-[#251D1F] dark:hover:bg-white/5 text-left hover:cursor-pointer transition-colors"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{empleadoName ?? 'Sin empleado'}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">{group.label}</p>
-                    </div>
-                    <NominaStatusBadge status={status} />
-                  </button>
-                );
-              })}
+          {!hasAnyNominaRecords && (
+            <div className="text-center py-20">
+              <UploadSimpleIcon className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-300 mb-1">Aún no hay registros de Nómina.</p>
+              <p className="text-gray-500 dark:text-gray-500 text-lg">Importa el reporte del checador para generar los primeros registros.</p>
             </div>
-          </div>
-        ))}
+          )}
+
+          {hasAnyNominaRecords && pendingRecords.length === 0 && (
+            <p className="text-lg text-gray-500 dark:text-gray-500 text-center py-12">
+              No hay registros de Nómina pendientes de pago.
+            </p>
+          )}
+
+          {pendingRecords.length > 0 && (
+            <table className="w-full text-lg">
+              <thead>
+                <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                  <th className="px-4 py-2 font-medium">Empleado</th>
+                  <th className="px-4 py-2 font-medium">Semana</th>
+                  <th className="px-4 py-2 font-medium">Horas Ordinarias</th>
+                  <th className="px-4 py-2 font-medium">Horas Extra</th>
+                  <th className="px-4 py-2 font-medium">Faltante</th>
+                  <th className="px-4 py-2 font-medium">Estatus</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E9D9D9] dark:divide-[#382C2E]">
+                {pendingRecords.map(record => {
+                  const empleadoName = getEmpleadoName(record, nominaTable);
+                  const semana = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP);
+                  const status = getStatusName(record, nominaTable);
+                  const montoOrdinariasField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_ORDINARIAS);
+                  const montoExtraField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_EXTRA);
+                  const faltanteField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_FALTANTE);
+                  return (
+                    <tr
+                      key={record.id}
+                      onClick={() => setSelectedNominaId(record.id)}
+                      className="cursor-pointer hover:bg-rose-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{empleadoName ?? 'Sin empleado'}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{semana ?? '-'}</td>
+                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                        {montoOrdinariasField ? record.getCellValueAsString(montoOrdinariasField) : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                        {montoExtraField ? record.getCellValueAsString(montoExtraField) : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                        {faltanteField ? record.getCellValueAsString(faltanteField) : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <NominaStatusBadge status={status} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {selectedNominaRecord && (
@@ -1415,21 +1655,21 @@ function NominaStatusBadge({ status }: { status: string | undefined }): React.Re
   switch (status) {
     case 'Pagado':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
+        <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
           <CheckCircleIcon className="w-3 h-3" />
           Pagado
         </span>
       );
     case 'Parcial':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-300 dark:border-yellow-500/30">
+        <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-300 dark:border-yellow-500/30">
           <WarningIcon className="w-3 h-3" />
           Parcial
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-600 px-2 py-1 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
+        <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-600 px-2 py-1 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
           {status ?? 'Pendiente'}
         </span>
       );
@@ -1465,6 +1705,15 @@ function NominaDetailModal({
   const faltanteField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_FALTANTE);
   const faltanteDisplay = faltanteField ? record.getCellValueAsString(faltanteField) : '';
 
+  const horasOrdinariasTrabajadasField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_HORAS_ORDINARIAS_TRABAJADAS);
+  const horasOrdinariasTrabajadasDisplay = horasOrdinariasTrabajadasField ? record.getCellValueAsString(horasOrdinariasTrabajadasField) : '-';
+  const horasExtraTrabajadasField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_HORAS_EXTRA_TRABAJADAS);
+  const horasExtraTrabajadasDisplay = horasExtraTrabajadasField ? record.getCellValueAsString(horasExtraTrabajadasField) : '-';
+  const montoHorasOrdinariasField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_ORDINARIAS);
+  const montoHorasOrdinariasDisplay = montoHorasOrdinariasField ? record.getCellValueAsString(montoHorasOrdinariasField) : '-';
+  const montoHorasExtraField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_EXTRA);
+  const montoHorasExtraDisplay = montoHorasExtraField ? record.getCellValueAsString(montoHorasExtraField) : '-';
+
   const controlHorarioField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_CONTROL_HORARIO);
   const linkedIds = new Set(
     (controlHorarioField ? (record.getCellValue(controlHorarioField) as LinkValue[] | null) : null)?.map(
@@ -1497,13 +1746,13 @@ function NominaDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between p-5 border-b border-[#E9D9D9] dark:border-[#382C2E]">
           <div>
-            <h2 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Pago de Nómina</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{empleadoName ?? 'Sin empleado'} · {semana}</p>
+            <h2 className="text-2xl font-medium text-gray-800 dark:text-[#F5F3EF]">Pago de Nómina</h2>
+            <p className="text-lg text-gray-500 dark:text-gray-400">{empleadoName ?? 'Sin empleado'} · {semana}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
             <XIcon className="w-5 h-5" />
@@ -1511,38 +1760,62 @@ function NominaDetailModal({
         </div>
 
         <div className="p-5 space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado</label>
-              <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
-                <span className="text-gray-500 dark:text-gray-400 text-sm">$</span>
-                <input
-                  type="number"
-                  value={pagadoValue}
-                  disabled={!canEditPagado}
-                  onChange={e => setPagadoValue(e.target.value)}
-                  onBlur={savePagado}
-                  className="w-full py-1.5 px-1 text-sm outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
-                />
+          <div className="grid grid-cols-3 gap-6">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado</label>
+                <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
+                  <span className="text-gray-500 dark:text-gray-400 text-lg">$</span>
+                  <input
+                    type="number"
+                    value={pagadoValue}
+                    disabled={!canEditPagado}
+                    onChange={e => setPagadoValue(e.target.value)}
+                    onBlur={savePagado}
+                    className="w-full py-1.5 px-1 text-lg outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Faltante</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Estatus</label>
+                <div className="py-1">
+                  <NominaStatusBadge status={status} />
+                </div>
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Faltante</label>
-              <p className="text-sm text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Ordinarias Trabajadas</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasOrdinariasTrabajadasDisplay}</p>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Ordinarias</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasOrdinariasDisplay}</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Estatus</label>
-              <div className="py-1">
-                <NominaStatusBadge status={status} />
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Extra Trabajadas</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasExtraTrabajadasDisplay}</p>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Extra</label>
+                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasExtraDisplay}</p>
               </div>
             </div>
           </div>
 
           <div>
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Control Horario</p>
-            <table className="w-full text-sm">
+            <p className="text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Control Horario</p>
+            <table className="w-full text-lg">
               <thead>
-                <tr className="text-left text-xs text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
                   <th className="pb-2 font-medium">Fecha</th>
                   <th className="pb-2 font-medium">Horas Ordinarias</th>
                   <th className="pb-2 font-medium">Horas Extra</th>
@@ -1584,6 +1857,18 @@ interface ControlHorarioDetailModalProps {
   onClose: () => void;
 }
 
+function parseISOToDateAndTime(iso: string | null): { date: Date; time: string } {
+  if (!iso) {
+    const now = new Date();
+    return { date: now, time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}` };
+  }
+  const [datePart, timePart] = iso.split('T');
+  const [y, m, d] = (datePart ?? '').split('-').map(Number);
+  const date = y && m && d ? new Date(y, m - 1, d) : new Date();
+  const time = (timePart ?? '00:00').slice(0, 5);
+  return { date, time };
+}
+
 function ControlHorarioDetailModal({
   record,
   controlHorarioTable,
@@ -1602,35 +1887,43 @@ function ControlHorarioDetailModal({
   const currentEntrada = entradaField ? (record.getCellValue(entradaField) as string | null) : null;
   const currentSalida = salidaField ? (record.getCellValue(salidaField) as string | null) : null;
 
-  const [entradaValue, setEntradaValue] = useState(currentEntrada ? currentEntrada.slice(0, 16) : '');
-  const [salidaValue, setSalidaValue] = useState(currentSalida ? currentSalida.slice(0, 16) : '');
+  const entradaParsed = parseISOToDateAndTime(currentEntrada);
+  const salidaParsed = parseISOToDateAndTime(currentSalida);
 
-  const saveEntrada = useCallback(() => {
-    if (!canEdit || !entradaField || !entradaValue) return;
-    const iso = `${entradaValue}:00-06:00`;
-    if (iso === currentEntrada) return;
+  const [entradaDate, setEntradaDate] = useState(entradaParsed.date);
+  const [entradaTime, setEntradaTime] = useState(entradaParsed.time);
+  const [salidaDate, setSalidaDate] = useState(salidaParsed.date);
+  const [salidaTime, setSalidaTime] = useState(salidaParsed.time);
+  const [showEntradaCalendar, setShowEntradaCalendar] = useState(false);
+  const [showSalidaCalendar, setShowSalidaCalendar] = useState(false);
+
+  const saveEntrada = useCallback((date: Date, time: string) => {
+    if (!canEdit || !entradaField) return;
+    const iso = `${formatDateForComparison(date)}T${time}:00-06:00`;
     controlHorarioTable.updateRecordAsync(record.id, { [FIELD_IDS.CH_ENTRADA]: iso }).catch(error => {
       console.error('Error updating Entrada:', error);
     });
-  }, [canEdit, entradaField, entradaValue, currentEntrada, controlHorarioTable, record.id]);
+  }, [canEdit, entradaField, controlHorarioTable, record.id]);
 
-  const saveSalida = useCallback(() => {
-    if (!canEdit || !salidaField || !salidaValue) return;
-    const iso = `${salidaValue}:00-06:00`;
-    if (iso === currentSalida) return;
+  const saveSalida = useCallback((date: Date, time: string) => {
+    if (!canEdit || !salidaField) return;
+    const iso = `${formatDateForComparison(date)}T${time}:00-06:00`;
     controlHorarioTable.updateRecordAsync(record.id, { [FIELD_IDS.CH_SALIDA]: iso }).catch(error => {
       console.error('Error updating Salida:', error);
     });
-  }, [canEdit, salidaField, salidaValue, currentSalida, controlHorarioTable, record.id]);
+  }, [canEdit, salidaField, controlHorarioTable, record.id]);
+
+  const dateInputCls = 'w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-3 py-2 pr-9 text-lg outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5';
+  const labelCls = 'block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl border border-[#E9D9D9] dark:border-[#382C2E] max-w-md w-full"
+        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl border border-[#E9D9D9] dark:border-[#382C2E] max-w-lg w-full"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between p-4 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-          <h3 className="text-sm font-medium text-gray-800 dark:text-[#F5F3EF]">Detalle de Control Horario</h3>
+          <h3 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Detalle de Control Horario</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
             <XIcon className="w-4 h-4" />
           </button>
@@ -1638,51 +1931,100 @@ function ControlHorarioDetailModal({
 
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Empleado</label>
-            <p className="text-sm text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
+            <label className={labelCls}>Empleado</label>
+            <p className="text-lg text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Entrada</label>
-              <input
-                type="datetime-local"
-                value={entradaValue}
-                disabled={!canEdit}
-                onChange={e => setEntradaValue(e.target.value)}
-                onBlur={saveEntrada}
-                className="w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 py-1.5 text-sm outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5"
-              />
+          <div>
+            <label className={labelCls}>Entrada</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  readOnly
+                  disabled={!canEdit}
+                  value={formatFechaLarga(formatDateForComparison(entradaDate))}
+                  onClick={() => canEdit && setShowEntradaCalendar(o => !o)}
+                  className={`${dateInputCls} cursor-pointer`}
+                />
+                <button
+                  type="button"
+                  disabled={!canEdit}
+                  onClick={() => canEdit && setShowEntradaCalendar(o => !o)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-500 transition-colors dark:text-gray-500 dark:hover:text-rose-400"
+                >
+                  <CalendarIcon size={15} />
+                </button>
+                {showEntradaCalendar && (
+                  <MiniCalendar
+                    selectedDate={entradaDate}
+                    onSelectDate={date => { setEntradaDate(date); setShowEntradaCalendar(false); saveEntrada(date, entradaTime); }}
+                    onClose={() => setShowEntradaCalendar(false)}
+                  />
+                )}
+              </div>
+              <div className="w-32 flex-shrink-0">
+                <CustomTimePicker
+                  value={entradaTime}
+                  onChange={time => { setEntradaTime(time); saveEntrada(entradaDate, time); }}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Salida</label>
-              <input
-                type="datetime-local"
-                value={salidaValue}
-                disabled={!canEdit}
-                onChange={e => setSalidaValue(e.target.value)}
-                onBlur={saveSalida}
-                className="w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 py-1.5 text-sm outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5"
-              />
+          </div>
+
+          <div>
+            <label className={labelCls}>Salida</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  readOnly
+                  disabled={!canEdit}
+                  value={formatFechaLarga(formatDateForComparison(salidaDate))}
+                  onClick={() => canEdit && setShowSalidaCalendar(o => !o)}
+                  className={`${dateInputCls} cursor-pointer`}
+                />
+                <button
+                  type="button"
+                  disabled={!canEdit}
+                  onClick={() => canEdit && setShowSalidaCalendar(o => !o)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-500 transition-colors dark:text-gray-500 dark:hover:text-rose-400"
+                >
+                  <CalendarIcon size={15} />
+                </button>
+                {showSalidaCalendar && (
+                  <MiniCalendar
+                    selectedDate={salidaDate}
+                    onSelectDate={date => { setSalidaDate(date); setShowSalidaCalendar(false); saveSalida(date, salidaTime); }}
+                    onClose={() => setShowSalidaCalendar(false)}
+                  />
+                )}
+              </div>
+              <div className="w-32 flex-shrink-0">
+                <CustomTimePicker
+                  value={salidaTime}
+                  onChange={time => { setSalidaTime(time); saveSalida(salidaDate, time); }}
+                />
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Laborables</label>
-              <p className="text-sm text-gray-800 dark:text-gray-200">
+              <label className={labelCls}>Horas Laborables</label>
+              <p className="text-lg text-gray-800 dark:text-gray-200">
                 {horasLaborablesField ? record.getCellValueAsString(horasLaborablesField) : '-'}
               </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Ordinarias</label>
-              <p className="text-sm text-gray-800 dark:text-gray-200">
+              <label className={labelCls}>Horas Ordinarias</label>
+              <p className="text-lg text-gray-800 dark:text-gray-200">
                 {horasOrdField ? record.getCellValueAsString(horasOrdField) : '-'}
               </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Extra</label>
-              <p className="text-sm text-gray-800 dark:text-gray-200">
+              <label className={labelCls}>Horas Extra</label>
+              <p className="text-lg text-gray-800 dark:text-gray-200">
                 {horasExtraField ? record.getCellValueAsString(horasExtraField) : '-'}
               </p>
             </div>
