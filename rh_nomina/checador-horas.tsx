@@ -151,6 +151,37 @@ function formatDateForComparison(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+const CHECADOR_TIMEZONE = 'America/Mexico_City';
+
+// El SDK de Airtable regresa el cell value de un campo dateTime como ISO en
+// UTC, no ya ajustado a la zona horaria configurada del campo. Leer la hora
+// directamente del string (p. ej. con split('T')) muestra 6 horas de más o
+// de menos, y en horas cercanas a medianoche puede incluso mostrar el día
+// equivocado. Esta conversión usa Intl con la zona horaria real para extraer
+// la fecha y hora locales correctas sin importar el formato del string.
+function isoToMexicoCityParts(iso: string): { year: number; month: number; day: number; hour: number; minute: number } | null {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: CHECADOR_TIMEZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(date);
+  const map: Record<string, string> = {};
+  for (const part of parts) map[part.type] = part.value;
+  if (!map.year || !map.month || !map.day || !map.hour || !map.minute) return null;
+  return {
+    year: Number(map.year), month: Number(map.month), day: Number(map.day),
+    hour: Number(map.hour), minute: Number(map.minute),
+  };
+}
+
+function isoToMexicoCityDateKey(iso: string): string | null {
+  const p = isoToMexicoCityParts(iso);
+  if (!p) return null;
+  return `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`;
+}
+
 // ─── Calendario y selector de hora (estilo Pedidos) ──────────────────────────
 function to12h(h24: number): { h: number; p: 'AM' | 'PM' } {
   if (h24 === 0) return { h: 12, p: 'AM' };
@@ -562,7 +593,7 @@ function ImportadorChecadorApp(): React.ReactElement {
       
       if (empleadoLinks && empleadoLinks.length > 0 && entrada) {
         const empleadoId = empleadoLinks[0]?.id;
-        const fechaOnly = entrada.split('T')[0];
+        const fechaOnly = isoToMexicoCityDateKey(entrada);
         if (empleadoId && fechaOnly) {
           keys.add(`${empleadoId}|${fechaOnly}`);
         }
@@ -1932,7 +1963,7 @@ function NominaDetailModal({
                       onClick={() => onSelectControlHorario(chRecord.id)}
                       className="cursor-pointer hover:bg-rose-50 dark:hover:bg-white/5 transition-colors"
                     >
-                      <td className="py-2 text-gray-800 dark:text-gray-200">{entrada ? formatFechaLarga(entrada.split('T')[0] ?? '') : '-'}</td>
+                      <td className="py-2 text-gray-800 dark:text-gray-200">{entrada ? formatFechaLarga(isoToMexicoCityDateKey(entrada) ?? '') : '-'}</td>
                       <td className="py-2 text-gray-800 dark:text-gray-200">
                         {horasOrdField ? chRecord.getCellValueAsString(horasOrdField) : '-'}
                       </td>
@@ -1958,14 +1989,13 @@ interface ControlHorarioDetailModalProps {
 }
 
 function parseISOToDateAndTime(iso: string | null): { date: Date; time: string } {
-  if (!iso) {
+  const parts = iso ? isoToMexicoCityParts(iso) : null;
+  if (!parts) {
     const now = new Date();
     return { date: now, time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}` };
   }
-  const [datePart, timePart] = iso.split('T');
-  const [y, m, d] = (datePart ?? '').split('-').map(Number);
-  const date = y && m && d ? new Date(y, m - 1, d) : new Date();
-  const time = (timePart ?? '00:00').slice(0, 5);
+  const date = new Date(parts.year, parts.month - 1, parts.day);
+  const time = `${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`;
   return { date, time };
 }
 
