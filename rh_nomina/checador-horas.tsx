@@ -833,6 +833,15 @@ function ImportadorChecadorApp(): React.ReactElement {
       groupedByEmployeeWeek.get(groupKey)!.rows.push(row);
     }
 
+    // Los archivos pueden subirse fuera de orden cronológico (p. ej. la semana
+    // más reciente primero). Si los Control Horario quedan vinculados en ese
+    // orden, los lookups de Inicio/Fin de Semana en Nómina (que dependen del
+    // orden de vínculo) muestran fechas erróneas. Ordenar aquí garantiza que
+    // el primer y último record vinculado sean cronológicamente correctos.
+    for (const group of groupedByEmployeeWeek.values()) {
+      group.rows.sort((a, b) => a.fecha.localeCompare(b.fecha));
+    }
+
     const results: ImportResultEmployee[] = [];
     let totalControlHorario = 0;
     let totalNomina = 0;
@@ -1517,6 +1526,16 @@ function NominaManager({
 }: NominaManagerProps): React.ReactElement {
   const [selectedNominaId, setSelectedNominaId] = useState<string | null>(null);
   const [selectedControlHorarioId, setSelectedControlHorarioId] = useState<string | null>(null);
+  // Colapsados por default: solo se expande el grupo de semana que el usuario abra.
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
+
+  const toggleWeek = useCallback((label: string) => {
+    setExpandedWeeks(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label); else next.add(label);
+      return next;
+    });
+  }, []);
 
   const pendingRecords = useMemo<AirtableRecord[]>(() => {
     if (!nominaRecords || !nominaTable) return [];
@@ -1616,14 +1635,29 @@ function NominaManager({
                   <th className="px-4 py-2 font-medium">Estatus</th>
                 </tr>
               </thead>
-              {weekGroups.map(group => (
+              {weekGroups.map(group => {
+                const isExpanded = expandedWeeks.has(group.label);
+                return (
                 <tbody key={group.label} className="divide-y divide-[#E9D9D9] dark:divide-[#382C2E] border-t border-[#E9D9D9] dark:border-[#382C2E]">
-                  <tr className="bg-gray-50 dark:bg-white/5">
+                  <tr
+                    onClick={() => toggleWeek(group.label)}
+                    className="bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 cursor-pointer transition-colors"
+                  >
                     <td colSpan={5} className="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-300">
-                      {group.label}
+                      <div className="flex items-center gap-2">
+                        {isExpanded ? (
+                          <CaretDownIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                        ) : (
+                          <CaretRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                        )}
+                        {group.label}
+                        <span className="text-gray-400 dark:text-gray-500 font-normal">
+                          ({group.records.length})
+                        </span>
+                      </div>
                     </td>
                   </tr>
-                  {group.records.map(record => {
+                  {isExpanded && group.records.map(record => {
                     const empleadoName = getEmpleadoName(record, nominaTable);
                     const status = getStatusName(record, nominaTable);
                     const montoOrdinariasField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_ORDINARIAS);
@@ -1652,7 +1686,8 @@ function NominaManager({
                     );
                   })}
                 </tbody>
-              ))}
+                );
+              })}
             </table>
           )}
         </div>
