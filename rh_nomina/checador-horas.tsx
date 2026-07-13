@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   initializeBlock,
   useBase,
@@ -16,6 +16,25 @@ import {
   SpinnerIcon,
   XIcon,
 } from '@phosphor-icons/react';
+
+// ─── Rosewood palette: sigue el tema del sistema (claro/oscuro) ──────────────
+function useTheme(): 'light' | 'dark' {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark' : 'light'
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setTheme(e.matches ? 'dark' : 'light');
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
+  }, [theme]);
+  return theme;
+}
 
 const FIELD_IDS = {
   EMPLEADOS_NUMERO_DE_EMPLEADO: 'fldtsIcGB618YwyOq',
@@ -262,6 +281,7 @@ function getCustomProperties(base: ReturnType<typeof useBase>) {
 }
 
 function ImportadorChecadorApp(): React.ReactElement {
+  useTheme();
   const base = useBase();
   const { customPropertyValueByKey, errorState } = useCustomProperties(getCustomProperties);
 
@@ -750,13 +770,15 @@ function ImportadorChecadorApp(): React.ReactElement {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={`flex items-center justify-center text-center border-2 border-dashed rounded-lg py-16 px-8 transition-colors ${
-            isDraggingOver ? 'border-gray-900 bg-gray-50' : 'border-gray-300'
+            isDraggingOver
+              ? 'border-rose-400 bg-rose-50 dark:border-rose-400/50 dark:bg-rose-500/10'
+              : 'border-gray-300 dark:border-[#382C2E]'
           }`}
         >
           <div>
-            <UploadSimpleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-800 text-lg mb-1">Arrastra el reporte semanal del checador (.csv)</p>
-            <p className="text-gray-500 text-sm mb-4">o selecciónalo desde tu computadora</p>
+            <UploadSimpleIcon className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-800 dark:text-[#F5F3EF] text-lg mb-1">Arrastra el reporte semanal del checador (.csv)</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">o selecciónalo desde tu computadora</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -767,7 +789,7 @@ function ImportadorChecadorApp(): React.ReactElement {
             />
             <button
               onClick={handleSelectFile}
-              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
             >
               Seleccionar archivo(s)
             </button>
@@ -780,8 +802,8 @@ function ImportadorChecadorApp(): React.ReactElement {
       return (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <SpinnerIcon className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
-            <p className="text-gray-600">Procesando archivo...</p>
+            <SpinnerIcon className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-4 animate-spin" />
+            <p className="text-gray-600 dark:text-gray-400">Procesando archivo...</p>
           </div>
         </div>
       );
@@ -791,12 +813,12 @@ function ImportadorChecadorApp(): React.ReactElement {
       return (
         <div className="flex items-center justify-center py-16">
           <div className="text-center max-w-md mx-auto">
-            <XCircleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <p className="text-gray-800 text-lg mb-2">Error</p>
-            <p className="text-gray-500 text-sm mb-4">{viewState.message}</p>
+            <XCircleIcon className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+            <p className="text-gray-800 dark:text-[#F5F3EF] text-lg mb-2">Error</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">{viewState.message}</p>
             <button
               onClick={handleReset}
-              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
             >
               Volver a intentar
             </button>
@@ -863,8 +885,8 @@ function ImportadorChecadorApp(): React.ReactElement {
 
       return (
         <div>
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600">
+          <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-lg border border-[#E9D9D9] dark:border-[#382C2E]">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {totalEmployees} empleados · {validRows} registros válidos · {warningRows} advertencias · {errorRows} errores
             </p>
           </div>
@@ -872,7 +894,7 @@ function ImportadorChecadorApp(): React.ReactElement {
           <div className="space-y-8 mb-6">
             {weekGroups.map(week => (
               <div key={week.key}>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   {formatWeekLabel(week.weekNumber, week.start, week.end)}
                 </h3>
                 <div className="space-y-4">
@@ -889,7 +911,7 @@ function ImportadorChecadorApp(): React.ReactElement {
             ))}
           </div>
 
-          <div className="flex justify-between gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-between gap-3 pt-4 border-t border-[#E9D9D9] dark:border-[#382C2E]">
             <input
               ref={addMoreFileInputRef}
               type="file"
@@ -901,7 +923,7 @@ function ImportadorChecadorApp(): React.ReactElement {
             <button
               onClick={handleSelectMoreFiles}
               disabled={isImporting || isAddingMoreFiles}
-              className="bg-white hover:bg-black/5 px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-white hover:bg-black/5 px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-[#E9D9D9] dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:bg-white/5"
             >
               {isAddingMoreFiles && <SpinnerIcon className="w-4 h-4 animate-spin" />}
               {isAddingMoreFiles ? 'Cargando...' : 'Seleccionar más archivos'}
@@ -911,14 +933,14 @@ function ImportadorChecadorApp(): React.ReactElement {
             <button
               onClick={handleCancel}
               disabled={isImporting}
-              className="bg-white hover:bg-black/5 px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-white hover:bg-black/5 px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border border-[#E9D9D9] dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:bg-white/5"
             >
               Cancelar
             </button>
             <button
               onClick={handleImport}
               disabled={isImporting || includedRows === 0}
-              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
             >
               {isImporting && <SpinnerIcon className="w-4 h-4 animate-spin" />}
               {isImporting ? 'Creando registros...' : 'Confirmar e Importar'}
@@ -936,31 +958,31 @@ function ImportadorChecadorApp(): React.ReactElement {
         <div>
           <div className="text-center mb-8">
             <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-medium text-gray-800 mb-2">Importación Completada</h2>
-            <p className="text-gray-600">
+            <h2 className="text-xl font-medium text-gray-800 dark:text-[#F5F3EF] mb-2">Importación Completada</h2>
+            <p className="text-gray-600 dark:text-gray-400">
               {result.totalControlHorario} registros de Control Horario creados, {result.totalNomina} registros de Nómina creados
             </p>
           </div>
 
           {result.employees.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Resumen por empleado y semana</h3>
-              <div className="bg-gray-50 rounded-lg border border-gray-200 divide-y divide-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Resumen por empleado y semana</h3>
+              <div className="bg-gray-50 dark:bg-white/5 rounded-lg border border-[#E9D9D9] dark:border-[#382C2E] divide-y divide-[#E9D9D9] dark:divide-[#382C2E]">
                 {result.employees.map((emp, idx) => (
                   <div key={idx} className="p-3 flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-gray-800">{emp.employeeName} · {emp.weekLabel}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm text-gray-800 dark:text-gray-200">{emp.employeeName} · {emp.weekLabel}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {emp.controlHorarioCreated} Control Horario · {emp.nominaCreated ? 'Nómina creada' : 'Sin nómina'}
                       </p>
                     </div>
                     {emp.error && (
-                      <span className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">
+                      <span className="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
                         Error: {emp.error}
                       </span>
                     )}
                     {emp.salarioPendiente && (
-                      <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded">
+                      <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
                         Salario pendiente
                       </span>
                     )}
@@ -972,8 +994,8 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.skippedDuplicates > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Advertencias</h3>
-              <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Advertencias</h3>
+              <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3 dark:text-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-500/30">
                 {result.skippedDuplicates} registro(s) duplicado(s) omitido(s)
               </p>
             </div>
@@ -981,10 +1003,10 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.notFoundRows.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Empleados no encontrados</h3>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Empleados no encontrados</h3>
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 dark:bg-rose-500/10 dark:border-rose-500/30">
                 {result.notFoundRows.map((row, idx) => (
-                  <p key={idx} className="text-sm text-red-700">
+                  <p key={idx} className="text-sm text-rose-700 dark:text-rose-300">
                     #{row.employeeNumber} - {row.employeeName}
                   </p>
                 ))}
@@ -995,7 +1017,7 @@ function ImportadorChecadorApp(): React.ReactElement {
           <div className="text-center pt-4">
             <button
               onClick={handleReset}
-              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
             >
               Importar otro archivo
             </button>
@@ -1008,12 +1030,12 @@ function ImportadorChecadorApp(): React.ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
-        <h1 className="text-lg font-medium text-gray-800">Nómina</h1>
+    <div className="min-h-screen bg-white dark:bg-[#1B1517] flex flex-col">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#E9D9D9] dark:border-[#382C2E] shrink-0">
+        <h1 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Nómina</h1>
         <button
           onClick={() => setShowImportModal(true)}
-          className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-sm"
+          className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-sm dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
         >
           <UploadSimpleIcon className="w-4 h-4" />
           Importar
@@ -1030,16 +1052,17 @@ function ImportadorChecadorApp(): React.ReactElement {
 
       {showImportModal && (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
           onClick={handleCloseImportModal}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[85vh] overflow-y-auto"
+            className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white">
-              <h2 className="text-lg font-medium text-gray-800">Importar checador</h2>
-              <button onClick={handleCloseImportModal} className="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
+            <div className="flex items-center justify-between p-4 border-b border-[#E9D9D9] dark:border-[#382C2E] sticky top-0 bg-white dark:bg-[#251D1F]">
+              <h2 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Importar checador</h2>
+              <button onClick={handleCloseImportModal} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
                 <XIcon className="w-5 h-5" />
               </button>
             </div>
@@ -1064,28 +1087,28 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
     switch (group.groupStatus) {
       case 'ok':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded dark:bg-green-500/15 dark:text-green-300">
             <CheckCircleIcon className="w-3 h-3" />
             OK
           </span>
         );
       case 'partial':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
             <WarningIcon className="w-3 h-3" />
             Parcial
           </span>
         );
       case 'duplicate':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
             <WarningIcon className="w-3 h-3" />
             Duplicados
           </span>
         );
       case 'not_found':
         return (
-          <span className="inline-flex items-center gap-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
             <XCircleIcon className="w-3 h-3" />
             No encontrado
           </span>
@@ -1094,21 +1117,21 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
   }, [group.groupStatus]);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 text-left"
+        className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 text-left"
       >
         <div className="flex items-center gap-3">
           {expanded ? (
-            <CaretDownIcon className="w-4 h-4 text-gray-500" />
+            <CaretDownIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           ) : (
-            <CaretRightIcon className="w-4 h-4 text-gray-500" />
+            <CaretRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           )}
-          <span className="text-sm font-medium text-gray-800">
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
             {group.employeeName}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             #{group.employeeNumber}
           </span>
         </div>
@@ -1119,7 +1142,7 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
         <div className="p-3">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
+              <tr className="text-left text-xs text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
                 <th className="pb-2 font-medium">Fecha</th>
                 <th className="pb-2 font-medium">Entrada</th>
                 <th className="pb-2 font-medium">Salida</th>
@@ -1127,12 +1150,12 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
                 <th className="pb-2 font-medium text-center">Incluir</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-white/5">
               {group.rows.map(row => (
                 <tr key={row.id} className={row.status === 'not_found' ? 'opacity-50' : ''}>
-                  <td className="py-2 text-gray-800">{formatFechaLarga(row.fecha)}</td>
-                  <td className="py-2 text-gray-800">{row.entradaRaw ?? '-'}</td>
-                  <td className="py-2 text-gray-800">{row.salidaRaw ?? '-'}</td>
+                  <td className="py-2 text-gray-800 dark:text-gray-200">{formatFechaLarga(row.fecha)}</td>
+                  <td className="py-2 text-gray-800 dark:text-gray-200">{row.entradaRaw ?? '-'}</td>
+                  <td className="py-2 text-gray-800 dark:text-gray-200">{row.salidaRaw ?? '-'}</td>
                   <td className="py-2">
                     <RowStatusBadge status={row.status} message={row.statusMessage} />
                   </td>
@@ -1142,7 +1165,7 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
                       checked={row.included}
                       disabled={disabled || row.status === 'not_found'}
                       onChange={() => onToggleRow(row.id)}
-                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 disabled:opacity-50"
+                      className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-400 disabled:opacity-50 dark:border-[#382C2E] dark:bg-[#251D1F]"
                     />
                   </td>
                 </tr>
@@ -1164,7 +1187,7 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
   switch (status) {
     case 'ok':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">
+        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded dark:bg-green-500/15 dark:text-green-300">
           <CheckCircleIcon className="w-3 h-3" />
           {message}
         </span>
@@ -1172,14 +1195,14 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
     case 'partial':
     case 'duplicate':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded">
+        <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
           <WarningIcon className="w-3 h-3" />
           {message}
         </span>
       );
     case 'not_found':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded">
+        <span className="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded dark:bg-rose-500/15 dark:text-rose-300">
           <XCircleIcon className="w-3 h-3" />
           {message}
         </span>
@@ -1198,12 +1221,34 @@ function getLookupFirst<T>(record: AirtableRecord, table: Table | undefined, fie
   return value && value.length > 0 ? (value[0]?.value ?? null) : null;
 }
 
+// Recorre cualquier combinación de envolturas que Airtable pueda devolver para
+// un lookup encadenado (arreglos, {linkedRecordId, value}, {id, name}) hasta
+// encontrar un nombre legible. Evita depender de suposiciones frágiles sobre
+// cuántos niveles de anidamiento trae un lookup en particular.
+function extractLookupName(raw: unknown): string | undefined {
+  if (raw == null) return undefined;
+  if (typeof raw === 'string') return raw || undefined;
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      const name = extractLookupName(item);
+      if (name) return name;
+    }
+    return undefined;
+  }
+  if (typeof raw === 'object') {
+    const obj = raw as Record<string, unknown>;
+    if (typeof obj.name === 'string' && obj.name) return obj.name;
+    if ('value' in obj) return extractLookupName(obj.value);
+  }
+  return undefined;
+}
+
 // NOMINA_EMPLEADO_LOOKUP hace lookup del campo Empleado (multipleRecordLinks)
-// de Control Horario, así que cada entrada trae un value anidado que es a su
-// vez un arreglo de {id, name}.
+// de Control Horario, así que el valor viene con más de un nivel de anidamiento.
 function getEmpleadoName(record: AirtableRecord, nominaTable: Table | undefined): string | undefined {
-  const links = getLookupFirst<LinkValue[]>(record, nominaTable, FIELD_IDS.NOMINA_EMPLEADO_LOOKUP);
-  return links && links.length > 0 ? links[0]?.name : undefined;
+  const field = nominaTable?.getFieldIfExists(FIELD_IDS.NOMINA_EMPLEADO_LOOKUP);
+  if (!field) return undefined;
+  return extractLookupName(record.getCellValue(field));
 }
 
 // Status es un campo de fórmula (singleSelect) directamente en Nómina, no un
@@ -1300,12 +1345,12 @@ function NominaManager({
       <div className="max-w-3xl mx-auto space-y-8">
         {!hasAnyNominaRecords && (
           <div className="text-center py-20">
-            <UploadSimpleIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 mb-1">Aún no hay registros de Nómina.</p>
-            <p className="text-gray-500 text-sm mb-4">Importa el reporte del checador para generar los primeros registros.</p>
+            <UploadSimpleIcon className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-300 mb-1">Aún no hay registros de Nómina.</p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm mb-4">Importa el reporte del checador para generar los primeros registros.</p>
             <button
               onClick={onOpenImport}
-              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer text-sm"
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer text-sm dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
             >
               Importar checador
             </button>
@@ -1313,15 +1358,15 @@ function NominaManager({
         )}
 
         {hasAnyNominaRecords && weekGroups.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-12">
+          <p className="text-sm text-gray-500 dark:text-gray-500 text-center py-12">
             No hay registros de Nómina pendientes de pago.
           </p>
         )}
 
         {weekGroups.map(group => (
           <div key={group.label}>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">{group.label}</h3>
-            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 overflow-hidden">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{group.label}</h3>
+            <div className="border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg divide-y divide-[#E9D9D9] dark:divide-[#382C2E] overflow-hidden">
               {group.records.map(record => {
                 const empleadoName = getEmpleadoName(record, nominaTable);
                 const status = getStatusName(record, nominaTable);
@@ -1329,11 +1374,11 @@ function NominaManager({
                   <button
                     key={record.id}
                     onClick={() => setSelectedNominaId(record.id)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 text-left hover:cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 bg-white hover:bg-rose-50 dark:bg-[#251D1F] dark:hover:bg-white/5 text-left hover:cursor-pointer transition-colors"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{empleadoName ?? 'Sin empleado'}</p>
-                      <p className="text-xs text-gray-500">{group.label}</p>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{empleadoName ?? 'Sin empleado'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">{group.label}</p>
                     </div>
                     <NominaStatusBadge status={status} />
                   </button>
@@ -1370,21 +1415,21 @@ function NominaStatusBadge({ status }: { status: string | undefined }): React.Re
   switch (status) {
     case 'Pagado':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
           <CheckCircleIcon className="w-3 h-3" />
           Pagado
         </span>
       );
     case 'Parcial':
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded">
+        <span className="inline-flex items-center gap-1 text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-300 dark:border-yellow-500/30">
           <WarningIcon className="w-3 h-3" />
           Parcial
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+        <span className="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-600 px-2 py-1 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
           {status ?? 'Pendiente'}
         </span>
       );
@@ -1447,19 +1492,20 @@ function NominaDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between p-5 border-b border-gray-200">
+        <div className="flex items-start justify-between p-5 border-b border-[#E9D9D9] dark:border-[#382C2E]">
           <div>
-            <h2 className="text-lg font-medium text-gray-800">Pago de Nómina</h2>
-            <p className="text-sm text-gray-500">{empleadoName ?? 'Sin empleado'} · {semana}</p>
+            <h2 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Pago de Nómina</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{empleadoName ?? 'Sin empleado'} · {semana}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
             <XIcon className="w-5 h-5" />
           </button>
         </div>
@@ -1467,25 +1513,25 @@ function NominaDetailModal({
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Pagado</label>
-              <div className="flex items-center border border-gray-300 rounded-md px-2">
-                <span className="text-gray-500 text-sm">$</span>
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado</label>
+              <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">$</span>
                 <input
                   type="number"
                   value={pagadoValue}
                   disabled={!canEditPagado}
                   onChange={e => setPagadoValue(e.target.value)}
                   onBlur={savePagado}
-                  className="w-full py-1.5 px-1 text-sm outline-none disabled:bg-transparent disabled:text-gray-500"
+                  className="w-full py-1.5 px-1 text-sm outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Faltante</label>
-              <p className="text-sm text-gray-800 py-1.5">{faltanteDisplay}</p>
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Faltante</label>
+              <p className="text-sm text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Estatus</label>
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Estatus</label>
               <div className="py-1">
                 <NominaStatusBadge status={status} />
               </div>
@@ -1493,16 +1539,16 @@ function NominaDetailModal({
           </div>
 
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-2">Control Horario</p>
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Control Horario</p>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
+                <tr className="text-left text-xs text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
                   <th className="pb-2 font-medium">Fecha</th>
                   <th className="pb-2 font-medium">Horas Ordinarias</th>
                   <th className="pb-2 font-medium">Horas Extra</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                 {linkedRecords.map(chRecord => {
                   const entrada = entradaField ? (chRecord.getCellValue(entradaField) as string | null) : null;
                   const horasOrdField = controlHorarioTable.getFieldIfExists(FIELD_IDS.CH_HORAS_ORDINARIAS);
@@ -1511,13 +1557,13 @@ function NominaDetailModal({
                     <tr
                       key={chRecord.id}
                       onClick={() => onSelectControlHorario(chRecord.id)}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-rose-50 dark:hover:bg-white/5 transition-colors"
                     >
-                      <td className="py-2 text-gray-800">{entrada ? formatFechaLarga(entrada.split('T')[0] ?? '') : '-'}</td>
-                      <td className="py-2 text-gray-800">
+                      <td className="py-2 text-gray-800 dark:text-gray-200">{entrada ? formatFechaLarga(entrada.split('T')[0] ?? '') : '-'}</td>
+                      <td className="py-2 text-gray-800 dark:text-gray-200">
                         {horasOrdField ? chRecord.getCellValueAsString(horasOrdField) : '-'}
                       </td>
-                      <td className="py-2 text-gray-800">
+                      <td className="py-2 text-gray-800 dark:text-gray-200">
                         {horasExtraField ? chRecord.getCellValueAsString(horasExtraField) : '-'}
                       </td>
                     </tr>
@@ -1580,63 +1626,63 @@ function ControlHorarioDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-lg shadow-2xl border border-gray-200 max-w-md w-full"
+        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl border border-[#E9D9D9] dark:border-[#382C2E] max-w-md w-full"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between p-4 border-b border-gray-200">
-          <h3 className="text-sm font-medium text-gray-800">Detalle de Control Horario</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
+        <div className="flex items-start justify-between p-4 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+          <h3 className="text-sm font-medium text-gray-800 dark:text-[#F5F3EF]">Detalle de Control Horario</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
             <XIcon className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Empleado</label>
-            <p className="text-sm text-gray-800">{empleado?.name ?? 'Sin empleado'}</p>
+            <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Empleado</label>
+            <p className="text-sm text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Entrada</label>
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Entrada</label>
               <input
                 type="datetime-local"
                 value={entradaValue}
                 disabled={!canEdit}
                 onChange={e => setEntradaValue(e.target.value)}
                 onBlur={saveEntrada}
-                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 py-1.5 text-sm outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Salida</label>
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Salida</label>
               <input
                 type="datetime-local"
                 value={salidaValue}
                 disabled={!canEdit}
                 onChange={e => setSalidaValue(e.target.value)}
                 onBlur={saveSalida}
-                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 py-1.5 text-sm outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Horas Laborables</label>
-              <p className="text-sm text-gray-800">
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Laborables</label>
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 {horasLaborablesField ? record.getCellValueAsString(horasLaborablesField) : '-'}
               </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Horas Ordinarias</label>
-              <p className="text-sm text-gray-800">
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Ordinarias</label>
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 {horasOrdField ? record.getCellValueAsString(horasOrdField) : '-'}
               </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Horas Extra</label>
-              <p className="text-sm text-gray-800">
+              <label className="block text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Extra</label>
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 {horasExtraField ? record.getCellValueAsString(horasExtraField) : '-'}
               </p>
             </div>
