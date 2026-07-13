@@ -106,9 +106,11 @@ Font stack: `font-sans antialiased` (system-ui, -apple-system, Segoe UI, etc.). 
 | Label / Meta | `text-sm` | Labels de campo, texto de soporte, botones |
 | Micro | `text-xs font-bold` | Números de día en calendario, chips pequeños |
 
-**Convención de casing para labels de campo (formularios):** `text-sm text-gray-400 uppercase tracking-wide mb-2 block dark:text-gray-500`. Esta es la convención activa en el código; aplica solo a labels de campo dentro de modales/formularios, no a headers de tabla ni títulos de sección.
+**Regla general de casing: todos los field titles y headers usan `capitalize`, nunca `uppercase`.** Esto aplica sin excepción a labels de campo, headers de tabla y títulos de sección.
 
-**Convención de casing para headers de tabla:** `uppercase tracking-wider` con `text-base font-semibold text-gray-500`.
+**Convención de casing para labels de campo (formularios):** `text-sm text-gray-400 capitalize mb-2 block dark:text-gray-500`. Esta es la convención activa en el código; aplica a labels de campo dentro de modales/formularios, headers de tabla y títulos de sección por igual.
+
+**Convención de casing para headers de tabla:** `capitalize` con `text-base font-semibold text-gray-500`.
 
 **Títulos y headers de sección:** `capitalize` (primera letra de cada palabra), nunca `uppercase`.
 

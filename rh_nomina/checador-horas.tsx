@@ -1424,7 +1424,7 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
         <div className="p-3">
           <table className="w-full text-base">
             <thead>
-              <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+              <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 capitalize border-b border-[#E9D9D9] dark:border-[#382C2E]">
                 <th className="pb-2">Fecha</th>
                 <th className="pb-2">Entrada</th>
                 <th className="pb-2">Salida</th>
@@ -1845,7 +1845,7 @@ function NominaManager({
           {pendingRecords.length > 0 && (
             <table className="w-full text-base">
               <thead>
-                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 capitalize border-b border-[#E9D9D9] dark:border-[#382C2E]">
                   <th className="px-4 py-2">Empleado</th>
                   <th className="px-4 py-2">Horas Ordinarias</th>
                   <th className="px-4 py-2">Horas Extra</th>
@@ -1922,7 +1922,7 @@ function NominaManager({
           ) : (
             <table className="w-full text-base">
               <thead>
-                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 capitalize border-b border-[#E9D9D9] dark:border-[#382C2E]">
                   <th className="px-3 py-2">Empleado</th>
                   <th className="px-3 py-2 text-right">Faltante</th>
                 </tr>
@@ -2260,15 +2260,15 @@ function NominaDetailModal({
             <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Horas Ordinarias</p>
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Trabajado</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Trabajado</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{horasOrdinariasTrabajadasDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Monto</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{montoHorasOrdinariasDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Pagado</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
                   <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                   <input
@@ -2288,15 +2288,15 @@ function NominaDetailModal({
             <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Horas Extra</p>
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Trabajado</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Trabajado</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{horasExtraTrabajadasDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Monto</label>
                 <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{montoHorasExtraDisplay}</p>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Pagado</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
                   <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                   <input
@@ -2314,11 +2314,11 @@ function NominaDetailModal({
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Faltante</label>
+              <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Faltante</label>
               <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Bono de Puntualidad</label>
+              <label className="block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2">Bono de Puntualidad</label>
               <div className="py-1">
                 <PuntualidadBadge value={puntualidadValue} />
               </div>
@@ -2329,7 +2329,7 @@ function NominaDetailModal({
             <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Control Horario</p>
             <table className="w-full text-base">
               <thead>
-                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 capitalize border-b border-[#E9D9D9] dark:border-[#382C2E]">
                   <th className="pb-2">Fecha</th>
                   <th className="pb-2">Horas Ordinarias</th>
                   <th className="pb-2">Horas Extra</th>
@@ -2449,7 +2449,7 @@ function ControlHorarioDetailModal({
   }, [canEdit, horasExtraAutorizadasField, currentHorasExtraAutorizadas, controlHorarioTable, record.id]);
 
   const dateInputCls = 'w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-3 py-2 pr-9 text-base outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5';
-  const labelCls = 'block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2';
+  const labelCls = 'block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2';
 
   return (
     <div className="fixed inset-0 z-[65] flex items-center justify-center p-5" onClick={onClose}>
@@ -2615,7 +2615,7 @@ function AddControlHorarioModal({
   const canSave = canCreate && employeeId.length > 0 && !isSaving;
 
   const dateInputCls = 'w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-3 py-2 pr-9 text-base outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors dark:bg-[#1B1517] dark:text-gray-100 cursor-pointer';
-  const labelCls = 'block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2';
+  const labelCls = 'block text-sm text-gray-400 dark:text-gray-500 capitalize mb-2';
 
   const handleSave = useCallback(async () => {
     if (!canSave) return;
