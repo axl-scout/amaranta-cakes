@@ -240,7 +240,7 @@ function SpinnerColumn({ values, index, onPrev, onNext }: SpinnerColumnProps): R
     return () => el.removeEventListener('wheel', handle);
   }, []);
   const btnCls = 'p-0.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors dark:hover:text-rose-300 dark:hover:bg-white/5';
-  const nc = 'text-3xl font-bold text-gray-800 dark:text-gray-200 w-14 text-center tabular-nums select-none';
+  const nc = 'text-lg font-bold text-gray-800 dark:text-gray-200 w-9 text-center tabular-nums select-none';
   return (
     <div ref={colRef} className="flex flex-col items-center select-none" style={{ userSelect: 'none' }}>
       <button type="button" onMouseDown={e => e.preventDefault()} onClick={onPrev} className={btnCls}><CaretUpIcon size={15} /></button>
@@ -277,19 +277,19 @@ function MiniCalendar({ selectedDate, onSelectDate, onClose }: MiniCalendarProps
   const todayStr = formatDateForComparison(new Date());
   const selectedStr = formatDateForComparison(selectedDate);
   return (
-    <div ref={containerRef} className="absolute top-full left-0 mt-1 z-50 bg-white border border-[#E9D9D9] rounded-lg shadow-lg p-3 w-96 dark:bg-[#251D1F] dark:border-[#382C2E]">
+    <div ref={containerRef} className="absolute top-full left-0 mt-1 z-[70] bg-white border border-[#E9D9D9] rounded-lg shadow-lg p-3 w-64 dark:bg-[#251D1F] dark:border-[#382C2E]">
       <div className="flex items-center justify-between mb-2">
         <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} className="p-1 hover:bg-rose-50 rounded transition-colors dark:hover:bg-white/5">
-          <CaretLeftIcon size={18} className="text-gray-600 dark:text-gray-400" />
+          <CaretLeftIcon size={16} className="text-gray-600 dark:text-gray-400" />
         </button>
-        <span className="text-2xl font-medium text-gray-800 capitalize dark:text-gray-200">{monthLabel}</span>
+        <span className="text-base font-medium text-gray-800 capitalize dark:text-gray-200">{monthLabel}</span>
         <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} className="p-1 hover:bg-rose-50 rounded transition-colors dark:hover:bg-white/5">
-          <CaretRightIcon size={18} className="text-gray-600 dark:text-gray-400" />
+          <CaretRightIcon size={16} className="text-gray-600 dark:text-gray-400" />
         </button>
       </div>
       <div className="grid grid-cols-7 gap-1 mb-1">
         {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map(d => (
-          <div key={d} className="text-xl text-gray-500 text-center dark:text-gray-500">{d}</div>
+          <div key={d} className="text-sm text-gray-500 text-center dark:text-gray-500">{d}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
@@ -298,9 +298,9 @@ function MiniCalendar({ selectedDate, onSelectDate, onClose }: MiniCalendarProps
           const dateStr = formatDateForComparison(new Date(year, month, day));
           const isToday = dateStr === todayStr;
           const isSelected = dateStr === selectedStr;
-          let cls = 'text-2xl rounded transition-colors text-center py-1 cursor-pointer hover:bg-rose-50 text-gray-800 dark:text-gray-200 dark:hover:bg-white/5';
-          if (isToday && !isSelected) cls = 'text-2xl rounded transition-colors text-center py-1 cursor-pointer bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300';
-          if (isSelected) cls = 'text-2xl rounded transition-colors text-center py-1 cursor-pointer bg-rose-600 text-white dark:bg-rose-500';
+          let cls = 'text-base rounded transition-colors text-center py-1 cursor-pointer hover:bg-rose-50 text-gray-800 dark:text-gray-200 dark:hover:bg-white/5';
+          if (isToday && !isSelected) cls = 'text-base rounded transition-colors text-center py-1 cursor-pointer bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300';
+          if (isSelected) cls = 'text-base rounded transition-colors text-center py-1 cursor-pointer bg-rose-600 text-white dark:bg-rose-500';
           return (
             <button key={idx} type="button" onClick={() => onSelectDate(new Date(year, month, day))} className={cls}>
               {day}
@@ -309,7 +309,7 @@ function MiniCalendar({ selectedDate, onSelectDate, onClose }: MiniCalendarProps
         })}
       </div>
       <div className="mt-2 text-center">
-        <button type="button" onClick={() => onSelectDate(new Date())} className="text-xl text-rose-600 hover:underline dark:text-rose-400">
+        <button type="button" onClick={() => onSelectDate(new Date())} className="text-sm text-rose-600 hover:underline dark:text-rose-400">
           Ir a hoy
         </button>
       </div>
@@ -392,12 +392,12 @@ function CustomTimePicker({ value, onChange, placeholder = 'Hora' }: CustomTimeP
         onFocus={() => setOpen(true)}
         onBlur={handleInputBlur}
         placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xl text-gray-900 outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-100 dark:placeholder-gray-600 dark:focus:border-rose-400"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-900 outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-100 dark:placeholder-gray-600 dark:focus:border-rose-400"
       />
       {open && (
         <div className="absolute top-full right-0 mt-1 z-[70] bg-white border border-[#E9D9D9] rounded-lg shadow-md p-2 flex items-center gap-0.5 dark:bg-[#251D1F] dark:border-[#382C2E]">
           <SpinnerColumn values={SPIN_HOURS} index={hourIdx} onPrev={prevHour} onNext={nextHour} />
-          <span className="text-gray-300 text-2xl font-bold mb-0.5 px-0.5 dark:text-gray-600">:</span>
+          <span className="text-gray-300 text-base font-bold mb-0.5 px-0.5 dark:text-gray-600">:</span>
           <SpinnerColumn values={SPIN_MINUTES} index={minIdx} onPrev={prevMinute} onNext={nextMinute} />
           <div className="w-px h-6 bg-gray-200 mx-1.5 dark:bg-white/10" />
           <SpinnerColumn values={SPIN_PERIODS} index={periodIdx} onPrev={togglePeriod} onNext={togglePeriod} />
@@ -1028,11 +1028,11 @@ function ImportadorChecadorApp(): React.ReactElement {
 
   if (errorState) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+      <div className="h-screen flex items-center justify-center overflow-hidden font-sans antialiased bg-[#F8F2F2] dark:bg-[#1B1517] p-8">
         <div className="text-center">
-          <XCircleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-800 text-2xl">Error de configuración</p>
-          <p className="text-gray-500 text-lg mt-2">{errorState.message}</p>
+          <XCircleIcon className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+          <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl font-bold">Error de configuración</p>
+          <p className="text-gray-500 dark:text-gray-400 text-base mt-2">{errorState.message}</p>
         </div>
       </div>
     );
@@ -1040,11 +1040,11 @@ function ImportadorChecadorApp(): React.ReactElement {
 
   if (!empleadosTable || !controlHorarioTable || !nominaTable) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+      <div className="h-screen flex items-center justify-center overflow-hidden font-sans antialiased bg-[#F8F2F2] dark:bg-[#1B1517] p-8">
         <div className="text-center">
           <WarningIcon className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <p className="text-gray-800 text-2xl font-medium">Configuración Requerida</p>
-          <p className="text-gray-500 text-lg mt-2">
+          <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl font-bold">Configuración Requerida</p>
+          <p className="text-gray-500 dark:text-gray-400 text-base mt-2">
             Configura las tablas de Empleados, Control Horario y Nómina en el panel de propiedades.
           </p>
         </div>
@@ -1067,8 +1067,8 @@ function ImportadorChecadorApp(): React.ReactElement {
         >
           <div>
             <UploadSimpleIcon className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl mb-1">Arrastra el reporte semanal del checador (.csv)</p>
-            <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">o selecciónalo desde tu computadora</p>
+            <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl font-bold mb-1">Arrastra el reporte semanal del checador (.csv)</p>
+            <p className="text-gray-500 dark:text-gray-400 text-base mb-4">o selecciónalo desde tu computadora</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -1104,8 +1104,8 @@ function ImportadorChecadorApp(): React.ReactElement {
         <div className="flex items-center justify-center py-16">
           <div className="text-center max-w-md mx-auto">
             <XCircleIcon className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-            <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl mb-2">Error</p>
-            <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">{viewState.message}</p>
+            <p className="text-gray-800 dark:text-[#F5F3EF] text-2xl font-bold mb-2">Error</p>
+            <p className="text-gray-500 dark:text-gray-400 text-base mb-4">{viewState.message}</p>
             <button
               onClick={handleReset}
               className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
@@ -1176,7 +1176,7 @@ function ImportadorChecadorApp(): React.ReactElement {
       return (
         <div>
           <div className="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-lg border border-[#E9D9D9] dark:border-[#382C2E]">
-            <p className="text-lg text-gray-600 dark:text-gray-400">
+            <p className="text-base text-gray-600 dark:text-gray-400">
               {totalEmployees} empleados · {validRows} registros válidos · {warningRows} advertencias · {errorRows} errores
             </p>
           </div>
@@ -1184,7 +1184,7 @@ function ImportadorChecadorApp(): React.ReactElement {
           <div className="space-y-8 mb-6">
             {weekGroups.map(week => (
               <div key={week.key}>
-                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   {formatWeekLabel(week.weekNumber, week.start, week.end)}
                 </h3>
                 <div className="space-y-4">
@@ -1248,7 +1248,7 @@ function ImportadorChecadorApp(): React.ReactElement {
         <div>
           <div className="text-center mb-8">
             <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-medium text-gray-800 dark:text-[#F5F3EF] mb-2">Importación Completada</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-[#F5F3EF] mb-2">Importación Completada</h2>
             <p className="text-gray-600 dark:text-gray-400">
               {result.totalControlHorario} registros de Control Horario creados, {result.totalNomina} registros de Nómina creados
             </p>
@@ -1256,23 +1256,23 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.employees.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Resumen por empleado y semana</h3>
+              <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-3 capitalize">Resumen por empleado y semana</h3>
               <div className="bg-gray-50 dark:bg-white/5 rounded-lg border border-[#E9D9D9] dark:border-[#382C2E] divide-y divide-[#E9D9D9] dark:divide-[#382C2E]">
                 {result.employees.map((emp, idx) => (
                   <div key={idx} className="p-3 flex justify-between items-center">
                     <div>
-                      <p className="text-lg text-gray-800 dark:text-gray-200">{emp.employeeName} · {emp.weekLabel}</p>
-                      <p className="text-base text-gray-500 dark:text-gray-400">
+                      <p className="text-base text-gray-800 dark:text-gray-200">{emp.employeeName} · {emp.weekLabel}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {emp.controlHorarioCreated} Control Horario · {emp.nominaCreated ? 'Nómina creada' : 'Sin nómina'}
                       </p>
                     </div>
                     {emp.error && (
-                      <span className="text-base bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
+                      <span className="text-sm font-medium bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 dark:text-rose-300">
                         Error: {emp.error}
                       </span>
                     )}
                     {emp.salarioPendiente && (
-                      <span className="text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+                      <span className="text-sm font-medium bg-yellow-50 text-yellow-700 px-2.5 py-0.5 rounded-full dark:bg-yellow-500/15 dark:text-yellow-300">
                         Salario pendiente
                       </span>
                     )}
@@ -1284,8 +1284,8 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.skippedDuplicates > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Advertencias</h3>
-              <p className="text-lg text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3 dark:text-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-500/30">
+              <h3 className="text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Advertencias</h3>
+              <p className="text-base text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3 dark:text-yellow-200 dark:bg-yellow-500/10 dark:border-yellow-500/30">
                 {result.skippedDuplicates} registro(s) duplicado(s) omitido(s)
               </p>
             </div>
@@ -1293,10 +1293,10 @@ function ImportadorChecadorApp(): React.ReactElement {
 
           {result.notFoundRows.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Empleados no encontrados</h3>
+              <h3 className="text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Empleados no encontrados</h3>
               <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 dark:bg-rose-500/10 dark:border-rose-500/30">
                 {result.notFoundRows.map((row, idx) => (
-                  <p key={idx} className="text-lg text-rose-700 dark:text-rose-300">
+                  <p key={idx} className="text-base text-rose-700 dark:text-rose-300">
                     #{row.employeeNumber} - {row.employeeName}
                   </p>
                 ))}
@@ -1320,7 +1320,7 @@ function ImportadorChecadorApp(): React.ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#1B1517] flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden font-sans antialiased bg-[#F8F2F2] dark:bg-[#1B1517]">
       <NominaManager
         nominaTable={nominaTable}
         controlHorarioTable={controlHorarioTable}
@@ -1331,16 +1331,16 @@ function ImportadorChecadorApp(): React.ReactElement {
 
       {showImportModal && (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm p-5"
           style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
           onClick={handleCloseImportModal}
         >
           <div
-            className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto"
+            className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl w-[60vw] min-w-[560px] max-w-[60vw] max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-[#E9D9D9] dark:border-[#382C2E] sticky top-0 bg-white dark:bg-[#251D1F]">
-              <h2 className="text-2xl font-medium text-gray-800 dark:text-[#F5F3EF]">Importar checador</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-[#F5F3EF]">Importar checador</h2>
               <button onClick={handleCloseImportModal} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
                 <XIcon className="w-5 h-5" />
               </button>
@@ -1366,28 +1366,28 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
     switch (group.groupStatus) {
       case 'ok':
         return (
-          <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-1 rounded dark:bg-green-500/15 dark:text-green-300">
+          <span className="inline-flex items-center gap-1 text-sm font-medium bg-green-50 text-green-700 px-2.5 py-0.5 rounded-full dark:bg-green-500/15 dark:text-green-300">
             <CheckCircleIcon className="w-3 h-3" />
             OK
           </span>
         );
       case 'partial':
         return (
-          <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+          <span className="inline-flex items-center gap-1 text-sm font-medium bg-yellow-50 text-yellow-700 px-2.5 py-0.5 rounded-full dark:bg-yellow-500/15 dark:text-yellow-300">
             <WarningIcon className="w-3 h-3" />
             Parcial
           </span>
         );
       case 'duplicate':
         return (
-          <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+          <span className="inline-flex items-center gap-1 text-sm font-medium bg-yellow-50 text-yellow-700 px-2.5 py-0.5 rounded-full dark:bg-yellow-500/15 dark:text-yellow-300">
             <WarningIcon className="w-3 h-3" />
             Duplicados
           </span>
         );
       case 'not_found':
         return (
-          <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-700 px-2 py-1 rounded dark:bg-rose-500/15 dark:text-rose-300">
+          <span className="inline-flex items-center gap-1 text-sm font-medium bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 dark:text-rose-300">
             <XCircleIcon className="w-3 h-3" />
             No encontrado
           </span>
@@ -1407,10 +1407,10 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
           ) : (
             <CaretRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           )}
-          <span className="text-lg font-medium text-gray-800 dark:text-gray-200">
+          <span className="text-base font-medium text-gray-800 dark:text-gray-200">
             {group.employeeName}
           </span>
-          <span className="text-base text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             #{group.employeeNumber}
           </span>
         </div>
@@ -1419,14 +1419,14 @@ function EmployeeGroupComponent({ group, onToggleRow, disabled }: EmployeeGroupP
 
       {expanded && (
         <div className="p-3">
-          <table className="w-full text-lg">
+          <table className="w-full text-base">
             <thead>
-              <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-                <th className="pb-2 font-medium">Fecha</th>
-                <th className="pb-2 font-medium">Entrada</th>
-                <th className="pb-2 font-medium">Salida</th>
-                <th className="pb-2 font-medium">Estado</th>
-                <th className="pb-2 font-medium text-center">Incluir</th>
+              <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                <th className="pb-2">Fecha</th>
+                <th className="pb-2">Entrada</th>
+                <th className="pb-2">Salida</th>
+                <th className="pb-2">Estado</th>
+                <th className="pb-2 text-center">Incluir</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -1466,7 +1466,7 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
   switch (status) {
     case 'ok':
       return (
-        <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-0.5 rounded dark:bg-green-500/15 dark:text-green-300">
+        <span className="inline-flex items-center gap-1 text-sm font-medium bg-green-50 text-green-700 px-2.5 py-0.5 rounded-full dark:bg-green-500/15 dark:text-green-300">
           <CheckCircleIcon className="w-3 h-3" />
           {message}
         </span>
@@ -1474,14 +1474,14 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
     case 'partial':
     case 'duplicate':
       return (
-        <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded dark:bg-yellow-500/15 dark:text-yellow-300">
+        <span className="inline-flex items-center gap-1 text-sm font-medium bg-yellow-50 text-yellow-700 px-2.5 py-0.5 rounded-full dark:bg-yellow-500/15 dark:text-yellow-300">
           <WarningIcon className="w-3 h-3" />
           {message}
         </span>
       );
     case 'not_found':
       return (
-        <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-700 px-2 py-0.5 rounded dark:bg-rose-500/15 dark:text-rose-300">
+        <span className="inline-flex items-center gap-1 text-sm font-medium bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 dark:text-rose-300">
           <XCircleIcon className="w-3 h-3" />
           {message}
         </span>
@@ -1642,32 +1642,32 @@ function NominaManager({
   const hasAnyNominaRecords = !!nominaRecords && nominaRecords.length > 0;
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
+    <div className="flex-1 min-h-0 overflow-auto p-6">
       <div className="max-w-7xl mx-auto flex gap-6 items-start">
         <div className="flex-1 min-w-0 border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
           {!hasAnyNominaRecords && (
             <div className="text-center py-20">
               <UploadSimpleIcon className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-300 mb-1">Aún no hay registros de Nómina.</p>
-              <p className="text-gray-500 dark:text-gray-500 text-lg">Importa el reporte del checador para generar los primeros registros.</p>
+              <p className="text-gray-500 dark:text-gray-500 text-base">Importa el reporte del checador para generar los primeros registros.</p>
             </div>
           )}
 
           {hasAnyNominaRecords && pendingRecords.length === 0 && (
-            <p className="text-lg text-gray-500 dark:text-gray-500 text-center py-12">
+            <p className="text-base text-gray-500 dark:text-gray-500 text-center py-12">
               No hay registros de Nómina pendientes de pago.
             </p>
           )}
 
           {pendingRecords.length > 0 && (
-            <table className="w-full text-lg">
+            <table className="w-full text-base">
               <thead>
-                <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-                  <th className="px-4 py-2 font-medium">Empleado</th>
-                  <th className="px-4 py-2 font-medium">Horas Ordinarias</th>
-                  <th className="px-4 py-2 font-medium">Horas Extra</th>
-                  <th className="px-4 py-2 font-medium">Faltante</th>
-                  <th className="px-4 py-2 font-medium">Estatus</th>
+                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                  <th className="px-4 py-2">Empleado</th>
+                  <th className="px-4 py-2">Horas Ordinarias</th>
+                  <th className="px-4 py-2">Horas Extra</th>
+                  <th className="px-4 py-2">Faltante</th>
+                  <th className="px-4 py-2">Estatus</th>
                 </tr>
               </thead>
               {weekGroups.map(group => {
@@ -1678,7 +1678,7 @@ function NominaManager({
                     onClick={() => toggleWeek(group.label)}
                     className="bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 cursor-pointer transition-colors"
                   >
-                    <td colSpan={5} className="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-300">
+                    <td colSpan={5} className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                       <div className="flex items-center gap-2">
                         {isExpanded ? (
                           <CaretDownIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -1729,7 +1729,7 @@ function NominaManager({
 
         <div className="w-80 shrink-0 border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
           <div className="flex items-center justify-between p-3 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-            <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300">Resumen por empleado</h3>
+            <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 capitalize">Resumen por empleado</h3>
             <button
               onClick={onOpenImport}
               title="Importar"
@@ -1740,15 +1740,15 @@ function NominaManager({
           </div>
 
           {employeeSummary.length === 0 ? (
-            <p className="text-base text-gray-500 dark:text-gray-500 text-center py-10 px-3">
+            <p className="text-sm text-gray-500 dark:text-gray-500 text-center py-10 px-3">
               Sin montos pendientes.
             </p>
           ) : (
-            <table className="w-full text-lg">
+            <table className="w-full text-base">
               <thead>
-                <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-                  <th className="px-3 py-2 font-medium">Empleado</th>
-                  <th className="px-3 py-2 font-medium text-right">Faltante</th>
+                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                  <th className="px-3 py-2">Empleado</th>
+                  <th className="px-3 py-2 text-right">Faltante</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E9D9D9] dark:divide-[#382C2E]">
@@ -1790,21 +1790,21 @@ function NominaStatusBadge({ status }: { status: string | undefined }): React.Re
   switch (status) {
     case 'Pagado':
       return (
-        <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
+        <span className="inline-flex items-center gap-1 text-sm font-medium bg-green-50 text-green-700 px-2.5 py-0.5 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
           <CheckCircleIcon className="w-3 h-3" />
           Pagado
         </span>
       );
     case 'Parcial':
       return (
-        <span className="inline-flex items-center gap-1 text-base bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-300 dark:border-yellow-500/30">
+        <span className="inline-flex items-center gap-1 text-sm font-medium bg-yellow-50 text-yellow-700 px-2.5 py-0.5 rounded-full border border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-300 dark:border-yellow-500/30">
           <WarningIcon className="w-3 h-3" />
           Parcial
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-600 px-2 py-1 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
+        <span className="inline-flex items-center gap-1 text-sm font-medium bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
           {status ?? 'Pendiente'}
         </span>
       );
@@ -1814,21 +1814,21 @@ function NominaStatusBadge({ status }: { status: string | undefined }): React.Re
 function PuntualidadBadge({ value }: { value: boolean | null }): React.ReactElement {
   if (value === null) {
     return (
-      <span className="inline-flex items-center gap-1 text-base bg-gray-100 text-gray-500 px-2 py-1 rounded-full border border-gray-200 dark:bg-white/5 dark:text-gray-500 dark:border-[#382C2E]">
+      <span className="inline-flex items-center gap-1 text-sm font-medium bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full border border-gray-200 dark:bg-white/5 dark:text-gray-500 dark:border-[#382C2E]">
         Sin datos
       </span>
     );
   }
   if (value) {
     return (
-      <span className="inline-flex items-center gap-1 text-base bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
+      <span className="inline-flex items-center gap-1 text-sm font-medium bg-green-50 text-green-700 px-2.5 py-0.5 rounded-full border border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30">
         <CheckCircleIcon className="w-3 h-3" />
         Cumplida
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-base bg-rose-50 text-rose-600 px-2 py-1 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
+    <span className="inline-flex items-center gap-1 text-sm font-medium bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full border border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30">
       No cumplida
     </span>
   );
@@ -1950,21 +1950,21 @@ function NominaDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm p-5"
       style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto"
+        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl w-[60vw] min-w-[560px] max-w-[60vw] max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between p-5 border-b border-[#E9D9D9] dark:border-[#382C2E]">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-medium text-gray-800 dark:text-[#F5F3EF]">Pago de Nómina</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-[#F5F3EF]">Pago de Nómina</h2>
               <NominaStatusBadge status={status} />
             </div>
-            <p className="text-lg text-gray-500 dark:text-gray-400">{empleadoName ?? 'Sin empleado'} · {semana}</p>
+            <p className="text-base text-gray-500 dark:text-gray-400">{empleadoName ?? 'Sin empleado'} · {semana}</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
             <XIcon className="w-5 h-5" />
@@ -1973,27 +1973,27 @@ function NominaDetailModal({
 
         <div className="p-5 space-y-5">
           <div>
-            <p className="text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Ordinarias</p>
+            <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Horas Ordinarias</p>
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Ordinarias Trabajadas</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasOrdinariasTrabajadasDisplay}</p>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Ordinarias Trabajadas</label>
+                <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{horasOrdinariasTrabajadasDisplay}</p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Ordinarias</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasOrdinariasDisplay}</p>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto Horas Ordinarias</label>
+                <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{montoHorasOrdinariasDisplay}</p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado Ordinario</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado Ordinario</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
-                  <span className="text-gray-500 dark:text-gray-400 text-lg">$</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                   <input
                     type="number"
                     value={pagadoOrdinarioValue}
                     disabled={!canEditPagado}
                     onChange={e => setPagadoOrdinarioValue(e.target.value)}
                     onBlur={savePagadoOrdinario}
-                    className="w-full py-1.5 px-1 text-lg outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
+                    className="w-full py-1.5 px-1 text-base outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
@@ -2001,27 +2001,27 @@ function NominaDetailModal({
           </div>
 
           <div>
-            <p className="text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Extra</p>
+            <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Horas Extra</p>
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Horas Extra Trabajadas</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{horasExtraTrabajadasDisplay}</p>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Horas Extra Trabajadas</label>
+                <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{horasExtraTrabajadasDisplay}</p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Monto Horas Extra</label>
-                <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{montoHorasExtraDisplay}</p>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Monto Horas Extra</label>
+                <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{montoHorasExtraDisplay}</p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Pagado Extra</label>
+                <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Pagado Extra</label>
                 <div className="flex items-center border border-gray-300 dark:border-[#382C2E] rounded-lg px-2 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-300 transition-colors">
-                  <span className="text-gray-500 dark:text-gray-400 text-lg">$</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                   <input
                     type="number"
                     value={pagadoExtraValue}
                     disabled={!canEditPagado}
                     onChange={e => setPagadoExtraValue(e.target.value)}
                     onBlur={savePagadoExtra}
-                    className="w-full py-1.5 px-1 text-lg outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
+                    className="w-full py-1.5 px-1 text-base outline-none disabled:bg-transparent disabled:text-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
@@ -2030,11 +2030,11 @@ function NominaDetailModal({
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Faltante</label>
-              <p className="text-lg text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
+              <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Faltante</label>
+              <p className="text-base text-gray-800 dark:text-gray-200 py-1.5">{faltanteDisplay}</p>
             </div>
             <div>
-              <label className="block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Bono de Puntualidad</label>
+              <label className="block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Bono de Puntualidad</label>
               <div className="py-1">
                 <PuntualidadBadge value={puntualidadValue} />
               </div>
@@ -2042,14 +2042,14 @@ function NominaDetailModal({
           </div>
 
           <div>
-            <p className="text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Control Horario</p>
-            <table className="w-full text-lg">
+            <p className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2 capitalize">Control Horario</p>
+            <table className="w-full text-base">
               <thead>
-                <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-                  <th className="pb-2 font-medium">Fecha</th>
-                  <th className="pb-2 font-medium">Horas Ordinarias</th>
-                  <th className="pb-2 font-medium">Horas Extra</th>
-                  <th className="pb-2 font-medium text-center">Extra Autorizadas</th>
+                <tr className="text-left text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                  <th className="pb-2">Fecha</th>
+                  <th className="pb-2">Horas Ordinarias</th>
+                  <th className="pb-2">Horas Extra</th>
+                  <th className="pb-2 text-center">Extra Autorizadas</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -2164,17 +2164,17 @@ function ControlHorarioDetailModal({
     });
   }, [canEdit, horasExtraAutorizadasField, currentHorasExtraAutorizadas, controlHorarioTable, record.id]);
 
-  const dateInputCls = 'w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-3 py-2 pr-9 text-lg outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5';
-  const labelCls = 'block text-base font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1';
+  const dateInputCls = 'w-full border border-gray-300 dark:border-[#382C2E] rounded-lg px-3 py-2 pr-9 text-base outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300 transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-[#1B1517] dark:text-gray-100 dark:disabled:bg-white/5';
+  const labelCls = 'block text-sm text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[65] flex items-center justify-center p-5" onClick={onClose}>
       <div
-        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl border border-[#E9D9D9] dark:border-[#382C2E] max-w-lg w-full"
+        className="bg-white dark:bg-[#251D1F] rounded-2xl shadow-2xl border border-[#E9D9D9] dark:border-[#382C2E] max-w-[580px] w-full"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between p-4 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-          <h3 className="text-lg font-medium text-gray-800 dark:text-[#F5F3EF]">Detalle de Control Horario</h3>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-[#F5F3EF]">Detalle de Control Horario</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:cursor-pointer">
             <XIcon className="w-4 h-4" />
           </button>
@@ -2184,7 +2184,7 @@ function ControlHorarioDetailModal({
           <div className="flex items-end justify-between gap-3">
             <div>
               <label className={labelCls}>Empleado</label>
-              <p className="text-lg text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
+              <p className="text-base text-gray-800 dark:text-gray-200">{empleado?.name ?? 'Sin empleado'}</p>
             </div>
             <div className="flex items-center gap-2 pb-0.5">
               <ExtraAutorizadasToggle
@@ -2192,7 +2192,7 @@ function ControlHorarioDetailModal({
                 disabled={!canEdit || !horasExtraAutorizadasField}
                 onToggle={toggleHorasExtraAutorizadas}
               />
-              <span className="text-base text-gray-600 dark:text-gray-400 whitespace-nowrap">Horas Extra Autorizadas</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Horas Extra Autorizadas</span>
             </div>
           </div>
 
@@ -2273,19 +2273,19 @@ function ControlHorarioDetailModal({
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className={labelCls}>Horas Laborables</label>
-              <p className="text-lg text-gray-800 dark:text-gray-200">
+              <p className="text-base text-gray-800 dark:text-gray-200">
                 {horasLaborablesField ? record.getCellValueAsString(horasLaborablesField) : '-'}
               </p>
             </div>
             <div>
               <label className={labelCls}>Horas Ordinarias</label>
-              <p className="text-lg text-gray-800 dark:text-gray-200">
+              <p className="text-base text-gray-800 dark:text-gray-200">
                 {horasOrdField ? record.getCellValueAsString(horasOrdField) : '-'}
               </p>
             </div>
             <div>
               <label className={labelCls}>Horas Extra</label>
-              <p className="text-lg text-gray-800 dark:text-gray-200">
+              <p className="text-base text-gray-800 dark:text-gray-200">
                 {horasExtraField ? record.getCellValueAsString(horasExtraField) : '-'}
               </p>
             </div>
