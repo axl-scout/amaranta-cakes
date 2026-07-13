@@ -140,6 +140,10 @@ function formatFechaCorta(date: Date): string {
   return `${diaSemana} ${String(date.getDate()).padStart(2, '0')} de ${mes}`;
 }
 
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(value);
+}
+
 function formatDateForComparison(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -1533,6 +1537,37 @@ function NominaManager({
     return pendientes;
   }, [nominaRecords, nominaTable]);
 
+  const weekGroups = useMemo<{ label: string; sortKey: number; records: AirtableRecord[] }[]>(() => {
+    if (!nominaTable) return [];
+    const groupMap = new Map<string, { label: string; sortKey: number; records: AirtableRecord[] }>();
+    for (const record of pendingRecords) {
+      const label = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP) ?? 'Semana desconocida';
+      const inicio = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_INICIO_SEMANA);
+      const sortKey = inicio ? new Date(inicio).getTime() : -Infinity;
+      if (!groupMap.has(label)) {
+        groupMap.set(label, { label, sortKey, records: [] });
+      }
+      groupMap.get(label)!.records.push(record);
+    }
+    return Array.from(groupMap.values()).sort((a, b) => b.sortKey - a.sortKey);
+  }, [pendingRecords, nominaTable]);
+
+  const employeeSummary = useMemo<{ name: string; faltante: number }[]>(() => {
+    if (!nominaTable) return [];
+    const faltanteField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_FALTANTE);
+    if (!faltanteField) return [];
+
+    const totals = new Map<string, number>();
+    for (const record of pendingRecords) {
+      const name = getEmpleadoName(record, nominaTable) ?? 'Sin empleado';
+      const faltante = (record.getCellValue(faltanteField) as number | null) ?? 0;
+      totals.set(name, (totals.get(name) ?? 0) + faltante);
+    }
+    return Array.from(totals.entries())
+      .map(([name, faltante]) => ({ name, faltante }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [pendingRecords, nominaTable]);
+
   const selectedNominaRecord = useMemo(
     () => nominaRecords?.find(r => r.id === selectedNominaId) ?? null,
     [nominaRecords, selectedNominaId]
@@ -1554,18 +1589,8 @@ function NominaManager({
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
-          <div className="flex items-center justify-end p-3 border-b border-[#E9D9D9] dark:border-[#382C2E]">
-            <button
-              onClick={onOpenImport}
-              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-lg dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-            >
-              <UploadSimpleIcon className="w-4 h-4" />
-              Importar
-            </button>
-          </div>
-
+      <div className="max-w-7xl mx-auto flex gap-6 items-start">
+        <div className="flex-1 min-w-0 border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
           {!hasAnyNominaRecords && (
             <div className="text-center py-20">
               <UploadSimpleIcon className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
@@ -1585,44 +1610,84 @@ function NominaManager({
               <thead>
                 <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
                   <th className="px-4 py-2 font-medium">Empleado</th>
-                  <th className="px-4 py-2 font-medium">Semana</th>
                   <th className="px-4 py-2 font-medium">Horas Ordinarias</th>
                   <th className="px-4 py-2 font-medium">Horas Extra</th>
                   <th className="px-4 py-2 font-medium">Faltante</th>
                   <th className="px-4 py-2 font-medium">Estatus</th>
                 </tr>
               </thead>
+              {weekGroups.map(group => (
+                <tbody key={group.label} className="divide-y divide-[#E9D9D9] dark:divide-[#382C2E] border-t border-[#E9D9D9] dark:border-[#382C2E]">
+                  <tr className="bg-gray-50 dark:bg-white/5">
+                    <td colSpan={5} className="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-300">
+                      {group.label}
+                    </td>
+                  </tr>
+                  {group.records.map(record => {
+                    const empleadoName = getEmpleadoName(record, nominaTable);
+                    const status = getStatusName(record, nominaTable);
+                    const montoOrdinariasField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_ORDINARIAS);
+                    const montoExtraField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_EXTRA);
+                    const faltanteField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_FALTANTE);
+                    return (
+                      <tr
+                        key={record.id}
+                        onClick={() => setSelectedNominaId(record.id)}
+                        className="cursor-pointer hover:bg-rose-50 dark:hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{empleadoName ?? 'Sin empleado'}</td>
+                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                          {montoOrdinariasField ? record.getCellValueAsString(montoOrdinariasField) : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                          {montoExtraField ? record.getCellValueAsString(montoExtraField) : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                          {faltanteField ? record.getCellValueAsString(faltanteField) : '-'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <NominaStatusBadge status={status} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              ))}
+            </table>
+          )}
+        </div>
+
+        <div className="w-80 shrink-0 border border-[#E9D9D9] dark:border-[#382C2E] rounded-lg overflow-hidden bg-white dark:bg-[#251D1F]">
+          <div className="flex items-center justify-between p-3 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+            <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300">Resumen por empleado</h3>
+            <button
+              onClick={onOpenImport}
+              title="Importar"
+              className="bg-gray-900 text-white p-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center justify-center dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+            >
+              <UploadSimpleIcon className="w-4 h-4" />
+            </button>
+          </div>
+
+          {employeeSummary.length === 0 ? (
+            <p className="text-base text-gray-500 dark:text-gray-500 text-center py-10 px-3">
+              Sin montos pendientes.
+            </p>
+          ) : (
+            <table className="w-full text-lg">
+              <thead>
+                <tr className="text-left text-base text-gray-500 dark:text-gray-400 border-b border-[#E9D9D9] dark:border-[#382C2E]">
+                  <th className="px-3 py-2 font-medium">Empleado</th>
+                  <th className="px-3 py-2 font-medium text-right">Faltante</th>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-[#E9D9D9] dark:divide-[#382C2E]">
-                {pendingRecords.map(record => {
-                  const empleadoName = getEmpleadoName(record, nominaTable);
-                  const semana = getLookupFirst<string>(record, nominaTable, FIELD_IDS.NOMINA_SEMANA_LOOKUP);
-                  const status = getStatusName(record, nominaTable);
-                  const montoOrdinariasField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_ORDINARIAS);
-                  const montoExtraField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_MONTO_HORAS_EXTRA);
-                  const faltanteField = nominaTable.getFieldIfExists(FIELD_IDS.NOMINA_FALTANTE);
-                  return (
-                    <tr
-                      key={record.id}
-                      onClick={() => setSelectedNominaId(record.id)}
-                      className="cursor-pointer hover:bg-rose-50 dark:hover:bg-white/5 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{empleadoName ?? 'Sin empleado'}</td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{semana ?? '-'}</td>
-                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
-                        {montoOrdinariasField ? record.getCellValueAsString(montoOrdinariasField) : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
-                        {montoExtraField ? record.getCellValueAsString(montoExtraField) : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
-                        {faltanteField ? record.getCellValueAsString(faltanteField) : '-'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <NominaStatusBadge status={status} />
-                      </td>
-                    </tr>
-                  );
-                })}
+                {employeeSummary.map(item => (
+                  <tr key={item.name}>
+                    <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.name}</td>
+                    <td className="px-3 py-2 text-right text-gray-800 dark:text-gray-200">{formatCurrency(item.faltante)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
