@@ -502,29 +502,23 @@ function FilterDropdown({ label, values, options, onChange }: {
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
   }, []);
-  const displayText = values.length === 0 ? 'Todos' : values.length === 1 ? values[0]! : `${values.length} seleccionados`;
+  const displayText = values.length === 0 ? label : values.length === 1 ? values[0]! : `${values.length} seleccionados`;
   const toggleOption = (opt: string) => onChange(values.includes(opt) ? values.filter(v => v !== opt) : [...values, opt]);
   const hasValue = values.length > 0;
   return (
-    <div className="flex items-center gap-2">
-      {label && <span className="text-sm text-gray-500 font-medium whitespace-nowrap dark:text-gray-400">{label}</span>}
-      <div ref={containerRef} className="relative">
-        <button type="button" onClick={() => setOpen(o => !o)}
-          className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50">
-          <span className="truncate">{displayText}</span>
-          {hasValue ? (
-            <XIcon size={14} className="text-gray-400 flex-shrink-0 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-              onClick={(e) => { e.stopPropagation(); onChange([]); }} />
-          ) : (
-            <CaretDownIcon size={14} className={`text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-          )}
-        </button>
-        {open && (
-          <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[260px] overflow-y-auto w-[200px] py-1 dark:bg-[#251D1F] dark:border-[#382C2E]">
-            <button type="button" onClick={() => { onChange([]); setOpen(false); }}
-              className={`w-full text-left px-3 py-1.5 text-base transition-colors ${values.length === 0 ? 'bg-rose-50 text-rose-700 font-medium dark:bg-rose-500/15 dark:text-rose-300' : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'}`}>
-              Todos
-            </button>
+    <div className="relative" ref={containerRef}>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50">
+        <span className="truncate">{displayText}</span>
+        {hasValue ? (
+          <XIcon size={14} className="text-gray-400 flex-shrink-0 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+            onClick={(e) => { e.stopPropagation(); onChange([]); }} />
+        ) : (
+          <CaretDownIcon size={14} className={`text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        )}
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[260px] overflow-y-auto w-[200px] py-1 dark:bg-[#251D1F] dark:border-[#382C2E]">
             {options.map(opt => {
               const sel = values.includes(opt);
               return (
@@ -536,7 +530,6 @@ function FilterDropdown({ label, values, options, onChange }: {
             })}
           </div>
         )}
-      </div>
     </div>
   );
 }
@@ -2026,7 +2019,7 @@ function PedidosApp(): React.ReactElement {
         </div>
 
         {/* Estatus filter */}
-        <FilterDropdown label="" values={selectedEstatus} options={['Pendiente', 'Entregado']} onChange={setSelectedEstatus} />
+        <FilterDropdown label="Estatus" values={selectedEstatus} options={['Pendiente', 'Entregado']} onChange={setSelectedEstatus} />
 
         {/* ── Inline date selector ── */}
         <div className="flex items-center gap-1.5">

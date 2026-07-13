@@ -174,7 +174,7 @@ Todos los modales tienen `max-h-[90vh] overflow-hidden flex flex-col` para conte
 Un solo componente `Dropdown` para todos los casos (filtros, edición de campo, selectores de layout). La lógica de interacción es idéntica independientemente del caso de uso.
 
 **Trigger:**
-- Estado vacío → muestra el nombre del campo/filtro como placeholder.
+- Estado vacío → muestra el **nombre del campo/filtro** como placeholder (p. ej. "Estatus", "Empleado"). Nunca un texto genérico como "Todos" — el nombre del filtro ya comunica qué se está mostrando (sin filtro aplicado).
 - Con valor seleccionado → muestra el valor; el ícono `CaretDown` se **reemplaza** por `X` para limpiar. Nunca ambos íconos a la vez.
 - El limpiado vive **dentro del trigger** (el ícono `X`) — nunca un link de texto "Limpiar" aparte, al lado o debajo del control.
 - Esta misma convención (ícono que se reemplaza por `X` dentro del control, sin link de texto separado) aplica a **cualquier trigger de filtro**, sea o no un Dropdown — p. ej. un selector de fecha standalone también reemplaza su ícono por `X` cuando hay una fecha seleccionada.
