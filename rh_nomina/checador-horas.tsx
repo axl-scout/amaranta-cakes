@@ -1723,34 +1723,30 @@ function NominaManager({
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-[#E9D9D9] dark:border-[#382C2E] shrink-0 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowDateFilterCalendar(o => !o)}
-                className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50 hover:cursor-pointer"
-              >
-                <span className="flex items-center gap-2 truncate">
-                  <CalendarIcon size={16} className="shrink-0" />
-                  <span className="truncate">{dateFilterValue ? formatFechaLarga(formatDateForComparison(dateFilterValue)) : 'Fecha'}</span>
-                </span>
-              </button>
-              {showDateFilterCalendar && (
-                <MiniCalendar
-                  selectedDate={dateFilterValue ?? new Date()}
-                  onSelectDate={date => { setDateFilterValue(date); setShowDateFilterCalendar(false); }}
-                  onClose={() => setShowDateFilterCalendar(false)}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowDateFilterCalendar(o => !o)}
+              className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50 hover:cursor-pointer"
+            >
+              <span className="flex items-center gap-2 truncate">
+                <CalendarIcon size={16} className="shrink-0" />
+                <span className="truncate">{dateFilterValue ? formatFechaLarga(formatDateForComparison(dateFilterValue)) : 'Fecha'}</span>
+              </span>
+              {dateFilterValue && (
+                <XIcon
+                  size={14}
+                  className="text-gray-400 flex-shrink-0 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  onClick={e => { e.stopPropagation(); setDateFilterValue(null); }}
                 />
               )}
-            </div>
-            {dateFilterValue && (
-              <button
-                type="button"
-                onClick={() => setDateFilterValue(null)}
-                className="text-sm text-gray-500 hover:text-gray-700 underline-offset-2 hover:underline cursor-pointer transition-colors dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                Limpiar
-              </button>
+            </button>
+            {showDateFilterCalendar && (
+              <MiniCalendar
+                selectedDate={dateFilterValue ?? new Date()}
+                onSelectDate={date => { setDateFilterValue(date); setShowDateFilterCalendar(false); }}
+                onClose={() => setShowDateFilterCalendar(false)}
+              />
             )}
           </div>
 
@@ -2040,50 +2036,49 @@ function FilterDropdown({ label, values, options, onChange, multiSelect = true }
     }
   };
 
+  const hasValue = values.length > 0;
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative" ref={containerRef}>
-        <button
-          type="button"
-          onClick={() => setOpen(o => !o)}
-          className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50"
-        >
-          <span className="truncate">{displayText}</span>
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="inline-flex items-center justify-between gap-2 min-w-[160px] bg-white border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 hover:border-rose-300 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 outline-none transition-colors dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:hover:border-rose-400/50"
+      >
+        <span className="truncate">{displayText}</span>
+        {hasValue ? (
+          <XIcon
+            size={14}
+            className="text-gray-400 flex-shrink-0 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+            onClick={e => { e.stopPropagation(); onChange([]); }}
+          />
+        ) : (
           <CaretDownIcon size={14} className={`text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
-        {open && (
-          <div className="absolute top-full left-0 mt-1 z-[70] bg-white border border-[#E9D9D9] rounded-lg shadow-lg max-h-[260px] overflow-y-auto w-[220px] py-1 dark:bg-[#251D1F] dark:border-[#382C2E]">
-            {options.length === 0 && (
-              <p className="px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500">Sin opciones</p>
-            )}
-            {options.map(opt => {
-              const sel = values.includes(opt.id);
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => selectOption(opt.id)}
-                  className={`w-full text-left px-3 py-1.5 text-base transition-colors ${
-                    sel
-                      ? 'bg-rose-50 text-rose-700 font-medium dark:bg-rose-500/15 dark:text-rose-300'
-                      : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
-                  }`}
-                >
-                  {opt.name}
-                </button>
-              );
-            })}
-          </div>
         )}
-      </div>
-      {values.length > 0 && (
-        <button
-          type="button"
-          onClick={() => onChange([])}
-          className="text-sm text-gray-500 hover:text-gray-700 underline-offset-2 hover:underline cursor-pointer transition-colors dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          Limpiar
-        </button>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-[70] bg-white border border-[#E9D9D9] rounded-lg shadow-lg max-h-[260px] overflow-y-auto w-[220px] py-1 dark:bg-[#251D1F] dark:border-[#382C2E]">
+          {options.length === 0 && (
+            <p className="px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500">Sin opciones</p>
+          )}
+          {options.map(opt => {
+            const sel = values.includes(opt.id);
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => selectOption(opt.id)}
+                className={`w-full text-left px-3 py-1.5 text-base transition-colors ${
+                  sel
+                    ? 'bg-rose-50 text-rose-700 font-medium dark:bg-rose-500/15 dark:text-rose-300'
+                    : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'
+                }`}
+              >
+                {opt.name}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
