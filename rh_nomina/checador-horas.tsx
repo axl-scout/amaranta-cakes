@@ -273,7 +273,8 @@ function ImportadorChecadorApp(): React.ReactElement {
   const controlHorarioRecords = useRecords(controlHorarioTable ?? null);
   const nominaRecords = useRecords(nominaTable ?? null);
 
-  const [activeTab, setActiveTab] = useState<'importar' | 'nomina'>('importar');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [viewState, setViewState] = useState<ViewState>({ stage: 'idle' });
   const [isAddingMoreFiles, setIsAddingMoreFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -492,6 +493,25 @@ function ImportadorChecadorApp(): React.ReactElement {
     e.target.value = '';
   }, [processFiles]);
 
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    const files = Array.from(e.dataTransfer.files ?? []).filter(f => f.name.toLowerCase().endsWith('.csv'));
+    if (files.length > 0) {
+      processFiles(files, 'replace');
+    }
+  }, [processFiles]);
+
   const handleSelectFile = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -688,6 +708,14 @@ function ImportadorChecadorApp(): React.ReactElement {
     }
   }, []);
 
+  const handleCloseImportModal = useCallback(() => {
+    setShowImportModal(false);
+    setViewState({ stage: 'idle' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
+
   if (errorState) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white p-8">
@@ -714,144 +742,127 @@ function ImportadorChecadorApp(): React.ReactElement {
     );
   }
 
-  if (activeTab === 'nomina') {
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <TabBar activeTab={activeTab} onChange={setActiveTab} />
-        <NominaManager
-          nominaTable={nominaTable}
-          controlHorarioTable={controlHorarioTable}
-          nominaRecords={nominaRecords}
-          controlHorarioRecords={controlHorarioRecords}
-        />
-      </div>
-    );
-  }
-
-  if (viewState.stage === 'idle') {
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <TabBar activeTab={activeTab} onChange={setActiveTab} />
-        <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center">
-          <UploadSimpleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-800 text-lg mb-4">Sube el reporte semanal del checador (.csv)</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <button
-            onClick={handleSelectFile}
-            className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
-          >
-            Seleccionar archivo(s)
-          </button>
+  const renderImportStage = (): React.ReactElement => {
+    if (viewState.stage === 'idle') {
+      return (
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`flex items-center justify-center text-center border-2 border-dashed rounded-lg py-16 px-8 transition-colors ${
+            isDraggingOver ? 'border-gray-900 bg-gray-50' : 'border-gray-300'
+          }`}
+        >
+          <div>
+            <UploadSimpleIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-800 text-lg mb-1">Arrastra el reporte semanal del checador (.csv)</p>
+            <p className="text-gray-500 text-sm mb-4">o selecciónalo desde tu computadora</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <button
+              onClick={handleSelectFile}
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
+            >
+              Seleccionar archivo(s)
+            </button>
+          </div>
         </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (viewState.stage === 'parsing') {
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <TabBar activeTab={activeTab} onChange={setActiveTab} />
-        <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center">
-          <SpinnerIcon className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600">Procesando archivo...</p>
-        </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (viewState.stage === 'error') {
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <TabBar activeTab={activeTab} onChange={setActiveTab} />
-        <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center max-w-md">
-          <XCircleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-800 text-lg mb-2">Error</p>
-          <p className="text-gray-500 text-sm mb-4">{viewState.message}</p>
-          <button
-            onClick={handleReset}
-            className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
-          >
-            Volver a intentar
-          </button>
-        </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (viewState.stage === 'preview' || viewState.stage === 'importing') {
-    const rows = viewState.rows;
-    const isImporting = viewState.stage === 'importing';
-
-    const weekMap = new Map<string, { start: Date; end: Date; rows: ParsedRow[] }>();
-    for (const row of rows) {
-      const { key, start, end } = getWeekRange(row.fecha);
-      if (!weekMap.has(key)) {
-        weekMap.set(key, { start, end, rows: [] });
-      }
-      weekMap.get(key)!.rows.push(row);
+      );
     }
 
-    const weekGroups: WeekGroup[] = Array.from(weekMap.entries())
-      .sort((a, b) => a[1].start.getTime() - b[1].start.getTime())
-      .map(([key, weekData]) => {
-        const groupMap = new Map<string, EmployeeGroup>();
+    if (viewState.stage === 'parsing') {
+      return (
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <SpinnerIcon className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
+            <p className="text-gray-600">Procesando archivo...</p>
+          </div>
+        </div>
+      );
+    }
 
-        for (const row of weekData.rows) {
-          const groupKey = row.employeeRecordId ?? `notfound-${row.employeeNumber}`;
-          if (!groupMap.has(groupKey)) {
-            groupMap.set(groupKey, {
-              employeeRecordId: row.employeeRecordId,
-              employeeNumber: row.employeeNumber,
-              employeeName: row.employeePreferredName ?? row.employeeName,
-              employeePreferredName: row.employeePreferredName,
-              rows: [],
-              groupStatus: 'ok',
-            });
-          }
-          groupMap.get(groupKey)!.rows.push(row);
+    if (viewState.stage === 'error') {
+      return (
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center max-w-md mx-auto">
+            <XCircleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-800 text-lg mb-2">Error</p>
+            <p className="text-gray-500 text-sm mb-4">{viewState.message}</p>
+            <button
+              onClick={handleReset}
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer"
+            >
+              Volver a intentar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (viewState.stage === 'preview' || viewState.stage === 'importing') {
+      const rows = viewState.rows;
+      const isImporting = viewState.stage === 'importing';
+
+      const weekMap = new Map<string, { start: Date; end: Date; rows: ParsedRow[] }>();
+      for (const row of rows) {
+        const { key, start, end } = getWeekRange(row.fecha);
+        if (!weekMap.has(key)) {
+          weekMap.set(key, { start, end, rows: [] });
         }
+        weekMap.get(key)!.rows.push(row);
+      }
 
-        const employeeGroups = Array.from(groupMap.values());
-        for (const group of employeeGroups) {
-          group.rows.sort((a, b) => a.fecha.replace(/\//g, '-').localeCompare(b.fecha.replace(/\//g, '-')));
-          if (group.rows.some(r => r.status === 'not_found')) {
-            group.groupStatus = 'not_found';
-          } else if (group.rows.some(r => r.status === 'duplicate')) {
-            group.groupStatus = 'duplicate';
-          } else if (group.rows.some(r => r.status === 'partial')) {
-            group.groupStatus = 'partial';
+      const weekGroups: WeekGroup[] = Array.from(weekMap.entries())
+        .sort((a, b) => a[1].start.getTime() - b[1].start.getTime())
+        .map(([key, weekData]) => {
+          const groupMap = new Map<string, EmployeeGroup>();
+
+          for (const row of weekData.rows) {
+            const groupKey = row.employeeRecordId ?? `notfound-${row.employeeNumber}`;
+            if (!groupMap.has(groupKey)) {
+              groupMap.set(groupKey, {
+                employeeRecordId: row.employeeRecordId,
+                employeeNumber: row.employeeNumber,
+                employeeName: row.employeePreferredName ?? row.employeeName,
+                employeePreferredName: row.employeePreferredName,
+                rows: [],
+                groupStatus: 'ok',
+              });
+            }
+            groupMap.get(groupKey)!.rows.push(row);
           }
-        }
-        employeeGroups.sort((a, b) => a.employeeNumber - b.employeeNumber);
 
-        const weekNumber = getISOWeekNumber(weekData.start);
-        return { key, weekNumber, start: weekData.start, end: weekData.end, employeeGroups };
-      });
+          const employeeGroups = Array.from(groupMap.values());
+          for (const group of employeeGroups) {
+            group.rows.sort((a, b) => a.fecha.replace(/\//g, '-').localeCompare(b.fecha.replace(/\//g, '-')));
+            if (group.rows.some(r => r.status === 'not_found')) {
+              group.groupStatus = 'not_found';
+            } else if (group.rows.some(r => r.status === 'duplicate')) {
+              group.groupStatus = 'duplicate';
+            } else if (group.rows.some(r => r.status === 'partial')) {
+              group.groupStatus = 'partial';
+            }
+          }
+          employeeGroups.sort((a, b) => a.employeeNumber - b.employeeNumber);
 
-    const totalEmployees = new Set(rows.map(r => r.employeeRecordId ?? `notfound-${r.employeeNumber}`)).size;
-    const validRows = rows.filter(r => r.status === 'ok' || r.status === 'partial').length;
-    const warningRows = rows.filter(r => r.status === 'duplicate' || r.status === 'partial').length;
-    const errorRows = rows.filter(r => r.status === 'not_found').length;
-    const includedRows = rows.filter(r => r.included).length;
+          const weekNumber = getISOWeekNumber(weekData.start);
+          return { key, weekNumber, start: weekData.start, end: weekData.end, employeeGroups };
+        });
 
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <TabBar activeTab={activeTab} onChange={setActiveTab} />
-        <div className="p-6">
-        <div className="max-w-5xl mx-auto">
+      const totalEmployees = new Set(rows.map(r => r.employeeRecordId ?? `notfound-${r.employeeNumber}`)).size;
+      const validRows = rows.filter(r => r.status === 'ok' || r.status === 'partial').length;
+      const warningRows = rows.filter(r => r.status === 'duplicate' || r.status === 'partial').length;
+      const errorRows = rows.filter(r => r.status === 'not_found').length;
+      const includedRows = rows.filter(r => r.included).length;
+
+      return (
+        <div>
           <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-sm text-gray-600">
               {totalEmployees} empleados · {validRows} registros válidos · {warningRows} advertencias · {errorRows} errores
@@ -915,19 +926,14 @@ function ImportadorChecadorApp(): React.ReactElement {
             </div>
           </div>
         </div>
-        </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (viewState.stage === 'completed') {
-    const { result } = viewState;
+    if (viewState.stage === 'completed') {
+      const { result } = viewState;
 
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <TabBar activeTab={activeTab} onChange={setActiveTab} />
-        <div className="p-6">
-        <div className="max-w-3xl mx-auto">
+      return (
+        <div>
           <div className="text-center mb-8">
             <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-xl font-medium text-gray-800 mb-2">Importación Completada</h2>
@@ -995,12 +1001,54 @@ function ImportadorChecadorApp(): React.ReactElement {
             </button>
           </div>
         </div>
-        </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return null;
+    return <></>;
+  };
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+        <h1 className="text-lg font-medium text-gray-800">Nómina</h1>
+        <button
+          onClick={() => setShowImportModal(true)}
+          className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer flex items-center gap-2 text-sm"
+        >
+          <UploadSimpleIcon className="w-4 h-4" />
+          Importar
+        </button>
+      </div>
+
+      <NominaManager
+        nominaTable={nominaTable}
+        controlHorarioTable={controlHorarioTable}
+        nominaRecords={nominaRecords}
+        controlHorarioRecords={controlHorarioRecords}
+        onOpenImport={() => setShowImportModal(true)}
+      />
+
+      {showImportModal && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={handleCloseImportModal}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[85vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white">
+              <h2 className="text-lg font-medium text-gray-800">Importar checador</h2>
+              <button onClick={handleCloseImportModal} className="text-gray-400 hover:text-gray-600 hover:cursor-pointer">
+                <XIcon className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">{renderImportStage()}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface EmployeeGroupProps {
@@ -1139,31 +1187,6 @@ function RowStatusBadge({ status, message }: RowStatusBadgeProps): React.ReactEl
   }
 }
 
-interface TabBarProps {
-  activeTab: 'importar' | 'nomina';
-  onChange: (tab: 'importar' | 'nomina') => void;
-}
-
-function TabBar({ activeTab, onChange }: TabBarProps): React.ReactElement {
-  const tabClass = (tab: 'importar' | 'nomina') =>
-    `px-4 py-3 text-sm font-medium border-b-2 hover:cursor-pointer ${
-      activeTab === tab
-        ? 'border-gray-900 text-gray-900'
-        : 'border-transparent text-gray-500 hover:text-gray-700'
-    }`;
-
-  return (
-    <div className="border-b border-gray-200 px-6 flex gap-2 shrink-0">
-      <button className={tabClass('importar')} onClick={() => onChange('importar')}>
-        Importar
-      </button>
-      <button className={tabClass('nomina')} onClick={() => onChange('nomina')}>
-        Nómina
-      </button>
-    </div>
-  );
-}
-
 // El cell value de un campo multipleLookupValues siempre viene envuelto como
 // { linkedRecordId, value }[] (nunca los valores planos), sin importar el tipo
 // del campo original. Renderizar el wrapper directo dispara el error de React
@@ -1202,6 +1225,7 @@ interface NominaManagerProps {
   controlHorarioTable: Table | undefined;
   nominaRecords: AirtableRecord[] | null;
   controlHorarioRecords: AirtableRecord[] | null;
+  onOpenImport: () => void;
 }
 
 interface NominaWeekGroup {
@@ -1215,6 +1239,7 @@ function NominaManager({
   controlHorarioTable,
   nominaRecords,
   controlHorarioRecords,
+  onOpenImport,
 }: NominaManagerProps): React.ReactElement {
   const [selectedNominaId, setSelectedNominaId] = useState<string | null>(null);
   const [selectedControlHorarioId, setSelectedControlHorarioId] = useState<string | null>(null);
@@ -1268,10 +1293,26 @@ function NominaManager({
 
   if (!nominaTable || !controlHorarioTable) return <></>;
 
+  const hasAnyNominaRecords = !!nominaRecords && nominaRecords.length > 0;
+
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-3xl mx-auto space-y-8">
-        {weekGroups.length === 0 && (
+        {!hasAnyNominaRecords && (
+          <div className="text-center py-20">
+            <UploadSimpleIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600 mb-1">Aún no hay registros de Nómina.</p>
+            <p className="text-gray-500 text-sm mb-4">Importa el reporte del checador para generar los primeros registros.</p>
+            <button
+              onClick={onOpenImport}
+              className="bg-gray-900 text-white px-4 py-2 rounded-md shadow-xs hover:shadow-sm hover:cursor-pointer text-sm"
+            >
+              Importar checador
+            </button>
+          </div>
+        )}
+
+        {hasAnyNominaRecords && weekGroups.length === 0 && (
           <p className="text-sm text-gray-500 text-center py-12">
             No hay registros de Nómina pendientes de pago.
           </p>
