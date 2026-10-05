@@ -10,6 +10,8 @@ import { FinanzasPage } from './finanzas/FinanzasPage';
 import { useThemeMode } from './components/ThemeToggle';
 import { setEstatusChoices, toneStyle, useIsDark } from './components/airtableColors';
 import { PedidosContentSkeleton } from './components/Skeletons';
+import { PeriodSelect } from './components/PeriodSelect';
+import { TableroEtapas } from './components/TableroEtapas';
 import { ProduccionPage } from './produccion/ProduccionPage';
 import {
   CaretLeft as CaretLeftIcon,
@@ -100,11 +102,18 @@ function PedidosApp(): React.ReactElement {
   const catalogoPanes = useMemo(() => buildCatalogOptions(catalogoRecords, catalogoTable, 'Pan'), [catalogoRecords, catalogoTable]);
   const catalogoRellenos = useMemo(() => buildCatalogOptions(catalogoRecords, catalogoTable, 'Relleno'), [catalogoRecords, catalogoTable]);
 
-  const [view, setView] = useState<'dia' | 'semana' | 'mes'>(() => {
+  const [view, setView] = useState<'dia' | 'semana' | 'mes' | 'todos'>(() => {
     if (typeof window === 'undefined') return 'dia';
     const s = window.localStorage.getItem('pedidos-view');
-    return s === 'dia' || s === 'semana' || s === 'mes' ? s : 'dia';
+    return s === 'dia' || s === 'semana' || s === 'mes' || s === 'todos' ? s : 'dia';
   });
+  const [diaForma, setDiaForma] = useState<'lista' | 'tablero'>(() => {
+    if (typeof window === 'undefined') return 'lista';
+    return window.localStorage.getItem('pedidos-dia-forma') === 'tablero' ? 'tablero' : 'lista';
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem('pedidos-dia-forma', diaForma); } catch { /* ignore */ }
+  }, [diaForma]);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useUrlParam('pedido');
@@ -122,8 +131,7 @@ function PedidosApp(): React.ReactElement {
   });
   const [showNuevoPedido, setShowNuevoPedido] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const viewIndex = view === 'dia' ? 0 : view === 'semana' ? 1 : 2;
-
+  
   const calendarPeriod: 'mes' | 'semana' = view === 'semana' ? 'semana' : 'mes';
   const searchRef = useRef<any>(null);
   const searchInputRef = useRef<any>(null);
@@ -172,6 +180,28 @@ function PedidosApp(): React.ReactElement {
         return new Date(ta).getTime() - new Date(tb).getTime();
       });
   }, [pedidoRecords, pedidosTable, calendarDate, selectedEstatus, hiddenPedidoIds]);
+
+  // Tablero por etapas (Todos / Día + Tablero): mismos pedidos, filtros y búsqueda; Entregado solo aparece al buscar.
+  const pedidosTablero = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const selStr = formatDateForComparison(calendarDate);
+    const out: { id: string; pid: string; fecha: string | null; estatus: string }[] = [];
+    for (const r of pedidoRecords) {
+      if (hiddenPedidoIds.has(r.id)) continue;
+      const estatus = readSelect(cv(r, pedidosTable, FIELD_IDS.ESTATUS));
+      const fecha = (cv(r, pedidosTable, FIELD_IDS.FECHA_ENTREGA) as string | null) || null;
+      if (selectedEstatus.length > 0 && !selectedEstatus.includes(estatus)) continue;
+      if (view === 'dia' && (!fecha || formatDateForComparison(new Date(fecha)) !== selStr)) continue;
+      const pid = cvs(r, pedidosTable, FIELD_IDS.PEDIDO_ID);
+      if (q) {
+        const hit = [pid, cvs(r, pedidosTable, FIELD_IDS.NUMERO_NOTA), cvs(r, pedidosTable, FIELD_IDS.CLIENTE), cvs(r, pedidosTable, FIELD_IDS.NUMERO_TELEFONO)]
+          .some((x) => x.toLowerCase().includes(q));
+        if (!hit) continue;
+      } else if (estatus === 'Entregado') continue;
+      out.push({ id: r.id, pid, fecha, estatus });
+    }
+    return out;
+  }, [pedidoRecords, pedidosTable, calendarDate, selectedEstatus, hiddenPedidoIds, searchQuery, view]);
 
   const filteredPedidosCalendar = useMemo(() => {
     return pedidoRecords.filter((r) => {
@@ -315,7 +345,7 @@ function PedidosApp(): React.ReactElement {
         <div className="order-6 sm:order-3 lg:order-3"><FilterDropdown label="" values={selectedEstatus} options={['Pendiente', 'Entregado']} onChange={setSelectedEstatus} /></div>
 
         {/* Fecha selector */}
-        <div className="flex items-center gap-1.5 order-1 sm:order-2 lg:order-2">
+        {view !== 'todos' && <div className="flex items-center gap-1.5 order-1 sm:order-2 lg:order-2">
           <button type="button" onClick={() => navCalendar(-1)} className={`hidden sm:flex ${navBtnCls}`} aria-label="Anterior"><CaretLeftIcon size={13} /></button>
           <div className="relative">
             {/* mobile icon trigger */}
@@ -344,21 +374,21 @@ function PedidosApp(): React.ReactElement {
               {currentPeriodLabel}
             </button>
           )}
-        </div>
+        </div>}
 
         {/* Row break: between row1 and row2 (mobile after fecha-block group; tablet after fecha) */}
         <div className="basis-full h-0 order-5 sm:order-4 lg:hidden" />
 
-        {/* Timeline sliding switch */}
-        <div className="order-7 sm:order-5 lg:order-5 lg:ml-auto relative flex items-stretch h-10 rounded-xl border border-gray-300 dark:border-[#2E352C] p-0.5 bg-white dark:bg-[#251D1F]">
-          <div className="absolute top-0.5 bottom-0.5 left-0.5 rounded-xl bg-rose-600 transition-transform duration-200 ease-out"
-            style={{ width: 'calc((100% - 4px) / 3)', transform: `translateX(${viewIndex * 100}%)` }} />
-          {(['dia', 'semana', 'mes'] as const).map((v) => (
-            <button key={v} type="button" onClick={() => { setView(v); setShowDatePicker(false); }}
-              className={`relative z-10 w-20 h-full flex items-center justify-center text-sm font-medium transition-colors font-sans whitespace-nowrap ${view === v ? 'text-white' : 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'}`}>
-              {v === 'dia' ? 'Día' : v === 'semana' ? 'Semana' : 'Mes'}
+        {/* Selector de periodo */}
+        <div className="order-7 sm:order-5 lg:order-5 lg:ml-auto flex items-center gap-2">
+          {view === 'dia' && (
+            <button type="button" onClick={() => setDiaForma((f) => (f === 'lista' ? 'tablero' : 'lista'))}
+              aria-label="Cambiar entre lista y tablero" title={diaForma === 'lista' ? 'Ver como tablero' : 'Ver como lista'}
+              className="h-10 px-3 rounded-xl border border-gray-300 dark:border-[#2E352C] bg-white dark:bg-[#251D1F] text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors font-sans cursor-pointer whitespace-nowrap">
+              {diaForma === 'lista' ? 'Lista' : 'Tablero'}
             </button>
-          ))}
+          )}
+          <PeriodSelect value={view} onChange={(v) => { setView(v); setShowDatePicker(false); }} />
         </div>
 
         {/* Nuevo pedido */}
@@ -378,7 +408,11 @@ function PedidosApp(): React.ReactElement {
       ) : (<>
       {/* Keyed so switching Día / Semana / Mes fades the new layout in */}
       <div key={view} className="anim-view flex-1 min-h-0 flex flex-col">
-      {view === 'dia' && (
+      {view === 'todos' || (view === 'dia' && diaForma === 'tablero') ? (
+        <TableroEtapas pedidos={pedidosTablero} loading={dataLoading} onOpen={(id) => setSelectedRecordId(id)} />
+      ) : null}
+
+      {view === 'dia' && diaForma === 'lista' && (
         <>
           <div className="px-4 sm:px-7 flex gap-3 overflow-x-auto pt-1.5 -mt-1.5 pb-3 mb-1.5 flex-shrink-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {filteredPedidosDia.length === 0

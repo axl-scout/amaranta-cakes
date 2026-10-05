@@ -87,8 +87,25 @@ export function calcSemaforoPedido(elementos: Elemento[], tasksDe: (elementoId: 
   return best;
 }
 
+/** Columna del tablero por etapa: 0 Horneado, 1 Embetunado / Glaseado, 2 Decorado, 3 Empacado. */
+export const COLUMNAS_TABLERO = ['Horneado', 'Embetunado / Glaseado', 'Decorado', 'Empacado'];
+const COLUMNA_ETAPA: Record<string, number> = { Horneado: 0, Embetunado: 1, Glaseado: 1, Decorado: 2, Empacado: 3 };
+
+export interface TarjetaTablero { elemento: Elemento; nivel: number; etapa: string; columna: number }
+
+/** Etapa actual de un elemento = primera etapa no completa (C3); si todas están completas, la última (Empacado). */
+export function columnaElemento(el: Pick<Elemento, 'etapas'>, tasksDelElemento: Task[], pedidoEntregado: boolean): number {
+  if (pedidoEntregado) return 3;
+  for (const e of el.etapas) {
+    const mine = tasksDelElemento.filter((t) => t.etapa === e);
+    if (!(mine.length > 0 && mine.every((t) => t.estatus === 'Terminado'))) return COLUMNA_ETAPA[e] ?? 0;
+  }
+  return 3;
+}
+
 /** Último valor conocido por pedido: se conserva mientras se recargan los datos. */
 const ultimo = new Map<string, Semaforo & { elemento: Elemento }>();
+const ultimoTablero = new Map<string, TarjetaTablero[]>();
 
 /** Hook compartido: se recalcula solo cuando cambian las tareas (incluye cambios instantáneos). */
 export function useSemaforo() {
@@ -110,6 +127,20 @@ export function useSemaforo() {
         const r = calcSemaforoPedido(els!, (id) => porElemento.get(id) ?? [], entregado(estatus));
         if (r) ultimo.set(pedidoId, r); else ultimo.delete(pedidoId);
         return r;
+      },
+      /** Tarjetas del tablero (una por elemento con etapas). Conserva el último valor mientras carga. */
+      tarjetas: (pedidoId: string, estatus: string | null | undefined): TarjetaTablero[] => {
+        const els = porPedido.get(pedidoId);
+        if (incompleto(els)) return ultimoTablero.get(pedidoId) ?? [];
+        const ent = entregado(estatus);
+        const out: TarjetaTablero[] = [];
+        for (const el of els!) {
+          const tk = porElemento.get(el.id) ?? [];
+          const sem = calcSemaforoElemento(el, tk, ent);
+          if (sem) out.push({ elemento: el, nivel: sem.nivel, etapa: sem.etapa, columna: columnaElemento(el, tk, ent) });
+        }
+        ultimoTablero.set(pedidoId, out);
+        return out;
       },
       /** true mientras el semáforo del pedido todavía no puede calcularse (estado de carga neutro). */
       pendiente: (pedidoId: string) => !listo || (porPedido.get(pedidoId) ?? []).some((e) => e.productoPendiente),

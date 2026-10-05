@@ -1,6 +1,6 @@
 # Amaranta Cakes
 
-Versión 1.9.2 — 2026-10-05
+Versión 1.10.0 — 2026-10-05
 
 Sistema de gestión para la pastelería Amaranta Cakes. Interfaz en React con datos en una base de Airtable.
 
@@ -24,6 +24,12 @@ El botón de descarga ofrece: source.pdf, source.zip, readme.pdf y readme.md.
 Con cada actualización: agregar una entrada en `lib/changelog.ts` (versión y fecha) y ejecutar `node scripts/gen-source.mjs`.
 
 ## Historial de versiones
+### v1.10.0 — 2026-10-05
+- Pedidos: el interruptor Día/Semana/Mes pasó a un selector que muestra solo la opción elegida y se despliega con el cursor, un clic/toque o el teclado; se agregó la opción "Todos".
+- Nueva vista "Todos": tablero con las columnas Horneado, Embetunado / Glaseado, Decorado y Empacado, una tarjeta por elemento, ordenadas por fecha de entrega de producción, con semáforo, etapa y conteo por columna. Los pedidos Entregados solo aparecen al buscarlos. En esta vista se ocultan las flechas y el selector de fecha.
+- Vista Día: botón Lista / Tablero (se recuerda la elección); el tablero muestra solo los pedidos del día elegido.
+- Sin cambios en tablas, campos, opciones ni automatizaciones de Airtable.
+
 ### v1.9.2 — 2026-10-05
 - La etapa del semáforo se muestra siempre como chip de color (también "No iniciado") en la lista del Día, la columna "Etapa" de Elementos, el encabezado del detalle del elemento y la línea "Etapa actual del elemento más atrasado", todos con un único componente y los colores del mapa único. Las tarjetas de Día, Semana y Mes siguen con texto simple.
 

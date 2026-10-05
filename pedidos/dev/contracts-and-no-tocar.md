@@ -33,3 +33,25 @@
 - La página de Producción, incluido el indicador de riesgo y los colores por etapa que ya tiene.
 - El detalle del elemento y sus flujos del Prompt 2, salvo el punto de color y la etapa que se piden aquí.
 - Cualquier texto de la interfaz que este prompt no mencione.
+
+
+# Contratos y "No tocar" (Prompt 4)
+
+## Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable.
+- C3. El color y la etapa de cada tarjeta salen de la misma función del semáforo del Prompt 3; no los recalcules aparte.
+- C4. Una tarea está completa cuando su Estatus es Terminado.
+- C5. Los colores de las tarjetas salen del mapa único de colores del Prompt 3 (basado en los colores de opciones select de Airtable) y la etapa se muestra con el componente EtapaChip del Prompt 3; no escribas colores sueltos ni dupliques el componente.
+- C6. Un valor derivado (etapa, color, columna del tablero) se calcula solo en el frontend, sin campos de fórmula, rollup ni calculados en Airtable, y conserva su último valor mientras los datos se recargan; nunca se muestra vacío.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- La página de Producción.
+- Las vistas Semana y Mes, el detalle del pedido y el detalle del elemento.
+- La búsqueda y los filtros existentes, salvo la excepción de Entregados descrita en el prompt.
+- Cualquier texto de la interfaz que este prompt no mencione.

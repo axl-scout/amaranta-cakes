@@ -6042,3 +6042,140 @@ La versión 1.9.2 está construida y validada. No la probé con datos reales: la
 - Tampoco pude ver que el chip cambie al instante al completar una etapa.
 
 **Airtable:** no creé ni cambié tablas, campos, opciones de select ni automatizaciones, y no escribí datos. `lib/airtable-hooks.tsx` y `package.json` no cambiaron.
+
+---
+
+### User — Oct 5, 2026, 3:35 AM CST
+
+# Canvas Prompt 4/4 — Vista Todos, tablero por etapas y selector de periodo
+
+Arma el plan para poder ejecutar los cambios o las actualizaciones que te describo aquí abajo.
+
+## Parte A: Cambios a aplicar
+1. Selector de periodo con hover expand (página Pedidos).
+   - Hoy el periodo se elige con un interruptor de 3 opciones (Día, Semana, Mes). Agrega la opción "Todos" y reemplaza el interruptor por un selector que muestra solo la opción elegida, con una flecha.
+   - En escritorio, al pasar el cursor sobre el selector se despliega la lista con las 4 opciones (Día, Semana, Mes, Todos); al elegir una, se cierra. También se abre con clic o con teclado (Enter, flechas, Escape).
+   - En celular, que no tiene cursor, se abre con un toque y se cierra al elegir o al tocar fuera.
+   - El selector tiene la misma altura que el resto de los elementos de la barra de herramientas. Conserva la opción elegida entre sesiones, como se hace hoy. El valor por defecto sigue siendo Día.
+   - En la vista Todos se ocultan las flechas de fecha, el selector de fecha y el botón de "hoy", porque no hay un periodo. La búsqueda y los filtros siguen funcionando.
+2. Nueva vista "Todos".
+   - Muestra todos los pedidos sin importar la fecha, como un tablero de 4 columnas, una por etapa: Horneado, Embetunado o Glaseado (en una sola columna, con el encabezado "Embetunado / Glaseado"), Decorado y Empacado.
+   - Cada tarjeta representa un elemento, no un pedido. Un pedido con dos elementos aparece dos veces, una tarjeta por elemento, cada una en la columna de su propia etapa.
+   - La columna de un elemento es su etapa actual: la primera etapa que aún no está completada. Si las 4 etapas están completas y el pedido no está entregado, va en Empacado. Los elementos de pedidos con Estatus "Entregado" no aparecen en el tablero.
+   - Dentro de cada columna, las tarjetas se ordenan por fecha de entrega de producción, de la más próxima a la más lejana; los pedidos sin fecha van al final.
+   - Cada tarjeta muestra: ID del pedido, nombre del elemento con su cantidad, fecha de entrega de producción y el color del semáforo del Prompt 3. Al hacer clic abre el detalle del pedido, igual que las demás tarjetas.
+   - Cada encabezado de columna muestra el conteo de tarjetas.
+   - En celular, las columnas se deslizan horizontalmente con ajuste por columna (una columna casi a todo el ancho).
+   - Esto resuelve ver de un vistazo todo lo que está en horneado: es la primera columna.
+3. Vista "Día" con dos formas.
+   - Conserva la lista actual y agrega un botón para alternar entre "Lista" y "Tablero".
+   - "Tablero" es el mismo tablero de la vista Todos (mismas columnas, tarjetas y orden), limitado a los pedidos del día seleccionado, con el mismo criterio de fecha que usa hoy la lista de la vista Día.
+   - Conserva la forma elegida entre sesiones. Por defecto, Lista.
+4. Vistas Semana y Mes.
+   - Se mantienen como están, con las etiquetas y colores del Prompt 3.
+
+## Tables & fields involved
+- Pedidos (tbl4izLZNlOcem1SC): ID del pedido (fldczBetjpB774xkR), Estatus (fldxy88bESBs57F9r), fecha de entrega de producción (fldc9PHWWrc4ThY6x), fecha de entrega al cliente (fld3EOkVHmX8PHObD), Cliente (fldfhgJV1cvaETHxW), Elementos (fldpupPTUZWSEvemI, enlace).
+- Elementos (tblis88Izkhbi3SIG): Nombre (flddTGNiG8RFSqniA), Cantidad (fldRXts0LZFxbXeXz), Producto (fldhyj9TEbD8ABnBK), Pedido (fldyBFdIC1QVZJrnl).
+- Tareas de producción (tblESlAFi4WqHlJtk): Etapa (fldXHZrKduKmnqBca), Estatus (fldc4Zj0xoAB8JR3H), Elemento (fldrSmQZzC0rA9wVs), Pedido (fldUxrDmIoHee1nIM).
+- Catálogo (tbllPBYdLexX7ZetM): Nombre del producto (flduxPtM9vWcE8x9n); el tipo de producto se deduce con la regla del Prompt 1.
+
+## Behaviors
+- Solo lectura: no escribas en Airtable ni cambies tablas, campos o automatizaciones.
+- El tablero se actualiza sin recargar cuando cambian las tareas o el Estatus de un pedido.
+- La búsqueda por texto y el filtro de estatus de la barra de herramientas filtran también las tarjetas del tablero. Excepción: los pedidos Entregados no aparecen en el tablero, pero sí deben seguir apareciendo en el buscador. Cuando hay texto en la búsqueda, el tablero incluye también los elementos de pedidos Entregados que coincidan, en la columna Empacado, con el color verde del semáforo y la etiqueta "Entregado". Al borrar la búsqueda desaparecen del tablero.
+- Los elementos cuyo tipo de producto no es Pastel, Plancha de cupcakes ni Galletas no aparecen en el tablero.
+- Cargando datos: muestra esqueletos de las 4 columnas, no una pantalla en blanco. Al refrescar, conserva lo ya mostrado en lugar de vaciarlo.
+
+## Fuera de alcance
+- Arrastrar tarjetas entre columnas ni cambiar etapas desde el tablero: solo lectura.
+- Cambios en Semana, Mes, detalle del pedido o detalle del elemento.
+- Cake toppers.
+
+## Criterios de aceptación
+- El selector muestra solo la opción elegida y despliega las 4 al pasar el cursor; en celular, con un toque.
+- "Todos" muestra 4 columnas con tarjetas por elemento, ordenadas por fecha de entrega de producción.
+- Un pedido con dos elementos en etapas distintas aparece en dos columnas.
+- En "Día" se puede alternar entre Lista y Tablero, y el tablero solo trae los pedidos del día.
+- Los pedidos Entregados no aparecen en el tablero, salvo cuando coinciden con el texto de la búsqueda.
+
+## Parte B: Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable.
+- C3. El color y la etapa de cada tarjeta salen de la misma función del semáforo del Prompt 3; no los recalcules aparte.
+- C4. Una tarea está completa cuando su Estatus es Terminado.
+- C5. Los colores de las tarjetas salen del mapa único de colores del Prompt 3 (basado en los colores de opciones select de Airtable) y la etapa se muestra con el componente EtapaChip del Prompt 3; no escribas colores sueltos ni dupliques el componente.
+- C6. Un valor derivado (etapa, color, columna del tablero) se calcula solo en el frontend, sin campos de fórmula, rollup ni calculados en Airtable, y conserva su último valor mientras los datos se recargan; nunca se muestra vacío.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- La página de Producción.
+- Las vistas Semana y Mes, el detalle del pedido y el detalle del elemento.
+- La búsqueda y los filtros existentes, salvo la excepción de Entregados descrita arriba.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+## Al terminar
+Reporta, en este orden:
+1. Cada punto de este prompt como hecho o no hecho.
+2. Cada tabla, campo, opción de select o automatización que hayas creado o cambiado (se espera: ninguna).
+3. Lo que no pudiste hacer o lo que asumiste.
+4. Un export COMPLETO del proyecto, confirmando que MANIFEST.json lista todos los archivos importados (en especial los nuevos o movidos) y cuántos archivos son (el número debe coincidir con el del ZIP).
+
+---
+
+### Assistant — Oct 5, 2026, 3:36 AM CST
+
+Presented a plan for review.
+
+---
+
+### User — Oct 5, 2026, 3:39 AM CST
+
+Build it
+
+---
+
+### Assistant — Oct 5, 2026, 3:42 AM CST
+
+La versión 1.10.0 está terminada y exportada. No pude ver la vista Todos ni el tablero en funcionamiento. La captura de pantalla solo muestra la página de inicio (sin datos), así que esas pantallas no se revisaron visualmente. El error 403 de la captura es del entorno.
+
+**1. Puntos del prompt**
+- **Selector de periodo (hecho):**
+  - Muestra solo la opción elegida con una flecha y tiene la misma altura que los demás controles (h-10).
+  - Ofrece Día, Semana, Mes y Todos.
+  - Se abre con el cursor en escritorio, con un clic o toque, y con el teclado (Enter, flechas, Escape).
+  - Se cierra al elegir o al tocar fuera.
+  - Recuerda la elección y por defecto abre en Día.
+  - En "Todos" se ocultan las flechas, el selector de fecha y el botón "Hoy". La búsqueda y los filtros siguen funcionando.
+- **Vista Todos (hecha):**
+  - Tablero con cuatro columnas: Horneado, Embetunado / Glaseado, Decorado y Empacado.
+  - Una tarjeta por elemento. Cada una muestra el ID del pedido, el elemento con su cantidad, la fecha de entrega de producción, el color del semáforo y la etapa. Al hacer clic abre el pedido.
+  - Cada columna cuenta sus tarjetas y las ordena por fecha, con las que no tienen fecha al final.
+  - Los pedidos Entregados solo aparecen al buscarlos, en Empacado con la etiqueta "Entregado".
+  - Los elementos que no son Pastel, Plancha de cupcakes o Galletas no aparecen.
+  - Muestra un estado de carga con las cuatro columnas y conserva lo mostrado al actualizar.
+  - En el celular se desplaza de lado, una columna por vez.
+  - La búsqueda y el filtro de estatus también filtran el tablero.
+  - El tablero se actualiza solo al cambiar las tareas o el estatus del pedido.
+- **Día con dos formas (hecho):**
+  - Un botón alterna entre Lista y Tablero, y recuerda la elección. Por defecto abre en Lista.
+  - El tablero muestra solo los pedidos del día elegido, con el mismo criterio de fecha que la lista.
+- **Semana y Mes:** sin cambios.
+
+**2. Airtable:** no se creó ni cambió ninguna tabla, campo, opción ni automatización. Todo se calcula en la app.
+
+**3. Supuestos**
+- La etapa de cada tarjeta es la primera etapa que no está en Terminado. Si todas lo están y el pedido no está Entregado, va a Empacado.
+- La búsqueda del tablero usa los mismos datos que el buscador actual: ID, nota, cliente y teléfono.
+- No incluí la búsqueda por fecha escrita, que el buscador sí admite.
+
+**4. Exportación**
+- Archivo: `exports/amaranta-v1.10.0.zip`.
+- Contiene 106 archivos, igual que el conteo de `MANIFEST.json`, y la lista coincide archivo por archivo.
+- Archivos nuevos incluidos: `components/PeriodSelect.tsx` y `components/TableroEtapas.tsx`.
+- Los archivos de datos y dependencias (`airtable-hooks.tsx` y `package.json`) no cambiaron, y la actualización cada 30 segundos sigue activa.
+- El README del ZIP es mínimo: solo el título y la referencia a `lib/changelog.ts`. A diferencia de los ZIP anteriores, no lo armé desde `lib/readme.ts`.
