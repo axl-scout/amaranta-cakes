@@ -78,3 +78,5 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Menú lateral en celular: hamburguesa, en un prompt aparte del Prompt 4.
 - Selector de periodo: en escritorio, el interruptor que se expande con hover; en celular, dropdown (el interruptor no cabe).
 - Optimizar pruebas: una prueba por vista o pantalla que junte varios casos (por ejemplo Todos: esqueleto, buscador y Entregados en una sola pasada); omitir las de casos borde ya verificados por código.
+- El buscador (lista de coincidencias) encuentra todos los pedidos, también Entregados, sin importar el filtro de estatus (decisión de Axel; excepción al "No tocar" del buscador). El filtro de estatus sigue filtrando las vistas.
+- El detalle del elemento debe abrir siempre completo (Pedido, Producto, tareas y seguimiento) tras completar una etapa, con la vista Todos abierta o no.
