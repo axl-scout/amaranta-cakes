@@ -55,3 +55,4 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Fechas secuenciales: aplica a la tabla de "Agregar Elemento" y al formulario de la tarea (decidido por Axel); las fechas posteriores se ajustan solas, no se limpian.
 - Respuesta inmediata en "Sí" y "No" del globo: la pantalla se actualiza al instante (actualización optimista) y, si la escritura falla, vuelve al estado real con el aviso de etapas guardadas.
 - Quitar el texto explicativo del globo "¿Completar tarea?" (confirmado otra vez al probar con Cupcakes).
+- Sección "Producción" del detalle del pedido: una tabla por elemento, con un subtítulo arriba de cada tabla con el nombre del elemento (en lugar de una sola tabla con todas las filas y la columna "Elemento"). Va al prompt de corrección.
