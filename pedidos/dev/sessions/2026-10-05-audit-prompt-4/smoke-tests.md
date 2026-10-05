@@ -20,24 +20,6 @@ Reglas
 |---|---|---|---|---|
 | 1 | Selector, escritorio | Página Pedidos > selector de periodo. Pasa el cursor; elige "Semana"; vuelve a pasar el cursor; clic en el selector; con Tab enfoca el selector, ↓ ↑ Enter y Escape. | Muestra solo la opción elegida con flecha, misma altura que el buscador (40 px). Al pasar el cursor despliega Día, Semana, Mes, Todos y se cierra al elegir. Con teclado: ↓/↑ mueven, Enter elige, Escape cierra. Nota: si ya está abierto por el hover, el clic lo cierra. | FUNCIONA, pero Axel pide cambiar el diseño (ver Observaciones). |
 
-### Vista Todos
-Record de la prueba 4: este record es el que vas a utilizar para esta prueba: [4128] Sara (`recZCPIvYm7J76UX1`, 1 oct), [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`, 8 oct), [4161] Efrain Dl Angel (`recpD5i15hQsj0PSl`, 14 oct) y [3413] Rosaura Avila (`rec3OES0NemnxyyzY`, 15 oct).
-
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-
-### Vista Día
-Record: este record es el que vas a utilizar para esta prueba: [4128] Sara (`recZCPIvYm7J76UX1`), abre el 1 oct 2026; luego [4161] Efrain Dl Angel (`recpD5i15hQsj0PSl`), abre el 14 oct 2026.
-
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-
-### Semana y Mes (regresión)
-Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026; y [3413] Rosaura Avila el 15 oct 2026.
-
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-
 ### Escritura (corre solo tras tu confirmación, pendiente 1)
 Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026. Escribe datos: crea 1 tarea (Horneado, Terminado) y Claude la borra al final.
 
