@@ -3,8 +3,8 @@
 Export a probar: v1.10.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Corre la prueba 13 (escribe datos, autorizada) y avísame para borrar la tarea que cree en [3210] (`recY1WRFAEYXZhe50`).
-2. Decisiones de Axel ya incorporadas al prompt de corrección: Entregados aparecen al buscar aunque el filtro sea "Pendiente"; la columna sale de la misma función del chip; el selector de periodo vuelve a ser el interruptor de antes, mostrando solo la opción elegida y expandiéndose con hover (prueba 1).
+1. Corre la prueba 13 (escribe datos, autorizada) y avísame para borrar la tarea que cree en [3210] (`recY1WRFAEYXZhe50`). Falta también reportar la 14.
+2. Decidir dos solicitudes nuevas (ver Observaciones de Axel y reporte): búsqueda que filtre Día, Semana y Mes, y menú lateral con hamburguesa en celular.
 
 Reglas
 - Filtro de estatus (junto al buscador): viene en "Pendiente". Para las pruebas de Entregado, ábrelo y marca "Entregado".
@@ -25,25 +25,18 @@ Record de la prueba 4: este record es el que vas a utilizar para esta prueba: [4
 
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 6 | Entregado al buscar (pendiente) | Quitar el texto de búsqueda y comprobar que las tarjetas desaparecen. Luego dejar solo "Pendiente" y buscar "Elizabeth". | Al borrar el texto desaparecen. Con solo "Pendiente" deben aparecer en Empacado, verdes, "Entregado" (hoy no aparece: se corrige con la decisión 1). | |
-| 7 | Productos sin etapas | Filtro Pendiente + Entregado. Busca "Gisela" y luego "Jarumi". Records: [4014] Gisela torres (`recL9IQjl1g5PGmRo`, elemento sin producto) y [3838] Jarumi (`recNX2aMYAzAYGygg`, sin elementos). | Ambos salen en la lista del buscador, pero el tablero no muestra tarjetas para ellos. | |
-| 8 | Esqueletos de carga | Selector > "Todos" y recarga la página (idealmente con la red lenta). | Mientras carga se ven esqueletos de las 4 columnas. Hallazgo: primero se ve el esqueleto de la tabla de Día (PARTIAL). | |
-| 9 | Tablero en celular | Celular > "Todos" > desliza a los lados. | Una columna casi a todo el ancho con ajuste por columna. | |
 
 ### Vista Día
 Record: este record es el que vas a utilizar para esta prueba: [4128] Sara (`recZCPIvYm7J76UX1`), abre el 1 oct 2026; luego [4161] Efrain Dl Angel (`recpD5i15hQsj0PSl`), abre el 14 oct 2026.
 
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 10 | Lista / Tablero | Selector > "Día" > fecha 1 oct 2026 > botón "Lista"/"Tablero" (junto al selector). Cambia a Tablero. Cambia la fecha al 14 oct. Vuelve a Lista. | Por defecto "Lista". En Tablero solo hay tarjetas de pedidos de ese día: el 1 oct incluye [4128] en Horneado; el 14 oct, [4161] en Horneado; ninguna de otros días. El criterio de fecha es el mismo de la lista. | |
-| 11 | Persistencia | Deja Día + Tablero, recarga. Cambia a Todos, recarga. | Tras recargar abre en Día + Tablero; con Todos abre en Todos. | |
 
 ### Semana y Mes (regresión)
 Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026; y [3413] Rosaura Avila el 15 oct 2026.
 
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 12 | Semana y Mes sin cambios | Selector > "Semana" (semana del 5 oct) y "Mes" (octubre), filtro Pendiente. | Tarjetas con nombre de etapa y fondo suave, igual que en v1.9.2; flechas y selector de fecha funcionan. | |
 
 ### Escritura (corre solo tras tu confirmación, pendiente 1)
 Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026. Escribe datos: crea 1 tarea (Horneado, Terminado) y Claude la borra al final.
@@ -61,7 +54,18 @@ Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S 
 ## Observaciones de Axel
 - Prueba 1: funciona, pero en lugar de un dropdown quiere el interruptor de antes (Día / Semana / Mes + Todos) con un cambio: solo se ve la opción seleccionada dentro de un contenedor; al pasar el cursor el contenedor se expande y muestra el selector completo. Va al prompt de corrección.
 
+## Observaciones de Axel (ronda 3)
+- El buscador no filtra la página (Día, Semana, Mes): solo muestra opciones en su desplegable. En Todos sí filtra el tablero.
+- En celular, el menú lateral no debería ir al costado; debería usarse la hamburguesa.
+
 ## Cerradas
+~~6 (resto). Axel confirma que funciona al borrar el texto. El caso con solo "Pendiente" queda cubierto por la decisión 1 del prompt de corrección.~~
+~~7. Productos sin etapas: capturas 11 y 12. "gisela" y "jarumi" salen en el buscador; [4014] y [3838] sin tarjeta en el tablero ([3850] Jarumi, otro pedido, sí tiene su tarjeta en Horneado).~~
+~~8. Esqueletos de carga: Axel confirma que funciona.~~
+~~9. Tablero en celular: captura 13, columnas que se deslizan con la siguiente asomando; funciona.~~
+~~10. Día Lista/Tablero: Axel confirma que funciona.~~
+~~11. Persistencia: Axel confirma que funciona.~~
+~~12. Semana y Mes: capturas 14 y 15 (5-11 oct y octubre, filtro Pendiente), tarjetas con "No iniciado" como en v1.9.2, flechas y selector de fecha funcionan.~~
 ~~5. Entregados ausentes: capturas 6 a 8 (filtro Pendiente + Entregado). Buscar 4180, 4160 y 4148 con Ctrl+F en el tablero da 0/0; ninguno aparece sin búsqueda.~~
 ~~6 (parte). Entregado al buscar: capturas 9 y 10 (filtro "2 seleccionados"). "elizabe" muestra 7 tarjetas en Empacado, verdes, con chip "Entregado" (incluye [3746], [3720] ×2, [4178] y pedidos antiguos sin ID como "Elizabeth Serna"); "alice" muestra [4160] Alice, Galletas × 50, 30 sep, Empacado verde "Entregado".~~
 ~~2. Selector, celular: capturas de Axel (vista Semana en celular, selector de 40 px con la opción elegida).~~

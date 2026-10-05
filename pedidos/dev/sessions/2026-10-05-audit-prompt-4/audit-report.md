@@ -4,13 +4,21 @@ Status: PARTIAL (v1.10.0). Code meets the plan except the Entregado search rule,
 
 ## Pending items
 
-Run smoke test 13 (writes data, authorized by Axel) in [3210] and tell Claude so the created task can be deleted.
-It is the only test that shows one order with two elements in two columns.
+Run smoke test 13 (writes data, authorized by Axel) in [3210], report test 14, and tell Claude so the created task can be deleted.
+It is the only test that shows one order with two elements in two columns; test 14 checks that nothing blanks on refresh.
 recY1WRFAEYXZhe50; tareas_produccion has 14 records now.
 
-Send the correction prompt only after smoke tests 5 to 15 are done (Axel's rule).
+Decide whether the search bar should also filter the Día list, Semana and Mes (today it only fills its dropdown). Recommendation: include it in this correction as an explicit exception to "No tocar" (existing search), applying the same text match as the board.
+Axel reported that typing in the search bar does not filter the page; only the board (Todos, Día > Tablero) filters. The Prompt 4 text asked for the board only, and "No tocar" protects the existing search, so Canvas did not change it.
+index.tsx:216-242 (search only fills the dropdown); index.tsx:164-182 and :206-214 (lists ignore searchQuery); screenshots 9 and 10 vs 14 and 15.
+
+Decide whether to fix the mobile menu (side rail should become the burger menu). Recommendation: handle it in a separate prompt, not in this correction.
+In mobile the side rail still takes the left column; it is not part of Prompt 4 and "No tocar" protects the mobile version, so it needs its own request.
+components/SideMenu.tsx:24-39 (SideRail has no mobile variant, fixed width, w-[3.75rem]); index.tsx:593; SideMenu.tsx unchanged in v1.10.0; screenshot 13.
+
+Send the correction prompt after smoke test 13 and 14 are reported (Axel's rule).
 It already includes the decisions below, so it is sent once.
-Open tests: 1 (redesign), 5 to 15 in smoke-tests.md.
+Open tests: 1 (redesign), 13, 14, 15.
 
 ## Decisions by Axel (this round)
 
@@ -30,6 +38,7 @@ Open tests: 1 (redesign), 5 to 15 in smoke-tests.md.
 - Read-only Airtable check: 11 tables and 2 automations, same as the Prompt 3 report; no new fields, formulas or rollups.
 - On-screen results so far (Axel): test 1 works but needs the redesign above; tests 2, 3 and 4 OK from screenshots (4 partly: counts and the 3 cards of [3413] not yet seen).
 - Tests 5 and part of 6 OK from screenshots: Entregado orders are absent from the board without search; with search "elizabe" (7 cards) and "alice" (1 card) they show in Empacado, green, chip "Entregado". Still open in 6: clearing the text and the "Pendiente"-only case (fixed by decision 1).
+- Tests 6 (rest), 7, 8, 9, 10, 11 and 12 OK (Axel; screenshots 11 to 15). Test 8 passes on screen although the code shows the Día table skeleton at first load (index.tsx:401); kept as an observation, not in the correction. Axel also reported that the search bar does not filter Día, Semana and Mes, and that the mobile menu should use the burger (pending items above).
 - Not run: tsc (no dependencies installed in this environment) and any on-screen test.
 
 ## Part A detail
