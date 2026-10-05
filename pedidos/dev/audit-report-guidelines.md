@@ -43,3 +43,5 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Tabla "Tareas de producción" del formulario de nuevo elemento: quitar las columnas Título, Cant. y Estatus (siguen prellenadas, solo no se muestran) y mostrar la etapa como chip con su color. Va al prompt de corrección.
 - Selector de fechas de la tabla del formulario de nuevo elemento: un solo calendario para Inicio y Fin. Se edita primero Inicio y se abre el calendario; al elegir la fecha de inicio el calendario no se cierra y la siguiente selección es la de fin; ambas se muestran como periodo resaltado. Va al prompt de corrección.
 - El selector de rango (Inicio y Fin en un solo calendario) aplica también al formulario de la tarea ("Fecha de inicio" y "Fecha de fin"), no solo a la tabla del formulario de nuevo elemento.
+- Selectores de fecha: agregar un botón para limpiar la fecha elegida (mismo patrón de la "X" que reemplaza el caret en los filtros).
+- Dropdowns (selector de Empleado en la tabla del formulario y los demás de la app): navegación con teclado, flecha arriba/abajo, Enter para elegir y Escape para cerrar, como el buscador de pedidos. Va al prompt de corrección.
