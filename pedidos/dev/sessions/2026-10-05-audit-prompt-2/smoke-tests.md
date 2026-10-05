@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: las pruebas 39, 40, 47, 48, 49 y 50 quedaron pospuestas por decisión de Axel y se harán con la v1.8.1, junto con las 51 a 53. Las demás están cerradas y al final del archivo. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: la v1.8.1 está recibida. Pendientes las pruebas 51, 53 y 54 (solo lectura) y 39, 40, 52, 47, 48, 50 y 49 (escriben datos en [3413], en ese orden). Las demás están cerradas y al final del archivo. Revisión por código de la v1.8.1: auto-refresco y dependencias restaurados. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -10,33 +10,27 @@ Reglas
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
 
-## v1.8.0 — [3413] Rosaura Avila (solo lectura)
+## v1.8.1 — [3413] Rosaura Avila (solo lectura)
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
-| 45 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Tres subtítulos ("Pastel 50 pax", "Cupcakes", "Galletas"), cada uno con su tabla y el texto "Sin tareas.". | OK (nota: los subtítulos salen Galletas, Cupcakes, Pastel 50 pax; deberían seguir el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas) |
-| 46 | [3413] Rosaura Avila | Abre el detalle de "Galletas", pulsa el icono de basura del encabezado y luego "Cancelar" en la confirmación. | Aparece la confirmación "¿Eliminar elemento?"; al cancelar no se borra nada y el detalle sigue abierto. | OK (la confirmación "¿Eliminar elemento?" con "Cancelar" y "Confirmar" funciona; cambio pedido: quitar un icono de X, por confirmar cuál) |
+| 51 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > fila "Galletas" (detalle del elemento). | La primera fila de datos muestra "Pedido" y luego "Producto" (editable); ya no aparece el campo "Nombre". El encabezado tiene solo el título y el icono de basura, sin "X"; el detalle se cierra con Esc y con clic afuera. | Pendiente (v1.8.1) |
+| 53 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Los subtítulos siguen el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas. | Pendiente (v1.8.1) |
+| 54 | Sin record | Página Pedidos > menú de descarga (solo usuarios autorizados) > pulsa "source.zip", "source.pdf", "readme.md" y "readme.pdf". | Los cuatro archivos se descargan y abren; el ZIP trae el código de la v1.8.1 con su README. No escribe en Airtable. | Pendiente (v1.8.1) |
 
-## Para la próxima versión (después del prompt v1.8.1) — [3413] Rosaura Avila
+## v1.8.1 — [3413] Rosaura Avila (ESCRIBEN datos, en este orden)
 
-| # | Record | Prueba | Expected | Estado |
-|---|---|---|---|---|
-| 51 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > fila "Galletas" (detalle del elemento). | La primera fila de datos muestra "Pedido" y luego "Producto" (editable); ya no aparece el campo "Nombre". | Pendiente (tras la corrección) |
-| 52 | [3413] Rosaura Avila (ESCRIBE) | Con el elemento de prueba con tareas: en la tabla de tareas del detalle del elemento y en la del pop-up del pedido cambia directamente el "Empleado", el "Inicio" y el "Fin" de una fila. | Los tres campos se editan en la misma celda de la tabla y se guardan solos; las demás celdas siguen abriendo el formulario de la tarea. Se aplican las reglas de fechas (secuenciales, rango, entrega pasada con "No se puede editar: la entrega de producción ya pasó."). Verifica en Airtable. | Pendiente (tras la corrección) |
-| 53 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Los subtítulos siguen el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas. | Pendiente (tras la corrección) |
-
-## v1.8.0 — [3413] Rosaura Avila (ESCRIBEN datos, en este orden)
-
-Crea el elemento de prueba en la prueba 39, usa las pruebas 40, 47, 48 y 50 sobre él y bórralo al final con la prueba 49.
+Crea el elemento de prueba en la prueba 39, usa las pruebas 40, 52, 47, 48 y 50 sobre él y bórralo al final con la prueba 49.
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
-| 39 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax" > en "Tareas de producción" pon Horneado del 5 al 7 oct y abre el selector de "Inicio" de Embetunado. Después cambia el fin de Horneado al 9 oct. | Embetunado solo permite elegir desde el 7 oct (el fin de Horneado) en adelante; los días anteriores salen deshabilitados. Lo mismo aplica a Decorado respecto a Embetunado y a Empacado respecto a Decorado. Al mover el fin de Horneado al 9 oct, las fechas de las etapas siguientes que quedaron antes del 9 se ajustan al 9 oct. | Pospuesta: se prueba con la v1.8.1 (decisión de Axel; con la v1.7.0 no se cumplía) |
-| 40 | [3413] Rosaura Avila (ESCRIBE: crea 1 elemento y 4 tareas, se limpian al final) | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax", cantidad 1 > en "Tareas de producción" pon Horneado del 5 al 7 oct y Embetunado del 7 al 8 oct > pulsa "Crear". Después abre el elemento recién creado (detalle del elemento) > clic en la fila Embetunado (formulario de la tarea) > abre "Fecha de inicio". Por último abre la fila Horneado y cambia su "Fecha de fin" al 9 oct. | En el formulario de la tarea Embetunado solo se pueden elegir días desde el 7 oct (el fin de Horneado). Al mover el fin de Horneado al 9 oct, las fechas de Embetunado se ajustan solas al 9 oct. | Pospuesta: se prueba con la v1.8.1 (decisión de Axel; con la v1.7.0 no se cumplía) |
-| 47 | [3413] Rosaura Avila (ESCRIBE) | Con el elemento de prueba de la prueba 40 (Pastel 5 pax, o crea uno con cantidad 2): en su detalle cambia "Cantidad" a 3 y la "Descripción" a "prueba"; intenta dejar el producto vacío. Cierra y reabre el detalle. | Aparece "Cambios guardados" en cada cambio; al reabrir quedan cantidad 3 y descripción "prueba". El producto no se puede dejar vacío. Verifica los valores en Airtable. | Pospuesta: se prueba con la v1.8.1 (decisión de Axel) |
-| 48 | [3413] Rosaura Avila (ESCRIBE) | En el detalle del elemento de prueba haz clic en "Decorado" y pulsa "Sí". | El tracker y la tabla cambian al instante, sin demora visible; Horneado, Embetunado y Decorado quedan Terminado 1/cantidad. Verifica en Airtable. | Pospuesta: se prueba con la v1.8.1 (decisión de Axel) |
-| 50 | [3413] Rosaura Avila (ESCRIBE) | Abre Pedidos en dos pestañas con [3413] abierto. En la pestaña A cambia la "Cantidad" del elemento de prueba; espera 30 segundos y mira la pestaña B sin recargar. | La pestaña B se actualiza sola con la cantidad nueva (actualización automática cada 30 s). Hoy no se cumple: se perdió en la v1.8.0 (ver observaciones). | Pospuesta: se prueba con la v1.8.1 (decisión de Axel) |
-| 49 | [3413] Rosaura Avila (ESCRIBE) | En el detalle del elemento de prueba pulsa el icono de basura y confirma "¿Eliminar elemento?". | El elemento se borra y el detalle se cierra. Revisa en Airtable qué pasó con sus tareas (si quedan sin elemento, bórralas). | Pospuesta: se prueba con la v1.8.1 (decisión de Axel) |
+| 39 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax" > en "Tareas de producción" pon Horneado del 5 al 7 oct y abre el selector de "Inicio" de Embetunado. Después cambia el fin de Horneado al 9 oct. | Embetunado solo permite elegir desde el 7 oct (el fin de Horneado) en adelante; los días anteriores salen deshabilitados. Lo mismo aplica a Decorado respecto a Embetunado y a Empacado respecto a Decorado. Al mover el fin de Horneado al 9 oct, las fechas de las etapas siguientes que quedaron antes del 9 se ajustan al 9 oct. | Pendiente (v1.8.1) |
+| 40 | [3413] Rosaura Avila (ESCRIBE: crea 1 elemento y 4 tareas, se limpian al final) | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax", cantidad 1 > en "Tareas de producción" pon Horneado del 5 al 7 oct y Embetunado del 7 al 8 oct > pulsa "Crear". Después abre el elemento recién creado (detalle del elemento) > clic en la fila Embetunado (formulario de la tarea) > abre "Fecha de inicio". Por último abre la fila Horneado y cambia su "Fecha de fin" al 9 oct. | En el formulario de la tarea Embetunado solo se pueden elegir días desde el 7 oct (el fin de Horneado). Al mover el fin de Horneado al 9 oct, las fechas de Embetunado se ajustan solas al 9 oct. | Pendiente (v1.8.1) |
+| 52 | [3413] Rosaura Avila (ESCRIBE) | Con el elemento de prueba con tareas: en la tabla de tareas del detalle del elemento y en la del pop-up del pedido cambia directamente el "Empleado", el "Inicio" y el "Fin" de una fila. | Los tres campos se editan en la misma celda de la tabla y se guardan solos; las demás celdas siguen abriendo el formulario de la tarea. Se aplican las reglas de fechas (secuenciales, rango, entrega pasada con "No se puede editar: la entrega de producción ya pasó."). Verifica en Airtable. | Pendiente (v1.8.1) |
+| 47 | [3413] Rosaura Avila (ESCRIBE) | Con el elemento de prueba de la prueba 40 (Pastel 5 pax, o crea uno con cantidad 2): en su detalle cambia "Cantidad" a 3 y la "Descripción" a "prueba"; intenta dejar el producto vacío. Cierra y reabre el detalle. | Aparece "Cambios guardados" en cada cambio; al reabrir quedan cantidad 3 y descripción "prueba". El producto no se puede dejar vacío. Verifica los valores en Airtable. | Pendiente (v1.8.1) |
+| 48 | [3413] Rosaura Avila (ESCRIBE) | En el detalle del elemento de prueba haz clic en "Decorado" y pulsa "Sí". | El tracker y la tabla cambian al instante, sin demora visible; Horneado, Embetunado y Decorado quedan Terminado 1/cantidad. Verifica en Airtable. | Pendiente (v1.8.1) |
+| 50 | [3413] Rosaura Avila (ESCRIBE) | Abre Pedidos en dos pestañas con [3413] abierto. En la pestaña A cambia la "Cantidad" del elemento de prueba; espera 30 segundos y mira la pestaña B sin recargar. | La pestaña B se actualiza sola con la cantidad nueva (actualización automática cada 30 s). Hoy no se cumple: se perdió en la v1.8.0 (ver observaciones). | Pendiente (v1.8.1) |
+| 49 | [3413] Rosaura Avila (ESCRIBE) | En el detalle del elemento de prueba pulsa el icono de basura y confirma "¿Eliminar elemento?". | El elemento se borra y el detalle se cierra. Revisa en Airtable qué pasó con sus tareas (si quedan sin elemento, bórralas). | Pendiente (v1.8.1) |
 # Sets cerrados
 
 ## [4128] Sara (`recZCPIvYm7J76UX1`) — abrir el 1 oct 2026 en Pedidos
@@ -133,3 +127,10 @@ Limpieza de la prueba 40 hecha (autorizada por Axel): se borraron el elemento "P
 | 42 | [4128] Sara | En el mismo detalle del elemento haz clic en el círculo "Glaseado". Ciérralo con clic afuera y con Esc. | El globo muestra solo "¿Completar tarea?" y los botones "Sí" y "No", sin texto explicativo. Cierra con clic afuera y con Esc sin escribir; siguen 4 tareas. | OK |
 | 43 | [4128] Sara | Cierra el detalle del elemento y revisa la sección "Producción" del pop-up del pedido. | Una sola tabla, con el subtítulo "Galletas" arriba; columnas Etapa, Empleado, Inicio, Fin, Avance y Ritmo (sin columna "Elemento"); filas Horneado, Glaseado, Decorado, Empacado. La línea "Etapa actual del elemento más atrasado" sigue arriba. | OK |
 | 44 | [4128] Sara | En esa tabla clic en la fila Horneado (formulario de la tarea) > abre "Fecha de inicio". No cambies nada. | Aparece "No se puede editar: la entrega de producción ya pasó." y todos los días siguen deshabilitados. | OK (aviso correcto; cambio pedido: poder editar Empleado, Inicio y Fin directamente en la tabla de tareas) |
+
+## v1.8.0 — [3413] Rosaura Avila (solo lectura)
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 45 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Tres subtítulos ("Pastel 50 pax", "Cupcakes", "Galletas"), cada uno con su tabla y el texto "Sin tareas.". | OK (nota: los subtítulos salen Galletas, Cupcakes, Pastel 50 pax; deberían seguir el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas) |
+| 46 | [3413] Rosaura Avila | Abre el detalle de "Galletas", pulsa el icono de basura del encabezado y luego "Cancelar" en la confirmación. | Aparece la confirmación "¿Eliminar elemento?"; al cancelar no se borra nada y el detalle sigue abierto. | OK (la confirmación "¿Eliminar elemento?" con "Cancelar" y "Confirmar" funciona; cambio pedido: quitar un icono de X, por confirmar cuál) |
