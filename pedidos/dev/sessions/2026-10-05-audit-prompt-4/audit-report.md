@@ -29,6 +29,7 @@ Open tests: 1 (redesign), 5 to 15 in smoke-tests.md.
 - Contracts: C1 OK, C2 OK, C3 PARTIAL, C4 OK, C5 OK, C6 OK.
 - Read-only Airtable check: 11 tables and 2 automations, same as the Prompt 3 report; no new fields, formulas or rollups.
 - On-screen results so far (Axel): test 1 works but needs the redesign above; tests 2, 3 and 4 OK from screenshots (4 partly: counts and the 3 cards of [3413] not yet seen).
+- Tests 5 and part of 6 OK from screenshots: Entregado orders are absent from the board without search; with search "elizabe" (7 cards) and "alice" (1 card) they show in Empacado, green, chip "Entregado". Still open in 6: clearing the text and the "Pendiente"-only case (fixed by decision 1).
 - Not run: tsc (no dependencies installed in this environment) and any on-screen test.
 
 ## Part A detail

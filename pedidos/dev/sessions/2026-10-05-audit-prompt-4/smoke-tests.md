@@ -25,8 +25,7 @@ Record de la prueba 4: este record es el que vas a utilizar para esta prueba: [4
 
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 5 | Entregados ausentes | Filtro de estatus: marca "Pendiente" y "Entregado". Sin escribir en el buscador, revisa las 4 columnas. Records: [4180] Elizabeth martinez (`recDcAiYcYQINykVw`), [4160] Alice (`rec2FnINtW50a2LFW`), [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`). | Ninguno de los tres aparece en el tablero. | |
-| 6 | Entregado al buscar | Mismo filtro (Pendiente + Entregado). Escribe "Elizabeth", luego "Alice"; borra el texto. Repite con solo "Pendiente" y "Elizabeth". Records: [4180] (Pastel 20 pax) y [4160] (Galletas). | Con la búsqueda aparece la tarjeta en Empacado, verde, chip "Entregado"; al borrar desaparece. Con solo "Pendiente": el prompt pide que también aparezca; hoy no aparece (hallazgo FAIL, pendiente 1 del reporte). | |
+| 6 | Entregado al buscar (pendiente) | Quitar el texto de búsqueda y comprobar que las tarjetas desaparecen. Luego dejar solo "Pendiente" y buscar "Elizabeth". | Al borrar el texto desaparecen. Con solo "Pendiente" deben aparecer en Empacado, verdes, "Entregado" (hoy no aparece: se corrige con la decisión 1). | |
 | 7 | Productos sin etapas | Filtro Pendiente + Entregado. Busca "Gisela" y luego "Jarumi". Records: [4014] Gisela torres (`recL9IQjl1g5PGmRo`, elemento sin producto) y [3838] Jarumi (`recNX2aMYAzAYGygg`, sin elementos). | Ambos salen en la lista del buscador, pero el tablero no muestra tarjetas para ellos. | |
 | 8 | Esqueletos de carga | Selector > "Todos" y recarga la página (idealmente con la red lenta). | Mientras carga se ven esqueletos de las 4 columnas. Hallazgo: primero se ve el esqueleto de la tabla de Día (PARTIAL). | |
 | 9 | Tablero en celular | Celular > "Todos" > desliza a los lados. | Una columna casi a todo el ancho con ajuste por columna. | |
@@ -63,6 +62,8 @@ Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S 
 - Prueba 1: funciona, pero en lugar de un dropdown quiere el interruptor de antes (Día / Semana / Mes + Todos) con un cambio: solo se ve la opción seleccionada dentro de un contenedor; al pasar el cursor el contenedor se expande y muestra el selector completo. Va al prompt de corrección.
 
 ## Cerradas
+~~5. Entregados ausentes: capturas 6 a 8 (filtro Pendiente + Entregado). Buscar 4180, 4160 y 4148 con Ctrl+F en el tablero da 0/0; ninguno aparece sin búsqueda.~~
+~~6 (parte). Entregado al buscar: capturas 9 y 10 (filtro "2 seleccionados"). "elizabe" muestra 7 tarjetas en Empacado, verdes, con chip "Entregado" (incluye [3746], [3720] ×2, [4178] y pedidos antiguos sin ID como "Elizabeth Serna"); "alice" muestra [4160] Alice, Galletas × 50, 30 sep, Empacado verde "Entregado".~~
 ~~2. Selector, celular: capturas de Axel (vista Semana en celular, selector de 40 px con la opción elegida).~~
 ~~3. Controles de fecha: capturas 2 y 3. En "Todos" no hay flechas, fecha ni "Hoy" y el buscador y el filtro siguen; en "Día" reaparecen (más el botón "Lista").~~
 ~~4. Columnas, tarjetas, orden y conteo (parcial por capturas): Horneado 51, las otras 3 columnas en 0 con "Sin elementos."; orden ascendente por fecha ([3931] 25 ago, [4128] 1 oct, [4132] y [3436] 8 oct, [3210] 2 tarjetas 8 oct 5:00 p.m. Cupcakes ×50 y Pastel 20 pax ×1, [4106] y [4159] 12 oct, [4161] 14 oct, [4143] y [3413] 15 oct); todas "No iniciado" morado. Sin ver aún: las 3 tarjetas de [3413], que el conteo 51 coincida y el clic que abre el pedido.~~
