@@ -22,11 +22,18 @@ Datos de arranque (autorizados por Axel; las 4 tareas huérfanas de la prueba 56
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
-| 58 | [3413] Rosaura Avila | Abre "Pastel 5 pax" > icono de basura y mira la confirmación. Pulsa "Cancelar". | La confirmación mantiene el título "¿Eliminar elemento?" y su texto ya no dice que la acción no se puede deshacer; dice "Se eliminarán también sus tareas de producción." Al cancelar no se borra nada. | Pendiente (v1.8.4) |
-| 56 | [3413] Rosaura Avila | Repite la prueba 56 de v1.8.3: borra "Pastel 5 pax" y deja pasar el aviso. Mientras el aviso está visible mira la sección "Producción" del pop-up del pedido y, en otra pestaña, Producción > "Todos", semana 5-11 oct. | Desaparecen al instante la tabla "Pastel 5 pax" y sus tareas, y no aparece ningún grupo "Sin elemento". Pasados ~10 s, en Airtable el elemento y sus 4 tareas ya no existen. | Pendiente de retest en v1.8.4 |
 | 57 | [3413] Rosaura Avila | Abre "Pastel 10 pax" (sin tareas) > icono de basura > confirma "¿Eliminar elemento?" y deja pasar el aviso. | El detalle se cierra y la fila desaparece de Elementos. Pasados ~10 s, en Airtable el elemento no existe. No se borra ninguna otra tarea del pedido. | Pendiente (v1.8.3) |
 
 # Sets cerrados
+
+## v1.8.4 — [3413] Rosaura Avila (resultados)
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 58 | [3413] Rosaura Avila | Abre "Pastel 5 pax" > icono de basura y mira la confirmación. Pulsa "Cancelar". | La confirmación mantiene el título "¿Eliminar elemento?" y su texto ya no dice que la acción no se puede deshacer; dice "Se eliminarán también sus tareas de producción." Al cancelar no se borra nada. | OK (la confirmación muestra "¿Eliminar elemento?" y "Se eliminarán también sus tareas de producción."; Cancelar no se probó en esta ronda, ya estaba OK en la prueba 46) |
+| 56 | [3413] Rosaura Avila | Repite la prueba 56 de v1.8.3: borra "Pastel 5 pax" y deja pasar el aviso. Mientras el aviso está visible mira la sección "Producción" del pop-up del pedido y, en otra pestaña, Producción > "Todos", semana 5-11 oct. | Desaparecen al instante la tabla "Pastel 5 pax" y sus tareas, y no aparece ningún grupo "Sin elemento". Pasados ~10 s, en Airtable el elemento y sus 4 tareas ya no existen. | OK en v1.8.4 (con el aviso visible el pop-up del pedido ya no muestra el grupo "Sin elemento" y desaparece la tabla de Pastel 5 pax; verificado en Airtable: el elemento y sus 4 tareas ya no existen, [3413] con 4 elementos y 0 tareas). En v1.8.3 había fallado. |
+| 55 | [3413] Rosaura Avila | Repetida en v1.8.4: borra "Pastel 5 pax" y pulsa "Deshacer" antes de que termine el aviso. | Vuelve el elemento con sus 4 tareas y los mismos valores. | OK en v1.8.4 (Horneado Ale 5-7 oct, Embetunado 7-8 oct, Decorado Fátima, Empacado, todas 0/2) |
+
 
 ## v1.8.3 — [3413] Rosaura Avila (resultados)
 
@@ -160,3 +167,5 @@ Limpieza hecha (autorizada por Axel): se borraron las 4 tareas huérfanas tras l
 Auditoría del export v1.8.3: `lib/airtable-hooks.tsx` y `package.json` sin cambios respecto a v1.8.2. Cambios: nuevo `produccion/deleteElemento.ts` (borra primero las tareas ligadas al elemento y luego el elemento; si falla una tarea, el elemento no se borra y avisa cuáles), `index.tsx` y `PedidoDetailStandalone.tsx` (usan el borrado en cascada; Deshacer restaura la vista de las tareas) y `PedidoTareasSection.tsx` (la línea de etapa actual respeta los elementos mostrados). Sin probar por Canvas con borrados reales; el fallo parcial de una tarea no se prueba en el ST.
 
 Estado de datos tras la prueba 56: el elemento "Pastel 5 pax" se borró, pero sus 4 tareas siguen en Airtable sin elemento (`recdKe2FFoO3CO6ds`, `reczAlwft0TIUWxnU`, `rec1MCaG0ABqQkI5P`, `recbJBeg9pJYdE7to`). "Pastel 10 pax" (`recifWvlDYThKZsmG`) sigue para la prueba 57.
+
+Estado de datos tras la prueba 56 en v1.8.4: borrado "Pastel 5 pax" y sus 4 tareas; "Pastel 10 pax" (`recifWvlDYThKZsmG`) sigue para la prueba 57. Falta recibir el export v1.8.4 para comparar `lib/airtable-hooks.tsx` y `package.json`.
