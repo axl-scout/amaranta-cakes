@@ -1,26 +1,12 @@
 # Smoke tests — Prompt 2/4 (element detail and tasks)
 
 Export under test: v1.5.0 (2026-10-05). Base: Production (`appSQk87nF0WpH2gi`).
-Status: tests 1-9 done (OK). Tests 10-28 pending.
+Status: tests 10-28 pending. Closed sets go at the end of the file (tests 1-9 done).
 
 Rules
 - Tests 1-23 only open screens. Close pop-ups by clicking the dark area, without pressing "No" or "Sí".
 - Tests 24-28 write to Production and run only on [3413] Rosaura Avila (`rec3OES0NemnxyyzY`).
 - "Vista" selector in Producción: Día, Todos (week layout), Grandes, Regulares.
-
-## [4128] Sara (`recZCPIvYm7J76UX1`) — open 1 Oct 2026 in Pedidos
-
-| # | Test | Expected | Status |
-|---|---|---|---|
-| 1 | Pedidos > open order > click row "Galletas" | Element detail opens: Cantidad 10, button "Editar" | OK |
-| 2 | Tracker in the element detail | Horneado current, the rest gray | OK |
-| 3 | Task table in the element detail | 4 rows, no "Elemento" column, Empacado "Sin asignar" | OK |
-| 4 | Order detail, section Producción | Line "Horneado · Galletas" and table with "Elemento" column | OK |
-| 5 | Click the Empacado row | Task form with "Sin asignar" | OK |
-| 6 | Open start and end date pickers | All days disabled (delivery 1 Oct, task created 2 Oct) | OK |
-| 7 | Click Glaseado circle, close the mini pop-up "¿Completar tarea?" by clicking outside | Nothing changes | OK |
-| 8 | Producción > vista "Todos" > week 5-11 Oct > search "Lalo" | Only Lalo's 2 tasks on Mon 5; text cleared, all return | OK |
-| 9 | Producción > vista "Día" > Fri 2 Oct > search "Ale" | Ale with 2 tasks (1 done: [4160] Alice Horneado); no load % and no "Capacidades" | OK |
 
 ## [4160] Alice (`rec2FnINtW50a2LFW`) — open 30 Sep 2026 (search "4160" if hidden)
 
@@ -67,3 +53,19 @@ Rules
 | 28 | Change Inicio of the test 27 Horneado task to 9 Oct | "Cambios guardados" | Pending |
 
 Cleanup after 24-28: delete the created tasks, then the element from test 27. Final state: 0 tasks and 3 elements in [3413].
+
+# Closed sets
+
+## [4128] Sara (`recZCPIvYm7J76UX1`) — open 1 Oct 2026 in Pedidos
+
+| # | Test | Expected | Status |
+|---|---|---|---|
+| 1 | Pedidos > open order > click row "Galletas" | Element detail opens: Cantidad 10, button "Editar" | OK |
+| 2 | Tracker in the element detail | Horneado current, the rest gray | OK |
+| 3 | Task table in the element detail | 4 rows, no "Elemento" column, Empacado "Sin asignar" | OK |
+| 4 | Order detail, section Producción | Line "Horneado · Galletas" and table with "Elemento" column | OK |
+| 5 | Click the Empacado row | Task form with "Sin asignar" | OK |
+| 6 | Open start and end date pickers | All days disabled (delivery 1 Oct, task created 2 Oct) | OK |
+| 7 | Click Glaseado circle, close the mini pop-up "¿Completar tarea?" by clicking outside | Nothing changes | OK |
+| 8 | Producción > vista "Todos" > week 5-11 Oct > search "Lalo" | Only Lalo's 2 tasks on Mon 5; text cleared, all return | OK |
+| 9 | Producción > vista "Día" > Fri 2 Oct > search "Ale" | Ale with 2 tasks (1 done: [4160] Alice Horneado); no load % and no "Capacidades" | OK |
