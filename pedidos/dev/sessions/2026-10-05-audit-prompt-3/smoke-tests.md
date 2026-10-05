@@ -1,18 +1,18 @@
 # Smoke tests — Prompt 3/4 (semáforo y etiquetas de etapa)
 
 Export probado: v1.9.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas cerradas 1 a 18 y 20 (ver "Cerradas"). Abierta: 19. Fecha de hoy en las pruebas: lunes 5 oct 2026.
+Estado: pruebas cerradas 1 a 18 y 20 (ver "Cerradas"). Abierta: 19 (falla parcial; faltan Decorado y Empacado). Fecha de hoy en las pruebas: lunes 5 oct 2026.
 
 Pending items
-1. Key message: Incluir en el Prompt de corrección que la etapa del semáforo no se muestre vacía ("—", tarjeta neutra) mientras cargan los datos.
-   Argument: Al abrir la vista Día o un pop-up, durante unos segundos la columna "Etapa" sale "—", la tarjeta sin color y la línea "Etapa actual…" no aparece, y después se llenan solas.
-   Supporting data: pruebas 7 y 8 (capturas 11 y 12; en la repetición, capturas 15 y 16, ya salió completo); `produccion/useProduccionData.ts:67` no espera a la tabla de elementos y `index.tsx` no usa `semaforo.loading`.
+1. Key message: Incluir en el Prompt de corrección que la etapa del semáforo no se quede vacía ni tarde en actualizarse: debe mantener el último valor y cambiar de inmediato al completar una etapa.
+   Argument: Al abrir la vista Día, al abrir un pop-up y, sobre todo, tras pulsar "Sí" en una etapa, la columna "Etapa" sale "—" y la tarjeta queda neutra; la etapa nueva aparece mucho después, sin recargar.
+   Supporting data: pruebas 7 y 8 (capturas 11 y 12), prueba 19 (capturas 24 y 25); causa probable: `utils.ts:197` usa el id como nombre cuando el nombre del producto aún no llega, y `etapasDeProducto` devuelve vacío (`semaforo.ts:65`); además `useProduccionData.ts:67` no espera a la tabla de elementos y `index.tsx` no usa `semaforo.loading`.
 2. Key message: Correr la prueba abierta (19); escribe datos, en [4161] Efrain Dl Angel.
    Argument: Se consolidaron de 20 a 1 abierta: cada color ya se verificó en la vista Mes (captura 3) y el resto se agrupa por vista, no por cliente.
    Supporting data: registros estándar reutilizables en `pedidos/dev/test-records.md`.
 3. Key message: Al terminar, avisar para borrar el resto de las tareas de arranque y las de la prueba 19.
    Argument: La tabla pasó de 14 a 29 registros y hoy tiene 22 (se borraron las de [4159] y [4084]).
-   Supporting data: estado final esperado: 14 tareas en `tareas_produccion` (`tblESlAFi4WqHlJtk`).
+   Supporting data: estado final esperado: 14 tareas en `tareas_produccion` (`tblESlAFi4WqHlJtk`). Hoy hay 24: 14 originales, 8 de arranque y 2 de [4161].
 4. Key message: Tema claro y oscuro omitido, se deja para la aplicación final (decisión de Axel).
    Argument: Los colores salen de un solo mapa con valores claro y oscuro.
    Supporting data: `produccion/semaforo.ts:27-34`, `components/airtableColors.ts`.
@@ -36,7 +36,7 @@ Datos de arranque creados por Claude en Airtable (autorizado por Axel): 15 tarea
 
 | # | Prueba | Expected | Estado |
 |---|---|---|---|
-| 19 | En Pedidos, vista "Día", ve al 14 oct y deja visible la lista. Abre el pop-up de [4161] Efrain Dl Angel > fila "Pastel 10 pax" > clic en el círculo "Horneado" > "Sí" en el globo. Cierra el detalle y el pop-up sin recargar y mira la fila y la tarjeta. Repite lo mismo con "Embetunado", "Decorado" y "Empacado". | Tras cada "Sí", sin recargar, la fila (etiqueta) y la tarjeta (texto con fondo suave) del 14 oct cambian en este orden: rojo "Horneado listo", naranja "Embetunado listo", amarillo "Decorado listo" y verde lima "Empacado listo". El encabezado del elemento cambia igual. |  |
+| 19 | En Pedidos, vista "Día", ve al 14 oct y deja visible la lista. Abre el pop-up de [4161] Efrain Dl Angel > fila "Pastel 10 pax" > clic en el círculo "Horneado" > "Sí" en el globo. Cierra el detalle y el pop-up sin recargar y mira la fila y la tarjeta. Repite lo mismo con "Embetunado", "Decorado" y "Empacado". | Tras cada "Sí", sin recargar, la fila (etiqueta) y la tarjeta (texto con fondo suave) del 14 oct cambian en este orden: rojo "Horneado listo", naranja "Embetunado listo", amarillo "Decorado listo" y verde lima "Empacado listo". El encabezado del elemento cambia igual. | FALLA parcial (en curso). Airtable muestra 2 tareas creadas en [4161]: Horneado y Embetunado Terminado (`recHaXSVtgH5dpMfl`, `recOhChQZh9O0Z34L`). Capturas 23 a 25: el globo "¿Completar tarea?" y el elemento con "No iniciado" OK. Tras la escritura, la lista y la tarjeta de [4161] se quedaron sin etapa ni color ("—" y tarjeta neutra, captura 24) y tardaron mucho en mostrar "Embetunado listo" (captura 25), sin recargar. El cambio sí llega sin recargar, pero con demora y con un estado vacío intermedio. Faltan Decorado y Empacado |
 
 Limpieza después de la prueba 19: borra las tareas creadas en [4161] (icono de basura en el formulario de cada tarea). Estado final esperado: 0 tareas para [4161]. Cuando termines, avisa para que Claude borre las tareas de arranque.
 
