@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pendientes solo las pruebas 39 y 40 (tras la próxima corrección). Las pruebas 1 a 38 están cerradas (38 omitida) y están al final del archivo. Limpieza de [3413] hecha. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: pendientes las pruebas 41 a 46 (solo lectura) y 39, 40, 47, 48, 49 y 50 (escriben datos) de la v1.8.0. Las pruebas 1 a 38 están cerradas (38 omitida) y están al final del archivo. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -10,13 +10,34 @@ Reglas
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
 
-## Para la próxima versión — fechas secuenciales entre etapas
+## v1.8.0 — [4128] Sara (solo lectura)
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 41 | [4128] Sara | Página Pedidos > abre [4128] Sara (1 oct) > fila "Galletas" (detalle del elemento). No cambies ningún campo. | No existe el botón "Editar". Los campos Producto, Cantidad, Costo unitario y Descripción se ven editables en su lugar; "Nombre" y "Pedido" son de solo lectura. Hay un icono de basura en el encabezado. | Pendiente |
+| 42 | [4128] Sara | En el mismo detalle del elemento haz clic en el círculo "Glaseado". Ciérralo con clic afuera y con Esc. | El globo muestra solo "¿Completar tarea?" y los botones "Sí" y "No", sin texto explicativo. Cierra con clic afuera y con Esc sin escribir; siguen 4 tareas. | Pendiente |
+| 43 | [4128] Sara | Cierra el detalle del elemento y revisa la sección "Producción" del pop-up del pedido. | Una sola tabla, con el subtítulo "Galletas" arriba; columnas Etapa, Empleado, Inicio, Fin, Avance y Ritmo (sin columna "Elemento"); filas Horneado, Glaseado, Decorado, Empacado. La línea "Etapa actual del elemento más atrasado" sigue arriba. | Pendiente |
+| 44 | [4128] Sara | En esa tabla clic en la fila Horneado (formulario de la tarea) > abre "Fecha de inicio". No cambies nada. | Aparece "No se puede editar: la entrega de producción ya pasó." y todos los días siguen deshabilitados. | Pendiente |
+
+## v1.8.0 — [3413] Rosaura Avila (solo lectura)
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 45 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Tres subtítulos ("Pastel 50 pax", "Cupcakes", "Galletas"), cada uno con su tabla y el texto "Sin tareas.". | Pendiente |
+| 46 | [3413] Rosaura Avila | Abre el detalle de "Galletas", pulsa el icono de basura del encabezado y luego "Cancelar" en la confirmación. | Aparece la confirmación "¿Eliminar elemento?"; al cancelar no se borra nada y el detalle sigue abierto. | Pendiente |
+
+## v1.8.0 — [3413] Rosaura Avila (ESCRIBEN datos, en este orden)
+
+Crea el elemento de prueba en la prueba 39, usa las pruebas 40, 47, 48 y 50 sobre él y bórralo al final con la prueba 49.
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
 | 39 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax" > en "Tareas de producción" pon Horneado del 5 al 7 oct y abre el selector de "Inicio" de Embetunado. Después cambia el fin de Horneado al 9 oct. | Embetunado solo permite elegir desde el 7 oct (el fin de Horneado) en adelante; los días anteriores salen deshabilitados. Lo mismo aplica a Decorado respecto a Embetunado y a Empacado respecto a Decorado. Al mover el fin de Horneado al 9 oct, las fechas de las etapas siguientes que quedaron antes del 9 se ajustan al 9 oct. | Hoy no se cumple (confirmado con capturas: Embetunado deja elegir desde el 4 oct aunque Horneado ya tiene fechas). Repetir tras la corrección |
 | 40 | [3413] Rosaura Avila (ESCRIBE: crea 1 elemento y 4 tareas, se limpian al final) | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax", cantidad 1 > en "Tareas de producción" pon Horneado del 5 al 7 oct y Embetunado del 7 al 8 oct > pulsa "Crear". Después abre el elemento recién creado (detalle del elemento) > clic en la fila Embetunado (formulario de la tarea) > abre "Fecha de inicio". Por último abre la fila Horneado y cambia su "Fecha de fin" al 9 oct. | En el formulario de la tarea Embetunado solo se pueden elegir días desde el 7 oct (el fin de Horneado). Al mover el fin de Horneado al 9 oct, las fechas de Embetunado se ajustan solas al 9 oct. | Hoy no se cumple (confirmado con capturas: el inicio de Embetunado deja elegir desde el 4 oct y sus fechas 7-8 oct no se ajustaron al mover el fin de Horneado al 9 oct). Repetir tras la corrección |
-
+| 47 | [3413] Rosaura Avila (ESCRIBE) | Con el elemento de prueba de la prueba 40 (Pastel 5 pax, o crea uno con cantidad 2): en su detalle cambia "Cantidad" a 3 y la "Descripción" a "prueba"; intenta dejar el producto vacío. Cierra y reabre el detalle. | Aparece "Cambios guardados" en cada cambio; al reabrir quedan cantidad 3 y descripción "prueba". El producto no se puede dejar vacío. Verifica los valores en Airtable. | Pendiente |
+| 48 | [3413] Rosaura Avila (ESCRIBE) | En el detalle del elemento de prueba haz clic en "Decorado" y pulsa "Sí". | El tracker y la tabla cambian al instante, sin demora visible; Horneado, Embetunado y Decorado quedan Terminado 1/cantidad. Verifica en Airtable. | Pendiente |
+| 50 | [3413] Rosaura Avila (ESCRIBE) | Abre Pedidos en dos pestañas con [3413] abierto. En la pestaña A cambia la "Cantidad" del elemento de prueba; espera 30 segundos y mira la pestaña B sin recargar. | La pestaña B se actualiza sola con la cantidad nueva (actualización automática cada 30 s). Hoy no se cumple: se perdió en la v1.8.0 (ver observaciones). | Pendiente (tras la corrección) |
+| 49 | [3413] Rosaura Avila (ESCRIBE) | En el detalle del elemento de prueba pulsa el icono de basura y confirma "¿Eliminar elemento?". | El elemento se borra y el detalle se cierra. Revisa en Airtable qué pasó con sus tareas (si quedan sin elemento, bórralas). | Pendiente |
 # Sets cerrados
 
 ## [4128] Sara (`recZCPIvYm7J76UX1`) — abrir el 1 oct 2026 en Pedidos
