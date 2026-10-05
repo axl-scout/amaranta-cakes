@@ -40,3 +40,4 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Se corrige el refresco del detalle del pedido tras cambios en el elemento.
 - Falla a mitad de la secuencia "Sí": se acepta el resultado parcial con aviso que diga qué etapas se guardaron.
 - Entran al prompt de corrección los defectos Esc, eliminar elemento con detalle abierto, orden de Embetunado y fechas con entrega pasada. "Reintentar tareas" queda como nota.
+- Tabla "Tareas de producción" del formulario de nuevo elemento: quitar las columnas Título, Cant. y Estatus (siguen prellenadas, solo no se muestran) y mostrar la etapa como chip con su color. Va al prompt de corrección.
