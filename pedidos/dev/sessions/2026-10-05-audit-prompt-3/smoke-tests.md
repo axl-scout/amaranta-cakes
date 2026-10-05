@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 3/4 (semáforo y etiquetas de etapa)
 
 Export probado: v1.9.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas 1 a 6 OK (capturas de Axel en tema oscuro; las pruebas 4 y 5 quedan con el cambio a chip para la corrección); pruebas 7 a 13 con confirmación parcial; el resto pendiente. Fecha de hoy en las pruebas: lunes 5 oct 2026.
+Estado: pruebas 1, 2, 3 y 6 cerradas (capturas de Axel en tema oscuro); las pruebas 4 y 5 quedan abiertas por el cambio a chip; pruebas 7 a 13 con confirmación parcial; el resto pendiente. Fecha de hoy en las pruebas: lunes 5 oct 2026.
 
 Pending items
 1. Key message: En la columna "Etapa" de la tabla Elementos y en el encabezado del detalle del elemento, la etapa debe ser una etiqueta (chip) con el color del semáforo, no punto con texto.
@@ -41,12 +41,8 @@ Pendiente; elemento Galletas x10 con 4 tareas, todas Pendiente.
 
 | # | Prueba | Expected | Estado |
 |---|---|---|---|
-| 1 | En Pedidos, vista "Día", ve al 1 oct 2026 y revisa la fila de [4128] Sara en la lista del Día. | La columna "Etapa" muestra una etiqueta (badge) redondeada "No iniciado" en morado. La columna "Estatus" sigue mostrando su pastilla como dato. | OK (captura 1: "No iniciado" en etiqueta morada; la pastilla "Pendiente" sigue en "Estatus") |
-| 2 | En esa misma vista revisa la tarjeta de [4128] Sara sobre la tabla. | Muestra solo el texto "No iniciado" bajo el nombre, sin etiqueta. Fondo y borde morado suave, no el naranja que daba el Estatus Pendiente. | OK (captura 1: solo el texto "No iniciado" bajo el nombre, sin etiqueta, fondo morado suave) |
-| 3 | Vista "Semana" (28 sep-4 oct): tarjeta de [4128] Sara del jueves 1. Luego vista "Mes" (octubre): tarjeta de [4128] Sara del día 1. | En Semana la tarjeta muestra nombre, elemento y la línea "No iniciado", con fondo morado suave. En Mes la tarjeta es morada suave y muestra "· No iniciado" junto al nombre (en pantalla ancha). | OK (capturas 2 y 3: Semana con "Galletas" y "No iniciado"; Mes con "· No iniciado") |
 | 4 | Vista "Día", 1 oct: haz clic en [4128] Sara para abrir su pop-up y revisa la tabla Elementos y la sección "Producción". | La fila Galletas tiene la columna "Etapa" con una etiqueta (chip) morada "No iniciado", igual que la de la lista del Día (no punto con texto). La línea "Etapa actual del elemento más atrasado: Horneado · Galletas" lleva un punto morado antes del texto. | OK (hoy; el expected final llega con la corrección). Captura 6: la columna "Etapa" muestra punto morado + texto y la línea muestra punto morado con "Horneado" en naranja de Producción (C4); Axel pide chip en la columna |
 | 5 | En el pop-up de [4128] Sara haz clic en la fila "Galletas" y mira el encabezado del detalle del elemento. | Junto al título "Galletas" aparece una etiqueta (chip) morada "No iniciado" (no punto con texto). | OK (hoy; el expected final llega con la corrección). Captura 7: punto morado + texto; Axel pide chip |
-| 6 | En Producción, vista "Todos", semana 5-11 oct, busca [4128] Sara. Luego vuelve a Pedidos, vista "Día", 1 oct, y revisa la fila y la tarjeta de [4128] Sara. | En Producción el indicador de riesgo (A tiempo, En riesgo, Retrasado) sigue como antes. En Pedidos no aparece ningún indicador de riesgo. | OK (captura 8: en Producción, "Todos", 5-11 oct, siguen los indicadores Retrasado, En riesgo y A tiempo y los chips por etapa de [4128] Sara el lun 5; en Pedidos no hay indicador de riesgo, capturas 1 a 3) |
 
 ## [4152] Luisa Fernanda (`recQn00xkwSusqXk1`) — abrir el 27 oct 2026 en Pedidos
 
@@ -152,3 +148,12 @@ Pastel 10 pax (`rec1exvwATKbn7zup`), sin tareas, un solo elemento. Parte en "No 
 | 20 | Con [4161] Efrain Dl Angel (14 oct) repite el flujo y pulsa "Sí" en "Embetunado", luego en "Decorado" y luego en "Empacado". Tras cada paso cierra los pop-ups y mira su fila y su tarjeta. | Naranja "Embetunado listo", amarillo "Decorado listo" y verde lima "Empacado listo", en ese orden, sin recargar, en lista, tarjeta y pop-up. |  |
 
 Limpieza después de las pruebas 19 y 20: borra las tareas creadas en [4161] (icono de basura en el formulario de cada tarea). Estado final esperado: 0 tareas para [4161]. Cuando termines, avisa para que Claude borre las 15 tareas de arranque; estado final esperado: 14 tareas en la tabla.
+
+# Cerradas
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| ~~1~~ | ~~[4128] Sara~~ | ~~En Pedidos, vista "Día", ve al 1 oct 2026 y revisa la fila de [4128] Sara en la lista del Día.~~ | ~~La columna "Etapa" muestra una etiqueta (badge) redondeada "No iniciado" en morado. La columna "Estatus" sigue mostrando su pastilla como dato.~~ | ~~OK (captura 1: "No iniciado" en etiqueta morada; la pastilla "Pendiente" sigue en "Estatus")~~ |
+| ~~2~~ | ~~[4128] Sara~~ | ~~En esa misma vista revisa la tarjeta de [4128] Sara sobre la tabla.~~ | ~~Muestra solo el texto "No iniciado" bajo el nombre, sin etiqueta. Fondo y borde morado suave, no el naranja que daba el Estatus Pendiente.~~ | ~~OK (captura 1: solo el texto "No iniciado" bajo el nombre, sin etiqueta, fondo morado suave)~~ |
+| ~~3~~ | ~~[4128] Sara~~ | ~~Vista "Semana" (28 sep-4 oct): tarjeta de [4128] Sara del jueves 1. Luego vista "Mes" (octubre): tarjeta de [4128] Sara del día 1.~~ | ~~En Semana la tarjeta muestra nombre, elemento y la línea "No iniciado", con fondo morado suave. En Mes la tarjeta es morada suave y muestra "· No iniciado" junto al nombre (en pantalla ancha).~~ | ~~OK (capturas 2 y 3: Semana con "Galletas" y "No iniciado"; Mes con "· No iniciado")~~ |
+| ~~6~~ | ~~[4128] Sara~~ | ~~En Producción, vista "Todos", semana 5-11 oct, busca [4128] Sara. Luego vuelve a Pedidos, vista "Día", 1 oct, y revisa la fila y la tarjeta de [4128] Sara.~~ | ~~En Producción el indicador de riesgo (A tiempo, En riesgo, Retrasado) sigue como antes. En Pedidos no aparece ningún indicador de riesgo.~~ | ~~OK (captura 8: en Producción, "Todos", 5-11 oct, siguen los indicadores Retrasado, En riesgo y A tiempo y los chips por etapa de [4128] Sara el lun 5; en Pedidos no hay indicador de riesgo, capturas 1 a 3)~~ |

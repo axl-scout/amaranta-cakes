@@ -25,6 +25,7 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Expected claro pero no excesivo, viñetas sin número al inicio.
 - Quitar las pruebas que las capturas de Axel ya resuelven.
 - Al cerrar un set, moverlo al final del archivo, en "Sets cerrados".
+- Cualquier prueba o item cerrado (OK) se mueve al final del archivo, en la sección "Cerradas", y se deja tachado (`~~texto~~`).
 - Las pruebas que escriben en Producción corren solo en el record designado ([3413] Rosaura Avila) y llevan limpieza al final.
 
 ## Repo
