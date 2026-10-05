@@ -6,9 +6,9 @@ Previous status: PARTIAL (v1.10.0). Code meets the plan except the Entregado sea
 
 ## Pending items
 
-Confirm the two smoke tests that write data on v1.11.0: test 22 in [3210] Alondra S Dávila (complete Horneado, then Embetunado of Pastel 20 pax; Claude deletes the created tasks) and test 23 in [4161] Efrain Dl Angel (delete its only element and press "Deshacer").
-They are the only way to verify that the board moves a card after "Sí" (the v1.10.0 failure) and that deleting the last element removes its cards.
-recY1WRFAEYXZhe50 (Pastel 20 pax recscT1PSK1PEkfU1, Cupcakes recdPnErWZjQiJTmP); recpD5i15hQsj0PSl (Pastel 10 pax rec1exvwATKbn7zup); tareas_produccion has 14 records.
+Confirm smoke test 20 (writes data) in [3210] Alondra S Dávila: complete Horneado, then Embetunado of Pastel 20 pax; Claude deletes the created tasks.
+It is the only way to verify that the board moves a card after "Sí" (the v1.10.0 failure); the last-element deletion test was dropped to reduce tests and writes (verified by code).
+recY1WRFAEYXZhe50 (Pastel 20 pax recscT1PSK1PEkfU1, Cupcakes recdPnErWZjQiJTmP); tareas_produccion has 14 records.
 
 Send the Canvas reply of the v1.11.0 round (its report, points 1 to 4), which is not in the transcript.
 The transcript ends at the prompt, so the cause Canvas found for the board not updating (point 4) is unknown and the export count it announced cannot be compared.
@@ -83,7 +83,8 @@ OK by diff: tables, fields, select options, automations (11 tables, 2 automation
 - Contracts: C1 OK, C2 OK, C3 OK (column, color and stage from calcSemaforoElemento), C4 OK, C5 OK, C6 OK (last value kept per element only while its product is pending, semaforo.ts:136-143).
 - Schema: read-only check 11 tables, 2 automations, tareas_produccion 14 records.
 - Observations: the expanded switch is 20 rem wide and anchors to the left below lg (PeriodSelect.tsx:41), so on a phone it may overflow the right edge (test 16); Producción and Finanzas toolbars also gained the hamburger on mobile (intended by the menu prompt); Canvas reply missing from the transcript; tsc not run.
-- Open: tests 16 to 24 in smoke-tests.md.
+- Test 16 (mobile selector) FAIL on screen (screenshot 20): the expanded switch does not fit on a phone; Axel decides: dropdown on mobile, expanding switch on desktop. Goes to the correction prompt.
+- Smoke tests consolidated from 9 open to 5 (17 to 21): Todos pass (skeleton, search, Entregados), Día/Semana/Mes search, menu (mobile and desktop), the one write test (20, [3210]) and the mobile selector retest (21). The last-element deletion test was dropped (covered by code).
 
 ## Version history
 

@@ -76,3 +76,5 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - El tablero debe actualizarse al completar una etapa (prueba 13 falló en v1.10.0); Canvas debe diagnosticar la causa.
 - El esqueleto de carga de la vista Todos y Día > Tablero debe tener las 4 columnas.
 - Menú lateral en celular: hamburguesa, en un prompt aparte del Prompt 4.
+- Selector de periodo: en escritorio, el interruptor que se expande con hover; en celular, dropdown (el interruptor no cabe).
+- Optimizar pruebas: una prueba por vista o pantalla que junte varios casos (por ejemplo Todos: esqueleto, buscador y Entregados en una sola pasada); omitir las de casos borde ya verificados por código.
