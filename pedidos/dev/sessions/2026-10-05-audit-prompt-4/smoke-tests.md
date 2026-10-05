@@ -20,7 +20,7 @@ Records de la prueba 17: este record es el que vas a utilizar para esta prueba: 
 
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 17 | Todos: esqueleto, buscador y Entregados | Selector > "Todos" y recarga la página (mira la carga). Filtro de estatus: "Pendiente" + "Entregado". Con Ctrl+F busca 4180, 4160 y 4148 en el tablero. Escribe "3210" y luego "alice" en el buscador. | Al cargar se ven las 4 columnas con barras de carga, no la tabla de Día. Ninguno de los 3 Entregados está en el tablero. Con "3210" solo se abre la lista con [3210] y con "alice" la lista con [4160]; el tablero no cambia (sigue en 51 tarjetas de Horneado, sin tarjetas nuevas). | |
+| 17 | Todos: esqueleto, buscador y Entregados | Selector > "Todos" y recarga la página (mira la carga). Filtro de estatus: "Pendiente" + "Entregado". Con Ctrl+F busca 4180, 4160 y 4148 en el tablero. Escribe "3210" y luego "alice" en el buscador. | Al cargar se ven las 4 columnas con barras de carga, no la tabla de Día. Ninguno de los 3 Entregados está en el tablero. Con "3210" solo se abre la lista con [3210] y con "alice" la lista con [4160]; el tablero no cambia (sigue en 51 tarjetas de Horneado, sin tarjetas nuevas). | EN CURSO (capturas 25 a 29): OK el esqueleto de 4 columnas con encabezados al cargar; Ctrl+F de 4180, 4160 y 4148 da 0/0 en el tablero; con "3210" solo se abre la lista y el tablero sigue igual (51 tarjetas de Horneado, las otras 3 columnas en 0). Falta escribir "alice". |
 
 ### Menú lateral (Pedidos, Producción y Finanzas)
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
