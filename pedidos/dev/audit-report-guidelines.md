@@ -45,3 +45,6 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - El selector de rango (Inicio y Fin en un solo calendario) aplica también al formulario de la tarea ("Fecha de inicio" y "Fecha de fin"), no solo a la tabla del formulario de nuevo elemento.
 - Selectores de fecha: agregar un botón para limpiar la fecha elegida (mismo patrón de la "X" que reemplaza el caret en los filtros).
 - Dropdowns (selector de Empleado en la tabla del formulario y los demás de la app): navegación con teclado, flecha arriba/abajo, Enter para elegir y Escape para cerrar, como el buscador de pedidos. Va al prompt de corrección.
+- "¿Completar tarea?" (mini pop-up): quitar el texto explicativo; solo la pregunta y los botones "Sí" y "No".
+- Detalle del elemento: reemplazar el botón "Editar" y su modal por edición en línea: los campos del detalle (nombre del producto, cantidad, descripción, etc.) son editables directamente y se guardan solos. El borrado del elemento queda como icono de basura con confirmación. Va al prompt de corrección.
+- Aviso de entrega de producción pasada: texto más corto. Propuesta: "La entrega de producción ya pasó."
