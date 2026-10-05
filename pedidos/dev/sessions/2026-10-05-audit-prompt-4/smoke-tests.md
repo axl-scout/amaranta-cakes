@@ -3,7 +3,7 @@
 Export a probar: v1.10.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Corre la prueba 13 (escribe datos, autorizada) y avísame para borrar la tarea que cree en [3210] (`recY1WRFAEYXZhe50`). Falta también reportar la 14.
+1. Prueba 13: manda una captura del tablero después del "Sí" (con "3210" en el buscador) para cerrarla; la tarea `rechbrn8oPFAgZV9d` se borra después.
 2. Decidir dos solicitudes nuevas (ver Observaciones de Axel y reporte): búsqueda que filtre Día, Semana y Mes, y menú lateral con hamburguesa en celular.
 
 Reglas
@@ -25,13 +25,12 @@ Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S 
 
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 13 | Dos elementos en etapas distintas; actualización sin recargar | Abre "Todos" en una pestaña y deja visible. En Pedidos abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí". Regresa al tablero sin recargar. | [3210] aparece 2 veces: Pastel 20 pax en Embetunado / Glaseado (chip "Horneado listo", rojo) y Cupcakes en Horneado ("No iniciado", morado). El cambio ocurre sin recargar y ninguna tarjeta ni chip queda vacío. | |
+| 13 | Dos elementos en etapas distintas; actualización sin recargar | Abre "Todos" en una pestaña y deja visible. En Pedidos abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí". Regresa al tablero sin recargar. | [3210] aparece 2 veces: Pastel 20 pax en Embetunado / Glaseado (chip "Horneado listo", rojo) y Cupcakes en Horneado ("No iniciado", morado). El cambio ocurre sin recargar y ninguna tarjeta ni chip queda vacío. | EN CURSO: captura 17 (antes de la escritura) muestra las 2 tarjetas de [3210] en Horneado con "No iniciado". Tarea creada en Airtable `rechbrn8oPFAgZV9d` (Horneado, Terminado, 10:22 UTC). Falta ver el tablero después del "Sí". |
 
 ### Transversales
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 14 | Sin vacíos al refrescar | En "Todos" con tarjetas visibles, cambia de pestaña y regresa, y espera 30 s. | Las tarjetas y conteos no desaparecen ni parpadean a vacío. | |
-| 15 | Sin escrituras | Claude, al terminar: lista `tareas_produccion` y esquema. | 14 tareas (o las mismas que antes de la prueba 13), esquema sin cambios. | |
+| 15 | Sin escrituras | Claude, al terminar: lista `tareas_produccion` y esquema. | 14 tareas (o las mismas que antes de la prueba 13), esquema sin cambios. | EN CURSO: 10:24 UTC, automatizaciones sin cambios (2); `tareas_produccion` tiene la tarea de la prueba 13 (15 registros); se verifica de nuevo al borrarla. |
 
 ## Observaciones de Axel (ronda 3)
 - El buscador no filtra la página (Día, Semana, Mes): solo muestra opciones en su desplegable. En Todos sí filtra el tablero.
@@ -49,6 +48,7 @@ Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S 
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| ~~14~~ | ~~Sin record (refresco)~~ | ~~En "Todos" con tarjetas visibles, cambia de pestaña y regresa, y espera 30 s.~~ | ~~Las tarjetas y conteos no desaparecen ni parpadean a vacío.~~ | ~~OK (Axel: ok)~~ |
 | ~~12~~ | ~~[3210] Alondra S Dávila y [3413] Rosaura Avila~~ | ~~Selector > "Semana" (semana del 5 oct) y "Mes" (octubre), filtro Pendiente.~~ | ~~Tarjetas con nombre de etapa y fondo suave, igual que en v1.9.2; flechas y selector de fecha funcionan.~~ | ~~OK (capturas 14 y 15: Semana 5-11 oct y Mes octubre, filtro Pendiente, tarjetas con "No iniciado" como en v1.9.2; flechas y selector de fecha funcionan)~~ |
 | ~~11~~ | ~~Sin record (persistencia)~~ | ~~Deja Día + Tablero, recarga. Cambia a Todos, recarga.~~ | ~~Tras recargar abre en Día + Tablero; con Todos abre en Todos.~~ | ~~OK (Axel: funciona)~~ |
 | ~~10~~ | ~~[4128] Sara y [4161] Efrain Dl Angel~~ | ~~Selector > "Día" > fecha 1 oct 2026 > botón "Lista"/"Tablero" (junto al selector). Cambia a Tablero. Cambia la fecha al 14 oct. Vuelve a Lista.~~ | ~~Por defecto "Lista". En Tablero solo hay tarjetas de pedidos de ese día: el 1 oct incluye [4128] en Horneado; el 14 oct, [4161] en Horneado; ninguna de otros días. El criterio de fecha es el mismo de la lista.~~ | ~~OK (Axel: funciona)~~ |
