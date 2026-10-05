@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas 21 a 28 pendientes (15 a 20 OK, set de [3413] abierto). Los sets cerrados van al final del archivo (pruebas 1 a 14 cerradas).
+Estado: pruebas 22 a 28 pendientes (15 a 21 OK, set de [3413] abierto). Los sets cerrados van al final del archivo (pruebas 1 a 14 cerradas).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -20,7 +20,7 @@ Reglas
 | 18 | Cierra el detalle y revisa "Producción" en el pop-up del pedido. | Aparece "Etapa actual del elemento más atrasado: Horneado · (uno de los 3 elementos)" y la tabla dice "Sin tareas.". | OK |
 | 19 | En la tabla Elementos del pedido pulsa "+" para abrir "Agregar elemento". Prueba estos productos sin guardar: ninguno, "Calendario de 12", "Caja de repostería", "Pastel 5 pax", "Cupcakes", "Galletas". Cierra con clic afuera. | Sin producto, con "Calendario de 12" y con "Caja de repostería" no aparece la sección "Tareas de producción". Con "Pastel 5 pax" y "Cupcakes" aparecen 4 filas (Horneado, Embetunado, Decorado, Empacado). Con "Galletas" aparecen 4 filas (Horneado, Glaseado, Decorado, Empacado). El formulario se ensancha cuando aparece la sección. | OK |
 | 20 | En "Agregar elemento" elige "Galletas" y escribe Cantidad 25; luego cámbiala a 30. No guardes. | Hoy cada fila muestra Cant. 25, "Completada 0", Estatus Pendiente, título "[3413] Rosaura Avila · Etapa · 25" y Empleado "Sin asignar". Tras la corrección la tabla solo tendrá Etapa (chip de color), Empleado, Inicio y Fin; título, cantidad y estatus ya no se ven y se verifican al guardar (prueba 27) en Airtable. | OK (cantidades 25 y 30 se actualizan; el título sale cortado, su valor se verifica en Airtable tras la prueba 27) |
-| 21 | En esa misma tabla abre los selectores "Inicio" y "Fin" de una fila. Elige Inicio 10 oct y luego Fin 8 oct; después Fin 12 oct y luego Inicio 14 oct. | Solo se pueden elegir días del 5 al 15 oct (antes de hoy y después de la entrega de producción están deshabilitados). Al elegir Fin 8 con Inicio 10, el Inicio pasa a 8. Al elegir Inicio 14 con Fin 12, el Fin pasa a 14: manda la última fecha elegida. | Pendiente |
+| 21 | En esa misma tabla abre los selectores "Inicio" y "Fin" de una fila. Elige Inicio 10 oct y luego Fin 8 oct; después Fin 12 oct y luego Inicio 14 oct. | Solo se pueden elegir días del 5 al 15 oct (antes de hoy y después de la entrega de producción están deshabilitados). Al elegir Fin 8 con Inicio 10, el Inicio pasa a 8. Al elegir Inicio 14 con Fin 12, el Fin pasa a 14: manda la última fecha elegida. | OK el ajuste de fechas (inicio 10 / fin 8 → inicio 8; fin 12 / inicio 14 → fin 14); faltan confirmar los días deshabilitados fuera del 5-15 oct |
 | 22 | Abre el selector "Empleado" de una fila y escribe "fa". | Solo aparecen "Sin asignar" arriba y "Fátima". La lista completa trae únicamente empleados de producción (Mariana, Ale, Lalo, Rach, Sofía, Jacky, Fátima). | Pendiente |
 | 23 | Con "Galletas" seleccionado pon Horneado → Ale con inicio 6 oct, Decorado → Lalo con inicio 7 oct y Glaseado → Jacky. Cambia el producto a "Pastel 5 pax" y cierra con clic afuera. | Horneado y Decorado conservan empleado y fechas. La fila Glaseado desaparece y aparece Embetunado vacío. Al cerrar no se crea ningún registro. | Pendiente |
 
