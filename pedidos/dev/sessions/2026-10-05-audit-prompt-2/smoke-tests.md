@@ -16,6 +16,16 @@ Datos de arranque creados por Claude en Airtable (autorizado por Axel): elemento
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+## v1.8.3 — [3413] Rosaura Avila (ESCRIBEN datos, en este orden)
+
+Datos de arranque creados por Claude en Airtable (autorizado por Axel): elemento "Pastel 5 pax" cantidad 2 (`recy4pgQnp8u1DWmx`) con 4 tareas Pendiente 0/2 (Horneado con Ale 5 a 7 oct, Embetunado 7 a 8 oct, Decorado con Fátima, Empacado sin empleado) y elemento "Pastel 10 pax" cantidad 1 (`recifWvlDYThKZsmG`) sin tareas. El borrado real ocurre unos 10 s después de confirmar, cuando termina el aviso "Elemento eliminado"; espera ese tiempo antes de revisar Airtable.
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 55 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > abre "Pastel 5 pax" (detalle del elemento) > icono de basura > confirma "¿Eliminar elemento?" > en el aviso "Elemento eliminado" pulsa "Deshacer" antes de que termine. | El elemento vuelve con sus 4 tareas y los mismos valores (Horneado Ale 5-7 oct, Embetunado 7-8 oct, Decorado Fátima, Empacado sin empleado, todas 0/2). En Airtable el elemento y las 4 tareas siguen existiendo. | Pendiente (v1.8.3) |
+| 56 | [3413] Rosaura Avila | Repite el borrado de "Pastel 5 pax" y esta vez deja pasar el aviso sin pulsar nada. Mientras el aviso está visible, mira la sección "Producción" del pop-up del pedido y, en otra pestaña, Producción > vista "Todos", semana 5-11 oct. | De inmediato desaparece la tabla "Pastel 5 pax" del pop-up del pedido y sus tareas del tablero de Producción (Ale el 5 y 7 oct, Fátima), sin recargar. Pasados ~10 s, en Airtable el elemento y sus 4 tareas ya no existen; quedan 3 elementos y 0 tareas en [3413]. | Pendiente (v1.8.3) |
+| 57 | [3413] Rosaura Avila | Abre "Pastel 10 pax" (sin tareas) > icono de basura > confirma "¿Eliminar elemento?" y deja pasar el aviso. | El detalle se cierra y la fila desaparece de Elementos. Pasados ~10 s, en Airtable el elemento no existe. No se borra ninguna otra tarea del pedido. | Pendiente (v1.8.3) |
+
 # Sets cerrados
 
 ## [4128] Sara (`recZCPIvYm7J76UX1`) — abrir el 1 oct 2026 en Pedidos
@@ -139,3 +149,5 @@ Limpieza de la prueba 40 hecha (autorizada por Axel): se borraron el elemento "P
 Auditoría del export v1.8.2: `lib/airtable-hooks.tsx` y `package.json` sin cambios respecto a v1.8.1. Cambios: URL con id del detalle (`?pedido=`, `?elemento=`, `?task=`, `?pago=`, `?empleado=`, pedido por Axel), ids de página, desplegables con apertura hacia arriba (Dropdowns, useFloating, EmpleadoSelect) y tracker sincronizado (StageTracker, PedidoTareasSection, useProduccionData). Observación: Axel pegó los prompts a Canvas con el marcador "[PEGAR AQUÍ: No tocar y contratos C1-C3]" sin reemplazar; Canvas aplicó las reglas previas.
 
 Limpieza hecha (autorizada por Axel): se borraron las 4 tareas huérfanas tras la prueba 49: `rec84New4oMm9JSRx`, `recxsaJp6DAhhCinf`, `receSXQ202evif7ZB`, `recqFfkqLLdl1x2sb`. Estado final verificado en Airtable: [3413] Rosaura Avila con 3 elementos y 0 tareas.
+
+Auditoría del export v1.8.3: `lib/airtable-hooks.tsx` y `package.json` sin cambios respecto a v1.8.2. Cambios: nuevo `produccion/deleteElemento.ts` (borra primero las tareas ligadas al elemento y luego el elemento; si falla una tarea, el elemento no se borra y avisa cuáles), `index.tsx` y `PedidoDetailStandalone.tsx` (usan el borrado en cascada; Deshacer restaura la vista de las tareas) y `PedidoTareasSection.tsx` (la línea de etapa actual respeta los elementos mostrados). Sin probar por Canvas con borrados reales; el fallo parcial de una tarea no se prueba en el ST.
