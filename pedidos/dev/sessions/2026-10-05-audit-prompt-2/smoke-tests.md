@@ -1,21 +1,14 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas 11 y 13 a 28 pendientes (10 y 12 OK). Los sets cerrados van al final del archivo (pruebas 1 a 9 cerradas).
+Estado: pruebas 13 a 28 pendientes. Los sets cerrados van al final del archivo (pruebas 1 a 12 cerradas).
+Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
 - Las pruebas 1 a 23 solo abren pantallas. Cierra los pop-ups con clic en el área oscura, sin pulsar "No" ni "Sí".
 - Las pruebas 24 a 28 escriben en Producción y corren solo en [3413] Rosaura Avila (`rec3OES0NemnxyyzY`).
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
-
-## [4160] Alice (`rec2FnINtW50a2LFW`) — abrir el 30 sep 2026 en Pedidos (si no aparece, buscar "4160")
-
-| # | Prueba | Expected | Estado |
-|---|---|---|---|
-| 10 | En Pedidos abre el pedido y haz clic en la fila "Galletas" para abrir el detalle del elemento. | El tracker muestra las 4 etapas con palomita y ninguna se puede pulsar (sin zoom al pasar el cursor). La tabla de tareas tiene 4 filas con avance 50/50 y ritmo "Terminada". | OK |
-| 11 | Cierra el detalle del elemento y revisa la sección "Producción" del pop-up del pedido. | No aparece la línea "Etapa actual del elemento más atrasado…" porque todo está completo. La tabla muestra las 4 tareas con "Galletas" en la columna "Elemento". | Pendiente |
-| 12 | Ve a la página Producción, elige la vista "Todos", ve a la semana 28 sep-4 oct y filtra por "Fátima" (en la versión publicada del 5 oct el filtro por empleado es el selector "Todo el equipo"; la caja de búsqueda decía "Buscar pedido…"). | Solo queda la fila de Fátima en el tablero, con un chip: [4160] Alice Glas. 50/50 el viernes 2 oct. Al borrar el texto vuelve todo el equipo. | OK |
 
 ## [4074] Gaby (`recE62HJlH9SaIUoE`) — abrir el 1 oct 2026 en Pedidos
 
@@ -70,3 +63,11 @@ Limpieza después de las pruebas 24 a 28: borra las tareas creadas (icono de bas
 | 7 | En el detalle del elemento haz clic en el círculo "Glaseado" y cierra el mini pop-up "¿Completar tarea?" con clic afuera. | No cambia nada: Glaseado sigue Pendiente 0/10 y siguen 4 tareas. | OK |
 | 8 | En Producción elige la vista "Todos", ve a la semana 5-11 oct y escribe "Lalo" en "Buscar empleado…". | Solo queda la fila de Lalo con sus 2 tareas del lunes 5 ([4128] Sara Deco. y Glas., 0/10). Al borrar el texto vuelve todo el equipo. | OK |
 | 9 | En Producción elige la vista "Día", ve al viernes 2 oct y escribe "Ale". | Queda Ale con 2 tareas (1 hecha, la de [4160] Alice). No hay porcentaje de carga ni botón "Capacidades". | OK |
+
+## [4160] Alice (`rec2FnINtW50a2LFW`) — abrir el 30 sep 2026 en Pedidos (si no aparece, buscar "4160")
+
+| # | Prueba | Expected | Estado |
+|---|---|---|---|
+| 10 | En Pedidos abre el pedido y haz clic en la fila "Galletas" para abrir el detalle del elemento. | El tracker muestra las 4 etapas con palomita y ninguna se puede pulsar (sin zoom al pasar el cursor). La tabla de tareas tiene 4 filas con avance 50/50 y ritmo "Terminada". | OK |
+| 11 | Cierra el detalle del elemento y revisa la sección "Producción" del pop-up del pedido. | No aparece la línea "Etapa actual del elemento más atrasado…" porque todo está completo. La tabla muestra las 4 tareas con "Galletas" en la columna "Elemento". | OK |
+| 12 | Ve a la página Producción, elige la vista "Todos", ve a la semana 28 sep-4 oct y filtra por "Fátima" (en la versión publicada del 5 oct el filtro por empleado es el selector "Todo el equipo"; la caja de búsqueda decía "Buscar pedido…"). | Solo queda la fila de Fátima en el tablero, con un chip: [4160] Alice Glas. 50/50 el viernes 2 oct. Al borrar el texto vuelve todo el equipo. | OK |
