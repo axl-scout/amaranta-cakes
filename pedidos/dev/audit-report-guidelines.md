@@ -60,3 +60,5 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Detalle del elemento: quitar el campo "Nombre" (repite al Producto) y mostrar primero "Pedido" y luego "Producto".
 - Tareas editables desde las tablas (detalle del pedido y detalle del elemento): solo "Empleado", "Inicio" y "Fin", directamente en la celda y con guardado automático; con las mismas reglas de fechas (rango, secuenciales, entrega pasada). Clic en las demás celdas sigue abriendo el formulario de la tarea (Avance, Estatus, Notas, Dividir).
 - Detalle del pedido, tablas por elemento: los subtítulos van en el mismo orden que la tabla Elementos del pedido.
+
+- Desplegables dentro de tablas y pop-ups (p. ej. Empleado en la última fila del detalle del elemento): no deben cortarse al fondo de la ventana; abren hacia arriba o se desplazan para verse completos. Va al prompt de corrección v1.8.2.
