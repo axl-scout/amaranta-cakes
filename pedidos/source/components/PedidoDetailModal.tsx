@@ -7,7 +7,7 @@ import { FIELD_IDS, formatCurrency, formatFriendlyDate, formatDateForComparison,
 import { ReceiptDocument, type ReceiptData, type ReceiptVariant } from './ReceiptDocument';
 import { ContactoPill, EstatusPill, EstatusDot } from './Pills';
 import { toneStyle, useIsDark } from './airtableColors';
-import { useSemaforo, semaforoStyle } from '../produccion/semaforo';
+import { useSemaforo, EtapaChip } from '../produccion/semaforo';
 import { PagosSection } from '../finanzas/PagosSection';
 import { MiniCalendar } from './Calendar';
 import { CustomTimePicker } from './TimePicker';
@@ -348,7 +348,7 @@ export function PedidoDetailModal({
                             <td className="px-3 py-2 text-base text-gray-700 dark:text-gray-300">{elNombre}</td>
                             <td className="px-3 py-2 text-base text-gray-700 whitespace-nowrap dark:text-gray-300">{(() => {
                               const sem = semaforo.elemento(el.id, estatus);
-                              return sem ? <span className="inline-flex items-center gap-2"><span aria-hidden className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: semaforoStyle(sem.nivel, 'fuerte', isDarkMode).backgroundColor }} />{sem.etapa}</span> : <span className="text-gray-300 dark:text-gray-700">—</span>;
+                              return sem ? <EtapaChip nivel={sem.nivel} etapa={sem.etapa} /> : <span className="text-gray-300 dark:text-gray-700">—</span>;
                             })()}</td>
                             <td className="px-3 py-2 text-base text-gray-700 max-w-[160px] dark:text-gray-300"><span className="line-clamp-2">{descripcion || '—'}</span></td>
                             <td className="px-3 py-2 text-base text-gray-700 tabular-nums dark:text-gray-300">{cantidad ?? '—'}</td>

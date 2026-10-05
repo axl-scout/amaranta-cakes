@@ -5971,3 +5971,74 @@ La versión 1.9.1 está construida y validada. No pude probar el comportamiento 
 - Un pedido que de verdad no tenga elementos con etapas sigue mostrando "—" una vez cargado, porque no tiene semáforo.
 
 **Airtable:** no creé ni cambié tablas, campos, opciones de select ni automatizaciones, y no escribí datos. `lib/airtable-hooks.tsx` y `package.json` no cambiaron, y el refresco automático de 30 s sigue.
+
+---
+
+### User — Oct 5, 2026, 3:17 AM CST
+
+# Canvas Prompt 3/4 — Corrección v1.9.2 (chip de etapa)
+
+## Modo
+Edición del proyecto existente de Canvas (app de Amaranta Cakes). Aplica SOLO el punto de abajo. Base: Producción (appSQk87nF0WpH2gi). Usa IDs de tablas y campos. Solo lectura: no escribas en Airtable ni cambies tablas, campos o automatizaciones.
+
+## Qué corregir
+1. La etapa se muestra siempre como chip (etiqueta redondeada con el color del semáforo), también cuando es "No iniciado".
+   - Hoy la lista del Día muestra la etapa como chip, pero en otros lugares sale como punto de color con texto. Falta consistencia.
+   - Cambia a chip en estos tres lugares:
+     a. Columna "Etapa" de la tabla Elementos del detalle del pedido (components/PedidoDetailModal.tsx).
+     b. Encabezado del detalle del elemento, junto al título (produccion/ElementoDetalle.tsx).
+     c. Línea "Etapa actual del elemento más atrasado" del detalle del pedido (produccion/PedidoTareasSection.tsx): el nombre de la etapa va en el chip y el nombre del elemento sigue como texto gris después del chip, por ejemplo: [chip: Embetunado listo] · Pastel 10 pax.
+   - Usa el mismo chip que ya usa la lista del Día: mismo tono fuerte del semáforo, mismo tamaño y forma. Crea un solo componente compartido (por ejemplo EtapaChip, junto al mapa del semáforo en produccion/semaforo.ts) y haz que la lista del Día y estos tres lugares lo usen. No definas colores nuevos: salen del mapa único del semáforo.
+   - Las tarjetas de Día, Semana y Mes NO cambian: siguen con el texto simple del nombre de la etapa, sin chip.
+   - Conserva el estado de carga actual (barra pulsante y último valor conocido): el chip solo reemplaza al punto con texto cuando ya hay etapa.
+
+## Contratos (deben cumplirse en todo el código)
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla. Aplica también a: Prompt 4.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable. Aplica también a: Prompt 4.
+- C3. Una tarea está completa cuando su Estatus es Terminado. Aplica también a: Prompt 4.
+- C4. El color y la etapa de un pedido se calculan siempre con la misma función del semáforo, en todas las vistas, incluida la del Prompt 4. Aplica también a: Prompt 4.
+- C5. El semáforo se calcula en el frontend (nunca como fórmula, rollup ni campo calculado en Airtable) y sus colores salen de un solo mapa basado en los colores de opciones select de Airtable. Aplica también a: Prompt 4.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- La página de Producción, incluido el indicador de riesgo y los colores por etapa que ya tiene.
+- El detalle del elemento y sus flujos del Prompt 2, salvo el punto de color y la etapa que se piden aquí.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+## Criterios de aceptación
+- La etapa es chip en la lista del Día, en la columna "Etapa" de Elementos, en el encabezado del detalle del elemento y en la línea "Etapa actual del elemento más atrasado", incluido "No iniciado".
+- Los cuatro chips usan el mismo componente y los mismos colores del mapa único del semáforo.
+- Las tarjetas de Día, Semana y Mes siguen con texto simple.
+- El semáforo sigue sin quedar vacío mientras carga, y sigue cambiando de inmediato al completar una etapa.
+- Nada más cambia: Producción, Finanzas, cake toppers y recibos se ven igual.
+
+## Al terminar
+Envíame un reporte (qué cambió, qué no pudiste probar, y cualquier tabla, campo, opción de select o automatización creada o cambiada: se espera ninguna) y un export completo (ZIP, README y transcript) con la versión 1.9.2. Incluye un MANIFEST.json real que liste todos los archivos y su conteo, y confirma que el conteo coincide con los archivos del ZIP.
+
+---
+
+### Assistant — Oct 5, 2026, 3:18 AM CST
+
+La versión 1.9.2 está construida y validada. No la probé con datos reales: la captura de pantalla solo muestra la página de inicio, sin datos.
+
+**Qué cambió**
+- La etapa del semáforo se ve ahora como chip de color, también cuando es "No iniciado", en estos cuatro lugares:
+  - la lista del Día;
+  - la columna "Etapa" de Elementos en el detalle del pedido;
+  - el encabezado del detalle del elemento, junto al título;
+  - la línea "Etapa actual del elemento más atrasado", donde después del chip sigue el nombre del elemento en gris: [chip] · Pastel 10 pax.
+- Los cuatro usan un solo componente (`EtapaChip`, en `produccion/semaforo.ts`) con el tono fuerte del mapa único. No definí colores nuevos.
+- Las tarjetas de Día, Semana y Mes no cambian: siguen con el texto simple.
+- Dejé como estaba el estado de carga (barra pulsante) y el último valor conocido. El chip solo aparece cuando ya hay etapa.
+
+**Export:** `exports/amaranta-v1.9.2.zip`, con README, transcript y `MANIFEST.json`. El manifiesto indica 103 archivos y comprobé que coincide con los archivos del ZIP.
+
+**Qué no pude probar**
+- No pude ver los chips en modo claro y oscuro, ni en celular, con pedidos reales.
+- Tampoco pude ver que el chip cambie al instante al completar una etapa.
+
+**Airtable:** no creé ni cambié tablas, campos, opciones de select ni automatizaciones, y no escribí datos. `lib/airtable-hooks.tsx` y `package.json` no cambiaron.

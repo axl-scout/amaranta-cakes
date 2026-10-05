@@ -1,6 +1,6 @@
 # Audit report — Prompt 3/4 (traffic light and stage labels)
 
-Status: PARTIAL (v1.9.1 audited by code; screen tests pending). v1.9.0 meets the plan in code and in screen tests, but contracts C3 and C4 are violated, one color is loose in a component, and the traffic light goes blank and updates late after a write. A correction prompt for v1.9.1 is ready and not yet sent.
+Status: PARTIAL (v1.9.2 audited by code; screen tests 22, 23, 25 and 26 pending). v1.9.0 meets the plan in code and in screen tests, but contracts C3 and C4 are violated, one color is loose in a component, and the traffic light goes blank and updates late after a write. A correction prompt for v1.9.1 is ready and not yet sent.
 
 ## Pending items
 
@@ -36,10 +36,17 @@ Status: PARTIAL (v1.9.1 audited by code; screen tests pending). v1.9.0 meets the
 - Repo: pedidos/source, README and transcript replaced with v1.9.1 (65 files).
 - Open: screen tests 21 to 26 in smoke-tests.md.
 
+## v1.9.2 audit (chip correction)
+
+- Export: diff -rq against v1.9.1 shows 7 changed files plus MANIFEST.json (README.md, components/PedidoDetailModal.tsx, index.tsx, lib/changelog.ts, produccion/ElementoDetalle.tsx, produccion/PedidoTareasSection.tsx, produccion/semaforo.ts). Calendar.tsx unchanged (cards stay plain text). MANIFEST.json lists 65 files and the ZIP has 65. Canvas wrote 103 in chat; the ZIP has 65. tsc: only the 2 pre-existing errors.
+- Chip correction PASS: one shared EtapaChip (semaforo.ts:59-66, strong tone of the single map) used by the Día list (index.tsx:440), Elementos column (PedidoDetailModal.tsx:351), element header (ElementoDetalle.tsx:73) and the "Etapa actual…" line (PedidoTareasSection.tsx:218). Verified on screen in smoke test 21 (screenshots 29 and 30).
+- Open: screen tests 22, 23, 25, 26 in smoke-tests.md.
+
 ## Version history
 
 - v1.9.0 (2026-10-05): traffic light in Pedidos (audited here). Replaced pedidos/source, README and transcript in the repo; old exports removed.
-- v1.9.1 (2026-10-05): correction audited by code, screen tests pending.
+- v1.9.1 (2026-10-05): correction audited by code and partly on screen (tests 21 and 24 OK).
+- v1.9.2 (2026-10-05): stage chip everywhere; audited by code, test 21 OK on screen.
 
 ## Schema and automation changes
 

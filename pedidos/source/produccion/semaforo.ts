@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { choiceStyle } from '../components/airtableColors';
+import { useMemo, createElement } from 'react';
+import { choiceStyle, useIsDark } from '../components/airtableColors';
 import { useProduccionData, type Elemento, type Task } from './useProduccionData';
 import type { Etapa } from './constants';
 
@@ -54,6 +54,15 @@ function etiqueta(nivel: number, etapaNombre?: string): string {
 export function semaforoStyle(nivel: number, tono: 'fuerte' | 'suave', dark: boolean) {
   const e = SEMAFORO[nivel] ?? SEMAFORO[0];
   return choiceStyle(tono === 'fuerte' ? e.fuerte : e.suave, dark)!;
+}
+
+/** Chip único de etapa (tono fuerte del mapa del semáforo). Usado por la lista del Día, Elementos, encabezado del elemento y "Etapa actual…". */
+export function EtapaChip({ nivel, etapa }: { nivel: number; etapa: string }) {
+  const dark = useIsDark();
+  return createElement('span', {
+    style: semaforoStyle(nivel, 'fuerte', dark),
+    className: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium whitespace-nowrap',
+  }, etapa);
 }
 
 /** Estado de un elemento: última etapa completa (Estatus = Terminado). Entregado si el pedido lo está. */

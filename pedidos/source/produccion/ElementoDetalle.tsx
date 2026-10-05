@@ -5,7 +5,7 @@ import { useUpdateRecord, type AirtableRecord, type Table } from '../lib/airtabl
 import { FIELD_IDS, formatCurrency, esProductoConRellenoYPan, readLinked, cv, cvs } from '../utils';
 import { CatalogDropdown, type CatalogOption } from '../components/Dropdowns';
 import { useIsDark } from '../components/airtableColors';
-import { semaforoStyle, calcSemaforoElemento } from './semaforo';
+import { EtapaChip, calcSemaforoElemento } from './semaforo';
 import { useProduccionData } from './useProduccionData';
 import { ElementoTareasSection } from './PedidoTareasSection';
 
@@ -70,11 +70,7 @@ export function ElementoDetalle({ record, elementosTable, catalogoProductos, cat
         <div className="p-5 border-b border-[#E9D9D9] dark:border-[#382C2E] flex items-center justify-between gap-3">
           <div className="min-w-0 flex items-center gap-3">
             <h2 className="font-bold text-2xl text-gray-900 truncate dark:text-[#F5F3EF]">{nombreRec || 'Elemento'}</h2>
-            {sem && (
-              <span className="inline-flex items-center gap-2 flex-shrink-0 text-sm font-medium text-gray-700 dark:text-gray-300">
-                <span aria-hidden className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: semaforoStyle(sem.nivel, 'fuerte', isDark).backgroundColor }} />{sem.etapa}
-              </span>
-            )}
+            {sem && <span className="flex-shrink-0"><EtapaChip nivel={sem.nivel} etapa={sem.etapa} /></span>}
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             <span className="hidden sm:inline text-xs text-gray-400 dark:text-gray-500 mr-2" aria-live="polite">

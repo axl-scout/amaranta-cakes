@@ -10,7 +10,7 @@ import { StageTracker, stageStates } from './StageTracker';
 import { useUrlParam } from '../lib/useUrlParam';
 import { TaskModal, type TaskModalMode } from './TaskModal';
 import { useIsDark } from '../components/airtableColors';
-import { semaforoStyle, useSemaforo } from './semaforo';
+import { useSemaforo, EtapaChip } from './semaforo';
 import { taskPace, PacePill, fmtTaskDay } from './pace';
 
 const th = 'px-3 py-2 text-sm font-semibold text-gray-700 text-left dark:text-gray-300';
@@ -215,8 +215,7 @@ export function PedidoTareasSection({ pedidoId, pedidoLabel, elementIds }: { ped
       {delayed && (
         <p className="mb-3 text-base text-gray-700 dark:text-gray-300">
           Etapa actual del elemento más atrasado:{' '}
-          <span aria-hidden className="inline-block w-2.5 h-2.5 rounded-full mr-1.5 align-middle" style={{ backgroundColor: semaforoStyle(delayed.nivel, 'fuerte', dark).backgroundColor }} />
-          <span className="font-semibold">{delayed.etapa}</span>
+          <EtapaChip nivel={delayed.nivel} etapa={delayed.etapa} />
           <span className="text-gray-500 dark:text-gray-400"> · {delayed.elemento.nombre || 'Elemento'}</span>
         </p>
       )}

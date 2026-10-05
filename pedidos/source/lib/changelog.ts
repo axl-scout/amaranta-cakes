@@ -1,6 +1,9 @@
 /** Version history of the app. Add a new entry (newest first) with every update; the README is built from it. */
 export interface ChangelogEntry { version: string; date: string; changes: string[] }
 export const CHANGELOG: ChangelogEntry[] = [
+  { version: '1.9.2', date: '2026-10-05', changes: [
+    'La etapa del semáforo se muestra siempre como chip de color (también "No iniciado") en la lista del Día, la columna "Etapa" de Elementos, el encabezado del detalle del elemento y la línea "Etapa actual del elemento más atrasado", todos con un único componente y los colores del mapa único. Las tarjetas de Día, Semana y Mes siguen con texto simple.',
+  ] },
   { version: '1.9.1', date: '2026-10-05', changes: [
     'El semáforo ya no queda vacío ni tarda: conserva su último valor mientras se recargan los datos, cambia de inmediato al completar una etapa y, mientras no hay datos por primera vez, muestra un estado de carga neutro en la columna "Etapa", en las tarjetas y en el detalle del pedido.',
     'Detalle del pedido: "Etapa actual del elemento más atrasado" usa la misma función del semáforo que las tarjetas (mismo elemento, misma etapa y color del punto).',
