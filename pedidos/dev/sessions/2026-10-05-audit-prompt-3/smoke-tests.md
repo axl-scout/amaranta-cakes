@@ -4,16 +4,16 @@ Export probado: v1.9.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
 Estado: pruebas 1 a 6 OK (capturas de Axel en tema oscuro; las pruebas 4 y 5 quedan con el cambio a chip para la corrección); pruebas 7 a 13 con confirmación parcial; el resto pendiente. Fecha de hoy en las pruebas: lunes 5 oct 2026.
 
 Pending items
-0. Key message: En la columna "Etapa" de la tabla Elementos y en el encabezado del detalle del elemento, la etapa debe ser una etiqueta (chip) con el color del semáforo, no punto con texto.
+1. Key message: En la columna "Etapa" de la tabla Elementos y en el encabezado del detalle del elemento, la etapa debe ser una etiqueta (chip) con el color del semáforo, no punto con texto.
    Argument: Axel lo pidió al probar 4, 5 y 7 y es consistente con la etiqueta de la lista del Día.
    Supporting data: `PedidoDetailModal.tsx:349-352`, `ElementoDetalle.tsx:71-78`; va al Prompt de corrección.
-1. Key message: Corre las pruebas 1 a 20 y marca el Estado; solo las pruebas 19 y 20 escriben datos, y solo en [4161] Efrain Dl Angel.
+2. Key message: Corre las pruebas 1 a 20 y marca el Estado; solo las pruebas 19 y 20 escriben datos, y solo en [4161] Efrain Dl Angel.
    Argument: Los colores rojo, naranja, amarillo y verde lima solo se ven con tareas Terminado. Claude ya las creó en 5 pedidos, así que solo falta verlos en pantalla.
    Supporting data: 15 tareas creadas (ver "Datos de arranque") y [4161] (`recpD5i15hQsj0PSl`) sin tareas para el recálculo en vivo.
-2. Key message: Avisa a Claude al terminar para borrar las 15 tareas de arranque (y las de las pruebas 19 y 20 si no las borras tú).
+3. Key message: Avisa a Claude al terminar para borrar las 15 tareas de arranque (y las de las pruebas 19 y 20 si no las borras tú).
    Argument: Dejan los pedidos con tareas que no existían y la tabla pasó de 14 a 29 registros.
    Supporting data: estado final esperado: 14 tareas en `tareas_produccion` (`tblESlAFi4WqHlJtk`).
-3. Key message: Las pruebas de tema claro y oscuro quedan para la aplicación final (decisión de Axel); el mapa de colores se verificó por código.
+4. Key message: Las pruebas de tema claro y oscuro quedan para la aplicación final (decisión de Axel); el mapa de colores se verificó por código.
    Argument: Los colores salen de un solo mapa con valores claro y oscuro.
    Supporting data: `produccion/semaforo.ts:27-34`, `components/airtableColors.ts`.
 
