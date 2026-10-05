@@ -26,6 +26,29 @@ Datos de arranque creados por Claude en Airtable (autorizado por Axel): 15 tarea
 - [4162] Silvia LC (`rec6CfqDdQE6OsZHI`), Galletas 60 (`recnVJ37t1pJ50jeS`): Horneado `recnrUUUThKIlVEu2`, Glaseado `rec2Mzcbd2HCmwy9O`.
 - [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), Pastel 20 pax (`recscT1PSK1PEkfU1`): Horneado `rec9hTvx9o6h1G2TO`, Embetunado `recKFgMGso71HrKvp`, Decorado `recGGBUcZSsJ4wnPG`. Sus Cupcakes (`recdPnErWZjQiJTmP`) siguen sin tareas.
 
+## v1.9.1 — Smoke tests de la corrección (abiertas)
+
+Export probado: v1.9.1 (2026-10-05). Hoy es lunes 5 oct 2026. Se prueba solo lo que cambió: la línea "Etapa actual…" (C4), el Tracker (C3) y el estado de carga del semáforo. Los colores por etapa ya se cerraron en v1.9.0.
+
+Pending items
+1. Key message: Autorizar a Claude a crear 6 tareas de arranque (Terminado, Origen Manual, sin empleado ni fechas) para las pruebas 21 a 23.
+   Argument: Sin tareas Terminado no hay etapas que comparar entre la línea, la tarjeta y el Tracker; se borran al cerrar.
+   Supporting data: [4120] Yami aguillon (`recvBRPY8mGxx4Jwu`, elemento `recWkvFQys1wObKSD`): Horneado y Embetunado; [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`, elemento `recscT1PSK1PEkfU1`): Horneado, Embetunado y Decorado; [4162] Silvia LC (`rec6CfqDdQE6OsZHI`, elemento `recnVJ37t1pJ50jeS`): Horneado Terminado con 30 de 60. La prueba 25 escribe en [4161].
+2. Key message: Decidir si la línea "Etapa actual del elemento más atrasado" debe mostrarse también en pedidos Entregados o sin tareas. Recomiendo dejarla.
+   Argument: Con la corrección usa el nombre del semáforo, así que ahora aparece "Entregado · Galletas" o "No iniciado · Galletas", y antes se ocultaba al estar todo completo.
+   Supporting data: `PedidoTareasSection.tsx:206-220`; prueba 26.
+
+| # | Prueba | Expected | Estado |
+|---|---|---|---|
+| 21 | [4120] Yami aguillon (23 oct, con las tareas de arranque). Vista "Día", 23 oct: abre el pop-up y mira la fila, la tarjeta, la columna "Etapa" de Elementos y la línea "Etapa actual…". | Las cuatro muestran lo mismo: "Embetunado listo" con el mismo color naranja; la línea dice "Embetunado listo · Pastel 10 pax" con punto naranja y el texto sin el color de Producción. | |
+| 22 | [3210] Alondra S Dávila (8 oct, con las tareas de arranque). Vista "Día", 8 oct: abre el pop-up. | La tarjeta y la línea dicen "No iniciado"; la línea nombra el elemento Cupcakes (el más atrasado), con punto morado. En Elementos, Pastel 20 pax "Decorado listo" y Cupcakes "No iniciado". | |
+| 23 | [4162] Silvia LC (1 nov, con la tarea de arranque). Vista "Día", 1 nov > pop-up > fila "Galletas" (detalle del elemento). | El Tracker marca Horneado como completo aunque la tarea tenga avance 30/60 (solo cuenta Terminado), con Glaseado como etapa actual. El encabezado y la fila dicen "Horneado listo". | |
+| 24 | Cualquier pedido, p. ej. [3210] (8 oct). Recarga la página con F5 en la vista "Día", 8 oct, y mira la lista y las tarjetas mientras carga. Luego abre el pop-up de [3210] justo después de cargar. | Mientras carga, la columna "Etapa" y las tarjetas muestran una barra gris pulsante y no "—" ni una tarjeta neutra. Al abrir el pop-up, la línea "Etapa actual…" muestra una barra pulsante y luego su valor. La columna "Etapa" de la tabla Elementos no debería quedar en "—" (pendiente de confirmar). | |
+| 25 | [4161] Efrain Dl Angel (14 oct). **ESCRIBE.** Vista "Día", 14 oct > pop-up > fila "Pastel 10 pax" > "Horneado" > "Sí", y cierra los pop-ups sin recargar. Repite con "Embetunado". | Tras cada "Sí" la fila y la tarjeta cambian de inmediato a "Horneado listo" (rojo) y luego "Embetunado listo" (naranja), sin pasar por "—" ni quedar neutras y sin demora. | |
+| 26 | [4148] Blanca Valdes (29 sep; filtro "Entregado") y Producción. Abre el pop-up de [4148] y revisa "Producción". Luego ve a Producción, vista "Todos", semana 5-11 oct. | En [4148] la columna "Etapa" dice "Entregado" y la línea (si aparece) dice "Entregado · Galletas" con punto verde. En Producción todo se ve igual que antes: chips por etapa de [4128] Sara el lunes 5 y los indicadores de riesgo. | |
+
+Limpieza tras la prueba 25: borra las tareas creadas en [4161]. Claude borra las tareas de arranque al cerrar; estado final esperado: 14 tareas en `tareas_produccion`.
+
 # Cerradas
 
 ~~Pending item: autorizar el borrado de las 7 tareas de arranque de [4159] y [4084]. Autorizado por Axel y hecho (verificado: la tabla quedó con 22 registros).~~

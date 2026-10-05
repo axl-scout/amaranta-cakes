@@ -396,7 +396,7 @@ function PedidosApp(): React.ReactElement {
                       style={semStyle ?? undefined}
                       className={`min-w-[220px] max-w-[240px] rounded-xl p-4 cursor-pointer flex-shrink-0 transition-all hover:shadow-md hover:-translate-y-0.5 ${semStyle ? '' : 'bg-white text-gray-900 dark:bg-[#251D1F] dark:text-gray-100'}`}>
                       <div className="font-bold text-base">{toTitleCase(pid)}</div>
-                      {sem && <div className="text-sm font-medium mt-0.5 opacity-90">{sem.etapa}</div>}
+                      {sem ? <div className="text-sm font-medium mt-0.5 opacity-90">{sem.etapa}</div> : semaforo.pendiente(r.id) ? <div aria-hidden className="mt-1.5 h-2.5 w-24 rounded-full bg-current opacity-20 animate-pulse" /> : null}
                       <div className="flex items-center gap-2 mt-2">
                         <ContactoPill value={metodo} />
                         <span className="text-sm opacity-75">{telefono || '—'}</span>
@@ -437,7 +437,7 @@ function PedidosApp(): React.ReactElement {
                               <td className="px-3 py-3"><EstatusPill value={estatusV} /></td>
                               <td className="px-3 py-3">{(() => {
                                 const sem = semaforo.pedido(r.id, estatusV);
-                                return sem ? <span style={semaforoStyle(sem.nivel, 'fuerte', isDark)} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium whitespace-nowrap">{sem.etapa}</span> : <span className="text-gray-300 dark:text-gray-700">—</span>;
+                                return sem ? <span style={semaforoStyle(sem.nivel, 'fuerte', isDark)} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium whitespace-nowrap">{sem.etapa}</span> : semaforo.pendiente(r.id) ? <span aria-hidden className="inline-block h-5 w-24 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse align-middle" /> : <span className="text-gray-300 dark:text-gray-700">—</span>;
                               })()}</td>
                               <td className="px-3 py-3"><ImpresoPill value={impresoV} /></td>
                               <td className="px-3 py-3 text-base text-center">

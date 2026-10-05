@@ -10,7 +10,7 @@ import { StageTracker, stageStates } from './StageTracker';
 import { useUrlParam } from '../lib/useUrlParam';
 import { TaskModal, type TaskModalMode } from './TaskModal';
 import { useIsDark } from '../components/airtableColors';
-import { semaforoStyle, calcSemaforoElemento } from './semaforo';
+import { semaforoStyle, useSemaforo } from './semaforo';
 import { taskPace, PacePill, fmtTaskDay } from './pace';
 
 const th = 'px-3 py-2 text-sm font-semibold text-gray-700 text-left dark:text-gray-300';
@@ -203,28 +203,21 @@ export function PedidoTareasSection({ pedidoId, pedidoLabel, elementIds }: { ped
     return out;
   }, [D.tasks, D.elementos, pedidoId, (elementIds ?? []).join(',')]);
 
-  // Most delayed element = the one whose current stage is the earliest in its own sequence.
-  const delayed = useMemo(() => {
-    let best: { el: Elemento; etapa: Etapa; idx: number } | null = null;
-    D.elementos.filter((el) => el.pedidoId === pedidoId && el.etapas.length > 0 && (!elementIds || !elementIds.length || elementIds.includes(el.id))).forEach((el) => {
-      const st = elementStates(el, D.tasks);
-      const idx = el.etapas.findIndex((e) => st[e] === 'current');
-      if (idx >= 0 && (!best || idx < best.idx)) best = { el, etapa: el.etapas[idx], idx };
-    });
-    return best as { el: Elemento; etapa: Etapa; idx: number } | null;
-  }, [D.elementos, D.tasks, pedidoId, (elementIds ?? []).join(',')]);
+  // Same single semáforo function as the pedido cards (C4): same element, stage and color.
+  const semaforo = useSemaforo();
+  const delayed = semaforo.pedido(pedidoId, order.estatus);
 
   return (
     <div>
+      {!delayed && semaforo.pendiente(pedidoId) && (
+        <p aria-hidden className="mb-3 h-4 w-64 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+      )}
       {delayed && (
         <p className="mb-3 text-base text-gray-700 dark:text-gray-300">
           Etapa actual del elemento más atrasado:{' '}
-          {(() => {
-            const sem = calcSemaforoElemento(delayed.el, D.tasks.filter((t) => t.elementoId === delayed.el.id), order.estatus === 'Entregado');
-            return sem ? <span aria-hidden className="inline-block w-2.5 h-2.5 rounded-full mr-1.5 align-middle" style={{ backgroundColor: semaforoStyle(sem.nivel, 'fuerte', dark).backgroundColor }} /> : null;
-          })()}
-          <span className="font-semibold" style={{ color: ETAPA_STYLE[delayed.etapa].hex }}>{delayed.etapa}</span>
-          <span className="text-gray-500 dark:text-gray-400"> · {delayed.el.nombre || 'Elemento'}</span>
+          <span aria-hidden className="inline-block w-2.5 h-2.5 rounded-full mr-1.5 align-middle" style={{ backgroundColor: semaforoStyle(delayed.nivel, 'fuerte', dark).backgroundColor }} />
+          <span className="font-semibold">{delayed.etapa}</span>
+          <span className="text-gray-500 dark:text-gray-400"> · {delayed.elemento.nombre || 'Elemento'}</span>
         </p>
       )}
       {groups.length === 0 ? (

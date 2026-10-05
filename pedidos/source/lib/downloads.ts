@@ -1,3 +1,4 @@
+import { CHANGELOG } from './changelog';
 import { SOURCE_FILES } from './sourceBundle';
 import { buildReadme, APP_VERSION } from './readme';
 
@@ -18,6 +19,9 @@ export async function downloadSourceZip(): Promise<void> {
   const zip = new JSZip();
   for (const [p, c] of Object.entries(SOURCE_FILES)) zip.file(p, c);
   zip.file('README.md', buildReadme());
+  // MANIFEST.json: real list of every file in the ZIP (including README.md and MANIFEST.json itself) + count.
+  const names = [...Object.keys(SOURCE_FILES), 'README.md', 'MANIFEST.json'].sort();
+  zip.file('MANIFEST.json', JSON.stringify({ version: CHANGELOG[0].version, fileCount: names.length, files: names }, null, 2));
   saveBlob(await zip.generateAsync({ type: 'blob' }), 'source.zip');
 }
 

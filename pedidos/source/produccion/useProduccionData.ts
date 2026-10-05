@@ -22,6 +22,8 @@ export interface Task {
 export interface Elemento {
   id: string; nombre: string; descripcion: string; cantidad: number; productoId: string | null; producto: string;
   pedidoId: string | null; etapas: Etapa[];
+  /** True while the linked product exists but its name has not arrived yet (stages cannot be known). */
+  productoPendiente: boolean;
 }
 export interface OrderStats { assigned: Record<Etapa, number>; done: Record<Etapa, number>; count: number }
 
@@ -53,6 +55,7 @@ export function useProduccionData() {
   const horT = base?.getTableById(HORARIOS.TABLE) ?? null;
   const tareasT = base?.getTableById(TAREAS.TABLE) ?? null;
   const capT = base?.getTableById(CAPACIDAD.TABLE) ?? null;
+  const catT = base?.getTableById(TABLE_IDS.catalogo) ?? null;
 
   const pedidosR = useRecords(pedidosT);
   const elementosR = useRecords(elementosT);
@@ -60,6 +63,15 @@ export function useProduccionData() {
   const horR = useRecords(horT);
   const tareasR = useRecords(tareasT);
   const capR = useRecords(capT);
+  const catR = useRecords(catT);
+
+  // Latches once a table has loaded for the first time (used by the semáforo so it is never evaluated on half-loaded data).
+  const elLoaded = useRef(false); const taLoaded = useRef(false); const caLoaded = useRef(false);
+  if (elementosT && !elementosR.loading) elLoaded.current = true;
+  if (tareasT && !tareasR.loading) taLoaded.current = true;
+  if (catT && !catR.loading) caLoaded.current = true;
+  const dataReady = elLoaded.current && taLoaded.current && caLoaded.current;
+  const catName = useMemo(() => new Map(catR.records.map((r) => [r.id, cvs(r, catT, FIELD_IDS.CAT_NOMBRE)])), [catR.records, catT]);
 
   // Only the first load shows the skeleton; later refetches (e.g. after creating a task) keep the page as is,
   // even when a table is still empty.
@@ -197,7 +209,9 @@ export function useProduccionData() {
   /** Every element of every order, with the stages its product type goes through. */
   const elementos: Elemento[] = useMemo(() => elementosR.records.map((el) => {
     const prod = readLinked(cv(el, elementosT, FIELD_IDS.EL_PRODUCTO))[0];
-    const producto = prod?.name ?? '';
+    // readLinked falls back to the id when the product name has not arrived: resolve it from the Catálogo instead.
+    const looksId = !!prod && (!prod.name || prod.name === prod.id || /^rec[A-Za-z0-9]{14}$/.test(prod.name));
+    const producto = prod ? (looksId ? (catName.get(prod.id) ?? '') : prod.name) : '';
     return {
       id: el.id,
       nombre: cvs(el, elementosT, FIELD_IDS.EL_NOMBRE) || producto,
@@ -207,8 +221,9 @@ export function useProduccionData() {
       producto,
       pedidoId: readLinked(cv(el, elementosT, FIELD_IDS.EL_PEDIDOS))[0]?.id ?? null,
       etapas: etapasDeProducto(producto),
+      productoPendiente: !!prod && producto === '',
     };
-  }), [elementosR.records, elementosT]);
+  }), [elementosR.records, elementosT, catName]);
   const elementoById = useMemo(() => new Map(elementos.map((e) => [e.id, e])), [elementos]);
 
   /** Order info for any order (not only cookies): ID text and production delivery day. */
@@ -258,7 +273,7 @@ export function useProduccionData() {
   const refetchEmps = useCallback(() => { empR.refetch(); }, [empR.refetch]);
 
   return {
-    loading, error, tareasT: tareasT as Table | null, capT: capT as Table | null, empT: empT as Table | null, allActiveEmps, refetchEmps,
+    loading, dataReady, error, tareasT: tareasT as Table | null, capT: capT as Table | null, empT: empT as Table | null, allActiveEmps, refetchEmps,
     emps, activeEmps, empName, hoursFor, shiftFor, capacity, rateFor, teamRateFor, workDaysBetween,
     orders, activeOrders, tasks, today, refetch, refetchAsync, refetchCap, elementos, elementoById, pedidoInfo,
   };

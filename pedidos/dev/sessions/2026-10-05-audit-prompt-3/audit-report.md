@@ -1,6 +1,6 @@
 # Audit report — Prompt 3/4 (traffic light and stage labels)
 
-Status: PARTIAL. v1.9.0 meets the plan in code and in screen tests, but contracts C3 and C4 are violated, one color is loose in a component, and the traffic light goes blank and updates late after a write. A correction prompt for v1.9.1 is ready and not yet sent.
+Status: PARTIAL (v1.9.1 audited by code; screen tests pending). v1.9.0 meets the plan in code and in screen tests, but contracts C3 and C4 are violated, one color is loose in a component, and the traffic light goes blank and updates late after a write. A correction prompt for v1.9.1 is ready and not yet sent.
 
 ## Pending items
 
@@ -26,10 +26,20 @@ Status: PARTIAL. v1.9.0 meets the plan in code and in screen tests, but contract
 - Smoke test results: all pass except test 19 (partial failure): after pressing "Sí" on a stage the list and card go blank ("—", neutral card) and the new stage appears late, without reload. The same blank state showed on first load of the Día view and in the order pop-up (tests 7 and 8, later fine). Probable cause: when the product name has not arrived, readLinked falls back to the record id (utils.ts:197) and etapasDeProducto returns no stages (semaforo.ts:65); useProduccionData.ts:67 also does not wait for the elements table and index.tsx ignores semaforo.loading.
 - Decisions by Axel: stage stays as dot plus text (no chip); theme tests left for the final app; Mes text truncation not included in the correction.
 
+## v1.9.1 audit (correction round)
+
+- Export: diff -rq against v1.9.0 shows 10 changed files plus the new MANIFEST.json (README.md, components/Calendar.tsx, components/airtableColors.ts, index.tsx, lib/changelog.ts, lib/downloads.ts, produccion/PedidoTareasSection.tsx, produccion/StageTracker.tsx, produccion/semaforo.ts, produccion/useProduccionData.ts). lib/airtable-hooks.tsx and package.json identical. MANIFEST.json lists 65 files and the ZIP has 65 (match). Canvas wrote 103 files in its chat message; the delivered ZIP has 65.
+- Type check (tsc --noEmit): only the 2 errors that already exist in v1.9.0 (missing generated sourceBundle).
+- Correction items: 1 line "Etapa actual" PASS (same semáforo function, PedidoTareasSection.tsx:206-208, 218-220); 2 Tracker C3 PASS (StageTracker.tsx:13-17); 3 loose colors PASS (SEMAFORO_NEUTRO, semaforo.ts:34-40; "airtable" field removed); 4 blank/late traffic light PARTIAL: Día list and cards show a loading bar and keep the last value (semaforo.ts:81-106, index.tsx:399,440, Calendar.tsx:179,199) but the order pop-up Elementos "Etapa" column still shows "—" while loading (PedidoDetailModal.tsx:350-351 unchanged).
+- Contracts: C1 OK, C2 OK, C3 OK, C4 OK, C5 OK (the neutral card class in index.tsx:396 remains outside the map; resolveAirtableColor in airtableColors.ts:56 is unused).
+- Observations: the line now also shows for Entregado and "No iniciado" orders; elementIds filter dropped from that line; useProduccionData now also loads the Catálogo table (extra fetch per instance, shared with Producción); the "ultimo" cache is written during render (semaforo.ts:81-103).
+- Repo: pedidos/source, README and transcript replaced with v1.9.1 (65 files).
+- Open: screen tests 21 to 26 in smoke-tests.md.
+
 ## Version history
 
 - v1.9.0 (2026-10-05): traffic light in Pedidos (audited here). Replaced pedidos/source, README and transcript in the repo; old exports removed.
-- v1.9.1: correction pending.
+- v1.9.1 (2026-10-05): correction audited by code, screen tests pending.
 
 ## Schema and automation changes
 

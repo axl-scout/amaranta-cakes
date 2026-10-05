@@ -17,21 +17,26 @@ export interface EstadoSemaforo {
   nivel: number;
   /** Nombre corto del estado (para comparar). */
   clave: string;
-  /** Color de opción select de Airtable (nombre original). */
-  airtable: string;
   /** Tono fuerte (chip/punto) y suave (fondo de tarjeta): claves de la paleta de Airtable. */
   fuerte: string;
   suave: string;
 }
 
 export const SEMAFORO: EstadoSemaforo[] = [
-  { nivel: 0, clave: 'No iniciado', airtable: 'purple', fuerte: 'purpleBright', suave: 'purpleLight2' },
-  { nivel: 1, clave: 'Horneado listo', airtable: 'red', fuerte: 'redBright', suave: 'redLight2' },
-  { nivel: 2, clave: 'Embetunado listo', airtable: 'orange', fuerte: 'orangeBright', suave: 'orangeLight2' },
-  { nivel: 3, clave: 'Decorado listo', airtable: 'yellow', fuerte: 'yellowBright', suave: 'yellowLight2' },
-  { nivel: 4, clave: 'Empacado listo', airtable: 'greenLight1', fuerte: 'greenLight1', suave: 'greenLight2' },
-  { nivel: 5, clave: 'Entregado', airtable: 'green', fuerte: 'greenBright', suave: 'greenLight1' },
+  { nivel: 0, clave: 'No iniciado', fuerte: 'purpleBright', suave: 'purpleLight2' },
+  { nivel: 1, clave: 'Horneado listo', fuerte: 'redBright', suave: 'redLight2' },
+  { nivel: 2, clave: 'Embetunado listo', fuerte: 'orangeBright', suave: 'orangeLight2' },
+  { nivel: 3, clave: 'Decorado listo', fuerte: 'yellowBright', suave: 'yellowLight2' },
+  { nivel: 4, clave: 'Empacado listo', fuerte: 'greenLight1', suave: 'greenLight2' },
+  { nivel: 5, clave: 'Entregado', fuerte: 'greenBright', suave: 'greenLight1' },
 ];
+
+/** Sin semáforo (pedido sin elementos con etapas) o aún cargando: único color neutro de la app. */
+export const SEMAFORO_NEUTRO = {
+  light: { backgroundColor: '#E5E9F0', color: '#1D1F25' },
+  dark: { backgroundColor: '#2E2F30', color: '#C4C7CD' },
+};
+export function semaforoNeutroStyle(dark: boolean) { return dark ? SEMAFORO_NEUTRO.dark : SEMAFORO_NEUTRO.light; }
 
 const NIVEL_ETAPA: Record<string, number> = { Horneado: 1, Embetunado: 2, Glaseado: 2, Decorado: 3, Empacado: 4 };
 
@@ -73,6 +78,9 @@ export function calcSemaforoPedido(elementos: Elemento[], tasksDe: (elementoId: 
   return best;
 }
 
+/** Último valor conocido por pedido: se conserva mientras se recargan los datos. */
+const ultimo = new Map<string, Semaforo & { elemento: Elemento }>();
+
 /** Hook compartido: se recalcula solo cuando cambian las tareas (incluye cambios instantáneos). */
 export function useSemaforo() {
   const D = useProduccionData();
@@ -82,18 +90,25 @@ export function useSemaforo() {
     const porElemento = new Map<string, Task[]>();
     for (const t of D.tasks) if (t.elementoId) { const a = porElemento.get(t.elementoId) ?? []; a.push(t); porElemento.set(t.elementoId, a); }
     const entregado = (estatus: string | null | undefined) => estatus === 'Entregado';
+    const listo = D.dataReady;
+    const incompleto = (els: Elemento[] | undefined) => !listo || !els || els.some((e) => e.productoPendiente);
     return {
       loading: D.loading,
+      listo,
       pedido: (pedidoId: string, estatus: string | null | undefined) => {
         const els = porPedido.get(pedidoId);
-        if (!els) return null;
-        return calcSemaforoPedido(els, (id) => porElemento.get(id) ?? [], entregado(estatus));
+        if (incompleto(els)) return ultimo.get(pedidoId) ?? null;
+        const r = calcSemaforoPedido(els!, (id) => porElemento.get(id) ?? [], entregado(estatus));
+        if (r) ultimo.set(pedidoId, r); else ultimo.delete(pedidoId);
+        return r;
       },
+      /** true mientras el semáforo del pedido todavía no puede calcularse (estado de carga neutro). */
+      pendiente: (pedidoId: string) => !listo || (porPedido.get(pedidoId) ?? []).some((e) => e.productoPendiente),
       elemento: (elementoId: string, estatus: string | null | undefined) => {
         const el = D.elementoById.get(elementoId);
-        return el ? calcSemaforoElemento(el, porElemento.get(el.id) ?? [], entregado(estatus)) : null;
+        return el && !el.productoPendiente && listo ? calcSemaforoElemento(el, porElemento.get(el.id) ?? [], entregado(estatus)) : null;
       },
     };
-  }, [D.elementos, D.tasks, D.loading, D.elementoById]);
+  }, [D.elementos, D.tasks, D.loading, D.dataReady, D.elementoById]);
 }
 export type SemaforoApi = ReturnType<typeof useSemaforo>;

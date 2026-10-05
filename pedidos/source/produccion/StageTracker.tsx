@@ -6,16 +6,15 @@ import type { Task } from './useProduccionData';
 export type StageState = 'done' | 'current' | 'pending';
 
 /**
- * A stage is done when its finished cookies cover the order (or, if the order's quantity is unknown,
- * when it has tasks and all of them are finished). The current stage is the first one not done.
+ * A stage is done when it has tasks and all of them have Estatus = Terminado (C3). The current stage is the first one not done.
  */
 export function stageStates(qty: number, tasks: Task[], etapas: Etapa[] = ETAPAS): Record<Etapa, StageState> {
   const res = {} as Record<Etapa, StageState>;
-  // C3: a task is complete when Estatus = Terminado AND completada >= asignada.
+  // C3: a task is complete when its Estatus is Terminado (nothing else).
   const raw = etapas.map((e) => {
     const mine = tasks.filter((t) => t.etapa === e);
     if (mine.length === 0) return false;
-    const complete = mine.filter((t) => t.estatus === 'Terminado' && t.completada >= t.asignada);
+    const complete = mine.filter((t) => t.estatus === 'Terminado');
     return complete.length === mine.length;
   });
   // A stage also shows complete when any later stage is complete (visual only).

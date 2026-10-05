@@ -1,6 +1,6 @@
 # Amaranta Cakes
 
-Versión 1.9.0 — 2026-10-05
+Versión 1.9.1 — 2026-10-05
 
 Sistema de gestión para la pastelería Amaranta Cakes. Interfaz en React con datos en una base de Airtable.
 
@@ -24,6 +24,13 @@ El botón de descarga ofrece: source.pdf, source.zip, readme.pdf y readme.md.
 Con cada actualización: agregar una entrada en `lib/changelog.ts` (versión y fecha) y ejecutar `node scripts/gen-source.mjs`.
 
 ## Historial de versiones
+### v1.9.1 — 2026-10-05
+- El semáforo ya no queda vacío ni tarda: conserva su último valor mientras se recargan los datos, cambia de inmediato al completar una etapa y, mientras no hay datos por primera vez, muestra un estado de carga neutro en la columna "Etapa", en las tarjetas y en el detalle del pedido.
+- Detalle del pedido: "Etapa actual del elemento más atrasado" usa la misma función del semáforo que las tarjetas (mismo elemento, misma etapa y color del punto).
+- Tracker de etapas: una etapa está completa solo cuando su tarea tiene Estatus = Terminado.
+- El color neutro de las tarjetas sin semáforo pasó al mapa único de colores.
+- El ZIP de exportación incluye MANIFEST.json con la lista de archivos y su conteo.
+
 ### v1.9.0 — 2026-10-05
 - Semáforo de avance en Pedidos: cada pedido muestra la etapa del elemento más atrasado (No iniciado, Horneado listo, Embetunado/Glaseado listo, Decorado listo, Empacado listo, Entregado) con su color, calculado solo en la app (sin campos nuevos en Airtable).
 - Lista del día: etapa como chip de color; tarjetas de Día, Semana y Mes: nombre de la etapa y fondo suave del color. El color de las tarjetas ya no depende del Estatus del pedido.

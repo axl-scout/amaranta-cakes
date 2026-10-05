@@ -1,6 +1,13 @@
 /** Version history of the app. Add a new entry (newest first) with every update; the README is built from it. */
 export interface ChangelogEntry { version: string; date: string; changes: string[] }
 export const CHANGELOG: ChangelogEntry[] = [
+  { version: '1.9.1', date: '2026-10-05', changes: [
+    'El semáforo ya no queda vacío ni tarda: conserva su último valor mientras se recargan los datos, cambia de inmediato al completar una etapa y, mientras no hay datos por primera vez, muestra un estado de carga neutro en la columna "Etapa", en las tarjetas y en el detalle del pedido.',
+    'Detalle del pedido: "Etapa actual del elemento más atrasado" usa la misma función del semáforo que las tarjetas (mismo elemento, misma etapa y color del punto).',
+    'Tracker de etapas: una etapa está completa solo cuando su tarea tiene Estatus = Terminado.',
+    'El color neutro de las tarjetas sin semáforo pasó al mapa único de colores.',
+    'El ZIP de exportación incluye MANIFEST.json con la lista de archivos y su conteo.',
+  ] },
   { version: '1.9.0', date: '2026-10-05', changes: [
     'Semáforo de avance en Pedidos: cada pedido muestra la etapa del elemento más atrasado (No iniciado, Horneado listo, Embetunado/Glaseado listo, Decorado listo, Empacado listo, Entregado) con su color, calculado solo en la app (sin campos nuevos en Airtable).',
     'Lista del día: etapa como chip de color; tarjetas de Día, Semana y Mes: nombre de la etapa y fondo suave del color. El color de las tarjetas ya no depende del Estatus del pedido.',

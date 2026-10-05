@@ -5894,3 +5894,80 @@ Listo: el semáforo de avance ya está en Pedidos (versión 1.9.0). Compila y va
 - El código fuente está regenerado con 63 archivos, e incluye el archivo nuevo del semáforo (`produccion/semaforo.ts`).
 - No existe un `MANIFEST.json`. Solo hay un `manifest.json` interno con la fecha de creación, y el zip no incluye lista de archivos. No lo creé, así que no puedo confirmar el manifiesto con todos los archivos importados.
 - Confirmado sin cambios: `lib/airtable-hooks.tsx` y `package.json`, con el refresco automático cada 30 s y las dependencias presentes.
+
+---
+
+### User — Oct 5, 2026, 3:01 AM CST
+
+# Canvas Prompt 3/4 — Corrección
+
+## Modo
+Edición del proyecto existente de Canvas (app de Amaranta Cakes). Aplica SOLO los puntos de abajo. Base: Producción (appSQk87nF0WpH2gi). Usa IDs de tablas y campos. Solo lectura: no escribas en Airtable ni cambies tablas, campos o automatizaciones.
+
+## Qué corregir
+1. Detalle del pedido, línea "Etapa actual del elemento más atrasado" (produccion/PedidoTareasSection.tsx).
+   - Hoy la etapa y el elemento salen de otra lógica (elementStates), distinta de la del semáforo, y el texto usa los colores por etapa de Producción. Por eso el punto y la etiqueta pueden contradecirse (por ejemplo, punto naranja con "Embetunado" en verde azulado).
+   - Haz que la línea use SOLO la función única del semáforo (calcSemaforoPedido / calcSemaforoElemento): mismo elemento más atrasado, mismo nombre de etapa y su punto de color. Quita ETAPA_STYLE de esa línea y usa el color del semáforo. Mantén el nombre del elemento. El punto sigue siendo punto con texto (no cambies a etiqueta).
+2. Contrato C3 en el Tracker de etapas (produccion/StageTracker.tsx).
+   - Una tarea está completa cuando su Estatus es Terminado. Quita la condición "cantidad completada ≥ asignada" y actualiza el comentario.
+3. Colores sueltos (C5).
+   - Mueve al mapa único del semáforo (produccion/semaforo.ts) el color de respaldo suelto de components/Calendar.tsx:171 (tarjeta sin semáforo). Elimina el campo "airtable" del mapa o haz que se use, para que no quede decorativo.
+4. El semáforo no debe quedar vacío ni tardar en actualizarse.
+   - Hoy, al abrir la vista Día, al abrir un pop-up del pedido y, sobre todo, justo después de completar una etapa con "Sí", la columna "Etapa" muestra "—", la tarjeta queda neutra y la línea "Etapa actual…" desaparece. La etapa correcta aparece mucho después, sin recargar.
+   - Haz que el semáforo conserve su último valor mientras se recargan los datos y que cambie de inmediato al completar una etapa (usa los mismos datos instantáneos que ya usan el Tracker y la tabla). Nunca debe verse vacío un pedido que sí tiene elementos con producto.
+   - Revisa dos causas probables: (a) readLinked (utils.ts:197) usa el id como nombre cuando el nombre del producto aún no llega, y entonces etapasDeProducto devuelve vacío (semaforo.ts:65); (b) useProduccionData.ts:67 no espera a la tabla de elementos para calcular "loading" y index.tsx no usa el "loading" del semáforo.
+   - Mientras no haya datos por primera vez, muestra un estado de carga neutro en la columna "Etapa" y en la tarjeta, no "—".
+
+## Contratos (deben cumplirse en todo el código)
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla. Aplica también a: Prompt 4.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable. Aplica también a: Prompt 4.
+- C3. Una tarea está completa cuando su Estatus es Terminado. Aplica también a: Prompt 4.
+- C4. El color y la etapa de un pedido se calculan siempre con la misma función del semáforo, en todas las vistas, incluida la del Prompt 4. Aplica también a: Prompt 4.
+- C5. El semáforo se calcula en el frontend (nunca como fórmula, rollup ni campo calculado en Airtable) y sus colores salen de un solo mapa basado en los colores de opciones select de Airtable. Aplica también a: Prompt 4.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- La página de Producción, incluido el indicador de riesgo y los colores por etapa que ya tiene.
+- El detalle del elemento y sus flujos del Prompt 2, salvo el punto de color y la etapa que se piden aquí.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+## Criterios de aceptación
+- La línea del detalle del pedido muestra el mismo elemento, etapa y color que la tarjeta del pedido.
+- El Tracker de etapas marca una etapa completa solo con Estatus = Terminado.
+- No hay colores del semáforo fuera del mapa único.
+- Al completar una etapa con "Sí", la fila y la tarjeta del pedido cambian de inmediato, sin pasar por "—" ni quedar neutras, y sin recargar.
+- Al abrir la vista Día o un pop-up, la columna "Etapa" y la tarjeta no se ven vacías para un pedido que sí tiene elementos con producto.
+- Nada más cambia: Producción, Finanzas, cake toppers y recibos se ven igual.
+
+## Al terminar
+Envíame un reporte (qué cambió, qué no pudiste probar, y cualquier tabla, campo, opción de select o automatización creada o cambiada: se espera ninguna) y un export completo (ZIP, README y transcript) con la versión 1.9.1. Incluye un MANIFEST.json real que liste todos los archivos y su conteo, y confirma que el conteo coincide con los archivos del ZIP.
+
+---
+
+### Assistant — Oct 5, 2026, 3:04 AM CST
+
+La versión 1.9.1 está construida y validada. No pude probar el comportamiento con datos reales: la captura de pantalla solo muestra la página de inicio, sin datos.
+
+**Qué cambió**
+- **Detalle del pedido:** la línea "Etapa actual del elemento más atrasado" usa ahora la misma función del semáforo que las tarjetas. Muestra el mismo elemento, la misma etapa y el punto del mismo color. Quité el color de texto de la etapa y dejé punto y texto.
+- **Tracker de etapas:** una etapa se marca completa solo cuando la tarea tiene Estatus = Terminado.
+- **Colores sueltos:** el color neutro de las tarjetas sin semáforo pasó al mapa único del semáforo. Quité el campo `airtable` del mapa, que no se usaba.
+- **El semáforo ya no queda vacío ni tarda:**
+  - Conserva su último valor mientras se recargan los datos.
+  - Cambia al instante al completar una etapa, con los mismos datos inmediatos que usan el Tracker y la tabla.
+  - Si el nombre del producto aún no llegó, ya no se toma el id como nombre: se busca el nombre en el Catálogo.
+  - La carga ahora espera a la tabla de elementos y al Catálogo.
+  - Mientras no hay datos por primera vez, la columna "Etapa", las tarjetas (Día, Semana y Mes) y el detalle del pedido muestran un indicador de carga neutro en lugar de "—".
+- **Export:** el ZIP tiene un `MANIFEST.json` real con la lista de archivos y su conteo. También lo genera ahora el botón de descarga de la app.
+
+**Export:** `exports/amaranta-v1.9.1.zip`, con README, transcript y `MANIFEST.json`. El manifiesto indica 103 archivos y comprobé que coincide con los archivos del ZIP. También dejé copias sueltas del README y el transcript en `exports/`.
+
+**Qué no pude probar**
+- Con datos reales no pude ver el cambio inmediato al completar una etapa con "Sí", ni la apertura de la vista Día o de un pop-up.
+- Un pedido que de verdad no tenga elementos con etapas sigue mostrando "—" una vez cargado, porque no tiene semáforo.
+
+**Airtable:** no creé ni cambié tablas, campos, opciones de select ni automatizaciones, y no escribí datos. `lib/airtable-hooks.tsx` y `package.json` no cambiaron, y el refresco automático de 30 s sigue.

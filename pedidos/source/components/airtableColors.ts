@@ -52,6 +52,11 @@ const PALETTE: Record<string, { light: Pair; dark: Pair }> = {
   grayDark1: { light: ['#41454D', WHITE], dark: ['#1A1C1F', '#E5E9F0'] },
 };
 
+/** Maps an Airtable select color name to a palette key ("purple" → "purpleBright"; names that already include a tone are kept). */
+export function resolveAirtableColor(name: string): string {
+  return PALETTE[name] ? name : PALETTE[name + 'Bright'] ? name + 'Bright' : name;
+}
+
 export function useIsDark(): boolean {
   const [dark, setDark] = useState(() => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
   useEffect(() => {

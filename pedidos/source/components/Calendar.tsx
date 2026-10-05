@@ -3,7 +3,7 @@ import { CaretLeft as CaretLeftIcon, CaretRight as CaretRightIcon, CaretDown as 
 import type { AirtableRecord, Table } from '../lib/airtable-hooks';
 import { useFloating } from './useFloating';
 import { toneStyle, useIsDark } from './airtableColors';
-import { semaforoStyle, type SemaforoApi } from '../produccion/semaforo';
+import { semaforoStyle, semaforoNeutroStyle, type SemaforoApi } from '../produccion/semaforo';
 import { FIELD_IDS, MONTHS_ES, MONTHS_ES_SHORT, DAYS_ES, getCalendarDays, formatDateForComparison, toTitleCase, cvs } from '../utils';
 
 const MONTH_MAX = 3;
@@ -168,7 +168,7 @@ export function CalendarioView({ filteredPedidos, calendarDate, period, onRecord
     const pid = pidField ? r.getCellValueAsString(pidField) : 'Sin ID';
     const estatus = getEstatusField(r);
     const sem = semaforo.pedido(r.id, estatus);
-    const style = (sem ? semaforoStyle(sem.nivel, 'suave', dark) : null) ?? { backgroundColor: dark ? '#2E2F30' : '#E5E9F0', color: dark ? '#C4C7CD' : '#1D1F25' };
+    const style = (sem ? semaforoStyle(sem.nivel, 'suave', dark) : null) ?? semaforoNeutroStyle(dark);
 
     if (month) {
       return (
@@ -176,7 +176,7 @@ export function CalendarioView({ filteredPedidos, calendarDate, period, onRecord
           className={'w-full flex items-center gap-1 min-w-0 text-left px-1.5 py-0.5 rounded font-semibold hover:opacity-80 transition-opacity font-sans text-xs ' + (shadow ? 'shadow-md' : '')}
           style={style}>
           <span className="truncate">{toTitleCase(pid)}</span>
-          {sem && <span className="truncate font-normal opacity-85 hidden sm:inline">· {sem.etapa}</span>}
+          {sem ? <span className="truncate font-normal opacity-85 hidden sm:inline">· {sem.etapa}</span> : semaforo.pendiente(r.id) ? <span aria-hidden className="h-2 w-10 rounded-full bg-current opacity-20 animate-pulse hidden sm:inline-block" /> : null}
         </button>
       );
     }
@@ -196,7 +196,7 @@ export function CalendarioView({ filteredPedidos, calendarDate, period, onRecord
         <div className="truncate">{toTitleCase(pid)}</div>
         {/* Always render the second line so every week card has the same height */}
         <div className="truncate opacity-85 font-normal">{primerElemento || '—'}</div>
-        <div className="truncate opacity-85 font-normal">{sem ? sem.etapa : '\u00a0'}</div>
+        <div className="truncate opacity-85 font-normal">{sem ? sem.etapa : semaforo.pendiente(r.id) ? <span aria-hidden className="inline-block h-2 w-12 rounded-full bg-current opacity-20 animate-pulse" /> : '\u00a0'}</div>
       </button>
     );
   }
