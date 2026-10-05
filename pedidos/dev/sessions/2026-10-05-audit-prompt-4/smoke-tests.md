@@ -3,7 +3,7 @@
 Export a probar: v1.10.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Prueba 13: manda una captura del tablero después del "Sí" (con "3210" en el buscador) para cerrarla; la tarea `rechbrn8oPFAgZV9d` se borra después.
+1. Prueba 13 FALLA: espera 30 s (o recarga) y manda otra captura del tablero con "3210" en el buscador; la tarea `rechbrn8oPFAgZV9d` se borra después.
 2. Decidir dos solicitudes nuevas (ver Observaciones de Axel y reporte): búsqueda que filtre Día, Semana y Mes, y menú lateral con hamburguesa en celular.
 
 Reglas
@@ -25,7 +25,7 @@ Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S 
 
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 13 | Dos elementos en etapas distintas; actualización sin recargar | Abre "Todos" en una pestaña y deja visible. En Pedidos abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí". Regresa al tablero sin recargar. | [3210] aparece 2 veces: Pastel 20 pax en Embetunado / Glaseado (chip "Horneado listo", rojo) y Cupcakes en Horneado ("No iniciado", morado). El cambio ocurre sin recargar y ninguna tarjeta ni chip queda vacío. | EN CURSO: captura 17 (antes de la escritura) muestra las 2 tarjetas de [3210] en Horneado con "No iniciado". Tarea creada en Airtable `rechbrn8oPFAgZV9d` (Horneado, Terminado, 10:22 UTC). Falta ver el tablero después del "Sí". |
+| 13 | Dos elementos en etapas distintas; actualización sin recargar | Abre "Todos" en una pestaña y deja visible. En Pedidos abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí". Regresa al tablero sin recargar. | [3210] aparece 2 veces: Pastel 20 pax en Embetunado / Glaseado (chip "Horneado listo", rojo) y Cupcakes en Horneado ("No iniciado", morado). El cambio ocurre sin recargar y ninguna tarjeta ni chip queda vacío. | FALLA en pantalla: captura 17 (tomada después del "Sí") muestra las 2 tarjetas de [3210] en Horneado con "No iniciado"; Pastel 20 pax debía pasar a Embetunado / Glaseado con "Horneado listo". Airtable sí tiene la tarea `rechbrn8oPFAgZV9d` (Horneado, Terminado, Manual, ligada a Pastel 20 pax `recscT1PSK1PEkfU1` y a [3210]), así que el dato está bien y el tablero no lo refleja. Pendiente saber si se corrige solo tras 30 s o al recargar. |
 
 ### Transversales
 | # | Área | Pasos | Resultado esperado | Pass/Fail |

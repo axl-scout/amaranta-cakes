@@ -4,9 +4,9 @@ Status: PARTIAL (v1.10.0). Code meets the plan except the Entregado search rule,
 
 ## Pending items
 
-Run smoke test 13 (writes data, authorized by Axel) in [3210], report test 14, and tell Claude so the created task can be deleted.
-It is the only test that shows one order with two elements in two columns; test 14 checks that nothing blanks on refresh.
-recY1WRFAEYXZhe50; tareas_produccion has 14 records now.
+Send one more screenshot of the board (search "3210") after waiting 30 s or reloading, so Claude can tell a delayed refresh from a missing update; then Claude deletes the test task.
+Smoke test 13 failed on screen: after "Sí" the two cards of [3210] stayed in Horneado with "No iniciado", although Airtable has the task correctly linked.
+Task rechbrn8oPFAgZV9d (Horneado, Terminado, linked to Pastel 20 pax recscT1PSK1PEkfU1 and to [3210]); screenshot 17; tareas_produccion has 15 records until it is deleted.
 
 Decide whether the search bar should also filter the Día list, Semana and Mes (today it only fills its dropdown). Recommendation: include it in this correction as an explicit exception to "No tocar" (existing search), applying the same text match as the board.
 Axel reported that typing in the search bar does not filter the page; only the board (Todos, Día > Tablero) filters. The Prompt 4 text asked for the board only, and "No tocar" protects the existing search, so Canvas did not change it.
@@ -39,6 +39,7 @@ Open tests: 1 (redesign), 13, 14, 15.
 - On-screen results so far (Axel): test 1 works but needs the redesign above; tests 2, 3 and 4 OK from screenshots (4 partly: counts and the 3 cards of [3413] not yet seen).
 - Tests 5 and part of 6 OK from screenshots: Entregado orders are absent from the board without search; with search "elizabe" (7 cards) and "alice" (1 card) they show in Empacado, green, chip "Entregado". Still open in 6: clearing the text and the "Pendiente"-only case (fixed by decision 1).
 - Tests 6 (rest), 7, 8, 9, 10, 11 and 12 OK (Axel; screenshots 11 to 15). Test 8 passes on screen although the code shows the Día table skeleton at first load (index.tsx:401); kept as an observation, not in the correction. Axel also reported that the search bar does not filter Día, Semana and Mes, and that the mobile menu should use the burger (pending items above).
+- Test 13 FAIL on screen (screenshot 17 taken after "Sí"): the board did not move Pastel 20 pax to Embetunado / Glaseado. Data is correct in Airtable; by code the overlay (useProduccionData.ts:202-207, PedidoTareasSection.tsx:285) and the refetch broadcast (useProduccionData.ts:263-267) should update every mounted instance, so the cause is not clear from code (possible stale ultimoTablero cache, semaforo.ts:134, or a refetch that does not reach the board). Goes to the correction prompt as a Canvas diagnosis. Test 14 OK (Axel).
 - Not run: tsc (no dependencies installed in this environment) and any on-screen test.
 
 ## Part A detail
@@ -94,4 +95,5 @@ None created or changed. Read-only check: 11 tables, 2 automations (autoincremen
 
 ## Data created or changed
 
-None so far. tareas_produccion has 14 records (verified read-only). If smoke test 13 is confirmed, one task will be created in [3210] and deleted; its ID will be recorded here.
+Test 13 (authorized by Axel): task rechbrn8oPFAgZV9d created in tareas_produccion (Horneado, Terminado, Manual, element recscT1PSK1PEkfU1, order recY1WRFAEYXZhe50) on 2026-10-05; to be deleted after the follow-up screenshot.
+None other so far. tareas_produccion has 14 records (verified read-only). If smoke test 13 is confirmed, one task will be created in [3210] and deleted; its ID will be recorded here.
