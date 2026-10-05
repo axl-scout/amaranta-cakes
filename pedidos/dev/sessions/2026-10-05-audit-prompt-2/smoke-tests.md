@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas 24 a 28 pendientes (escriben datos en [3413]). Los sets cerrados van al final del archivo (pruebas 1 a 23 cerradas). Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: pruebas 29 a 38 (v1.7.0, solo lectura) y 24 a 28 (escriben datos) pendientes. Los sets cerrados van al final del archivo (pruebas 1 a 23 cerradas). Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -10,14 +10,31 @@ Reglas
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
 
+## v1.7.0 — correcciones (solo lectura, no escriben datos)
+
+Records: [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`), [4128] Sara (`recZCPIvYm7J76UX1`), [3413] Rosaura Avila (`rec3OES0NemnxyyzY`). Rutas como en las pruebas anteriores.
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 29 | [4148] Blanca Valdes | En Pedidos busca "4148", abre el pedido y haz clic en la fila "Galletas". | La tabla sigue con 1 tarea (Empacado 100/100). El tracker muestra las 4 etapas completas aunque no tengan tareas. No se crea ningún registro. En el pop-up del pedido no aparece la línea "Etapa actual…". | Pendiente |
+| 30 | [4128] Sara | Abre el pedido (1 oct), clic en la fila "Galletas" y clic en el círculo "Glaseado". Prueba cerrarlo con clic afuera y con Esc. | Aparece un globo pequeño junto a la etapa, sin fondo oscuro, con "¿Completar tarea?", el texto "Sí: completa esta etapa y las anteriores. No: solo crea la tarea, sin completar." y los botones "Sí" y "No" del mismo ancho. "Sí" no tiene foco automático. Se cierra con clic afuera y con Esc sin escribir nada; siguen 4 tareas. | Pendiente |
+| 31 | [4128] Sara | En el detalle del elemento pulsa "Editar" y luego Esc; después Esc otra vez. No cambies ningún campo. | El primer Esc cierra solo el modal "Editar elemento" y el detalle sigue abierto. El segundo Esc cierra el detalle. | Pendiente |
+| 32 | [3413] Rosaura Avila | En "Agregar elemento" elige "Galletas", abre el selector "Empleado" de una fila y usa flecha abajo, flecha arriba, Enter y Escape. Cierra el formulario con clic afuera. | Las flechas mueven la opción resaltada (da la vuelta al llegar al final o al inicio) y la lista se desplaza para mantenerla visible; el mouse también resalta. Enter elige la resaltada y Escape cierra la lista. No se crea ningún registro. | Pendiente |
+| 33 | [3413] Rosaura Avila | En Producción, vista "Todos", abre el filtro "Todo el equipo" y el selector de vista y prueba flechas, Enter y Escape. | Mismo comportamiento de teclado que en la prueba 32 en todos los dropdowns. El diseño del tablero y de la vista Día no cambia. | Pendiente |
+| 34 | [3413] Rosaura Avila | En "Agregar elemento" elige "Pastel 5 pax", cantidad 30 y elige fechas en dos filas. | La tabla muestra solo Etapa (chip con el color de la etapa), Empleado, Inicio y Fin; no hay Título, Cant. ni Estatus. No hay scroll horizontal ni columnas cortadas con fechas elegidas. | Pendiente |
+| 35 | [3413] Rosaura Avila | En esa tabla haz clic en "Inicio" de una fila, elige el 8 oct, luego elige el 10 oct; abre "Fin" de la misma fila; usa la "X" de Inicio y de Fin. | Un solo calendario: elegir el inicio no lo cierra y la siguiente selección es el fin; el periodo 8-10 oct queda resaltado. Tocar "Fin" abre el mismo calendario. Cada "X" limpia su fecha. Solo se pueden elegir días del 4 al 15 oct. Dejar fechas vacías es válido. | Pendiente |
+| 36 | [4128] Sara | Abre el pedido, clic en la fila Horneado de la tabla de tareas y abre el selector de fechas. No cambies nada. | Aparece el aviso "La entrega de producción de este pedido ya pasó. Cambia esa fecha en el pedido para poder fechar la tarea." en lugar del mensaje "anterior a hoy". Todos los días siguen deshabilitados. En una tarea ya creada el Inicio no se puede quitar, solo el Fin. | Pendiente |
+| 37 | [3413] Rosaura Avila | Regresión de Esc: abre el cake topper del pedido y pulsa Esc; en Pedidos abre "Nuevo pedido" y pulsa Esc; en Producción vista "Día" abre el detalle de un pedido y pulsa Esc. | Cada Esc cierra solo la capa superior y no se guarda nada. | Pendiente |
+| 38 | [4128] Sara | Repite las pruebas 30 y 35 en modo claro, en modo oscuro y con la ventana angosta (celular). | El globo, el calendario de rango y los dropdowns se ven bien y se pueden usar en los tres casos. | Pendiente |
+
 ## [3413] Rosaura Avila (`rec3OES0NemnxyyzY`) — ESCRIBEN datos en Producción
 
 | # | Prueba | Expected | Estado |
 |---|---|---|---|
-| 24 | Abre el detalle de "Pastel 50 pax", haz clic en el círculo "Decorado" y en el mini pop-up pulsa "No". Repite el clic y "No". | Se crea 1 tarea: Decorado, título "[3413] Rosaura Avila · Decorado · 1", asignada 1, completada 0, Pendiente, Origen Manual, ligada al pedido y al elemento, sin empleado ("Sin asignar") y sin fechas. El tracker no cambia (Horneado sigue como actual). La segunda vez no se duplica. | Pendiente |
+| 24 | Abre el detalle de "Pastel 50 pax", haz clic en el círculo "Decorado" y en el mini pop-up pulsa "No" en el globo. Repite el clic y "No". | Se crea 1 tarea: Decorado, título "[3413] Rosaura Avila · Decorado · 1", asignada 1, completada 0, Pendiente, Origen Manual, ligada al pedido y al elemento, sin empleado ("Sin asignar") y sin fechas. El tracker no cambia (Horneado sigue como actual). La segunda vez no se duplica. | Pendiente |
 | 25 | En el mismo elemento haz clic en "Decorado" y pulsa "Sí". Cierra el detalle y mira el pop-up del pedido sin reabrirlo. | Se crean Horneado y Embetunado como Terminado 1/1 y Decorado pasa a Terminado 1/1. El tracker muestra 3 palomitas y Empacado como actual. El pop-up del pedido debe mostrar las 3 tareas y la línea de etapa actualizada sin reabrirse (hoy falla: sigue con datos viejos). | Pendiente |
 | 26 | Abre el detalle de "Cupcakes", haz clic en "Empacado" y pulsa "Sí". | Se crean 4 tareas (Horneado, Embetunado, Decorado, Empacado), todas Terminado 1/1 y "Sin asignar". El tracker muestra las 4 palomitas. | Pendiente |
-| 27 | En "Agregar elemento" elige "Galletas", Cantidad 2, Horneado → Ale con inicio 6 oct y fin 7 oct, deja lo demás vacío y pulsa "Crear" dos veces seguidas. | Se crea 1 elemento y 4 tareas, todas Pendiente 0/2 y ligadas al elemento y al pedido. Horneado lleva Ale y las fechas; las otras 3 salen "Sin asignar" y sin fechas. No hay duplicados. | Pendiente |
+| 27 | En "Agregar elemento" elige "Galletas", Cantidad 2, Horneado → Ale con el calendario de rango (inicio 6 oct, fin 7 oct), deja lo demás vacío y pulsa "Crear" dos veces seguidas. | Se crea 1 elemento y 4 tareas, todas Pendiente 0/2 y ligadas al elemento y al pedido. Horneado lleva Ale y las fechas; las otras 3 salen "Sin asignar" y sin fechas. No hay duplicados. | Pendiente |
 | 28 | Abre la tarea Horneado de la prueba 27 (clic en su fila) y cambia "Fecha de inicio" al 9 oct. Ciérrala y vuelve a abrirla. | Aparece "Cambios guardados" y, al reabrir, la fecha de inicio es el 9 oct. | Pendiente |
 
 Limpieza después de las pruebas 24 a 28: borra las tareas creadas (icono de basura en el formulario de cada tarea) y luego el elemento de la prueba 27 desde "Editar". Estado final esperado: 0 tareas y 3 elementos en [3413].
