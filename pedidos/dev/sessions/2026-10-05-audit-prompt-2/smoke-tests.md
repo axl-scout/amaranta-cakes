@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pendientes solo las pruebas 39 y 40 (tras la próxima corrección). Las pruebas 1 a 38 están cerradas (38 omitida) y están al final del archivo. Limpieza de [3413] pendiente (ver el final). Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: pendientes solo las pruebas 39 y 40 (tras la próxima corrección). Las pruebas 1 a 38 están cerradas (38 omitida) y están al final del archivo. Limpieza de [3413] hecha. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -101,4 +101,4 @@ Records: [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`), [4128] Sara (`recZCPIvYm7J7
 
 Limpieza después de las pruebas 24 a 28: borra las tareas creadas (icono de basura en el formulario de cada tarea) y luego el elemento de la prueba 27 desde "Editar". Estado final esperado: 0 tareas y 3 elementos en [3413].
 
-Limpieza pendiente: en [3413] Rosaura Avila hay 11 tareas de prueba (3 de Pastel 50 pax, 4 de Cupcakes y 4 del elemento Galletas nuevo) y 1 elemento Galletas nuevo (`rec4y37pNvUupXVWj`). Borrar primero las tareas y luego el elemento. Estado final esperado: 0 tareas y 3 elementos.
+Limpieza hecha (autorizada por Axel): se borraron las 11 tareas de prueba y el elemento Galletas nuevo (`rec4y37pNvUupXVWj`) de [3413] Rosaura Avila. Estado final verificado en Airtable: 0 tareas y 3 elementos. Para las pruebas 39 y 40 habrá que crear tareas con fechas de nuevo.
