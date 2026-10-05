@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: la v1.8.1 está recibida. Pendientes las pruebas 51, 53 y 54 (solo lectura) y 39, 40, 52, 47, 48, 50 y 49 (escriben datos en [3413], en ese orden). Las demás están cerradas y al final del archivo. Revisión por código de la v1.8.1: auto-refresco y dependencias restaurados. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: pendientes solo las pruebas que escriben datos en [3413], en este orden: 39, 40, 52, 47, 48, 50 y 49. Las demás están cerradas (54 omitida) y al final del archivo. Revisión por código de la v1.8.1: auto-refresco y dependencias restaurados. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -9,14 +9,6 @@ Reglas
 - Las pruebas 24 a 28 escriben en Producción y corren solo en [3413] Rosaura Avila (`rec3OES0NemnxyyzY`).
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
-
-## v1.8.1 — [3413] Rosaura Avila (solo lectura)
-
-| # | Record | Prueba | Expected | Estado |
-|---|---|---|---|---|
-| 51 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > fila "Galletas" (detalle del elemento). | La primera fila de datos muestra "Pedido" y luego "Producto" (editable); ya no aparece el campo "Nombre". El encabezado tiene solo el título y el icono de basura, sin "X"; el detalle se cierra con Esc y con clic afuera. | Pendiente (v1.8.1) |
-| 53 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Los subtítulos siguen el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas. | Pendiente (v1.8.1) |
-| 54 | Sin record | Página Pedidos > menú de descarga (solo usuarios autorizados) > pulsa "source.zip", "source.pdf", "readme.md" y "readme.pdf". | Los cuatro archivos se descargan y abren; el ZIP trae el código de la v1.8.1 con su README. No escribe en Airtable. | Pendiente (v1.8.1) |
 
 ## v1.8.1 — [3413] Rosaura Avila (ESCRIBEN datos, en este orden)
 
@@ -134,3 +126,11 @@ Limpieza de la prueba 40 hecha (autorizada por Axel): se borraron el elemento "P
 |---|---|---|---|---|
 | 45 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Tres subtítulos ("Pastel 50 pax", "Cupcakes", "Galletas"), cada uno con su tabla y el texto "Sin tareas.". | OK (nota: los subtítulos salen Galletas, Cupcakes, Pastel 50 pax; deberían seguir el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas) |
 | 46 | [3413] Rosaura Avila | Abre el detalle de "Galletas", pulsa el icono de basura del encabezado y luego "Cancelar" en la confirmación. | Aparece la confirmación "¿Eliminar elemento?"; al cancelar no se borra nada y el detalle sigue abierto. | OK (la confirmación "¿Eliminar elemento?" con "Cancelar" y "Confirmar" funciona; cambio pedido: quitar un icono de X, por confirmar cuál) |
+
+## v1.8.1 — [3413] Rosaura Avila (solo lectura)
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 51 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > fila "Galletas" (detalle del elemento). | La primera fila de datos muestra "Pedido" y luego "Producto" (editable); ya no aparece el campo "Nombre". El encabezado tiene solo el título y el icono de basura, sin "X"; el detalle se cierra con Esc y con clic afuera. | OK |
+| 53 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Los subtítulos siguen el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas. | OK |
+| 54 | Sin record | Página Pedidos > menú de descarga (solo usuarios autorizados) > pulsa "source.zip", "source.pdf", "readme.md" y "readme.pdf". | Los cuatro archivos se descargan y abren; el ZIP trae el código de la v1.8.1 con su README. No escribe en Airtable. | Omitida (decisión de Axel) |
