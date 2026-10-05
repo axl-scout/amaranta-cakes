@@ -67,3 +67,9 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Antes de pegar un prompt en Canvas, reemplazar el marcador [PEGAR AQUÍ: No tocar y contratos C1-C3] con el texto de contracts-and-no-tocar.md; en la v1.8.2 se pegó sin reemplazar.
 - Confirmación "¿Eliminar elemento?": su texto debe decir que también se eliminan sus tareas de producción (ya no "Esta acción no se puede deshacer."), porque existe el aviso "Deshacer". Texto propuesto: "Se eliminarán también sus tareas de producción." Va al prompt de corrección v1.8.4.
 - Cuando Axel pregunte por el marcador [PEGAR AQUÍ…], entregar el prompt con el texto de No tocar y contratos ya insertado.
+
+## Decisiones vigentes del Prompt 4
+- Los Entregados que coinciden con la búsqueda aparecen en el tablero aunque el filtro de estatus sea "Pendiente" (Empacado, verde, "Entregado").
+- La columna del tablero sale de la misma función del chip: etapa siguiente a la última completada.
+- Selector de periodo: no es un dropdown; es el interruptor anterior (Día, Semana, Mes, Todos) que muestra solo la opción elegida en un contenedor y se expande con hover (toque en celular) para mostrar todas.
+- La prueba 13 (dos elementos en etapas distintas) corre en [3210] Alondra S Dávila y Claude borra la tarea al final.

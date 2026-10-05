@@ -4,21 +4,20 @@ Status: PARTIAL (v1.10.0). Code meets the plan except the Entregado search rule,
 
 ## Pending items
 
-Decide whether searched Entregado orders must appear on the board even when the status filter is "Pendiente" (default). Recommendation: yes, when there is search text, ignore the status filter for Entregado matches.
-The prompt says they must show in Empacado, green, label "Entregado"; today the status filter is applied before the search, so with the default filter they never appear.
-index.tsx:193 (filter) runs before index.tsx:196-200 (search); smoke test 6.
+Run smoke test 13 (writes data, authorized by Axel) in [3210] and tell Claude so the created task can be deleted.
+It is the only test that shows one order with two elements in two columns.
+recY1WRFAEYXZhe50; tareas_produccion has 14 records now.
 
-Decide the board column rule. Recommendation: derive the column from the same function as the chip (the stage after the last completed one), so card color, chip and column never disagree.
-The column is recomputed apart from the semáforo (columnaElemento, semaforo.ts:97-104 vs calcSemaforoElemento, semaforo.ts:69-78): an element with Embetunado Terminado but no Horneado task shows chip "Embetunado listo" in the Horneado column. Contract C3 asks for one function.
-semaforo.ts:69-104; the tracker already shows earlier stages as complete (v1.7.0).
+Send the correction prompt only after smoke tests 5 to 15 are done (Axel's rule).
+It already includes the decisions below, so it is sent once.
+Open tests: 1 (redesign), 5 to 15 in smoke-tests.md.
 
-Confirm that I can run smoke test 13 (writes data) on [3210] Alondra S Dávila: 1 task Horneado, Terminado, Origen Manual, deleted at the end.
-It is the only way to see one order with two elements in different columns; [4161] has one element.
-recY1WRFAEYXZhe50, Pastel 20 pax recscT1PSK1PEkfU1, Cupcakes recdPnErWZjQiJTmP; tareas_produccion has 14 records now.
+## Decisions by Axel (this round)
 
-Confirm that reports go in pedidos/dev/sessions/<date>-<topic>/ (repo convention) and not in audit-reports/NN-orders-canvas-audit-report.md as the prompt says. Recommendation: keep the repo convention.
-The repo has no audit-reports folder; the Prompt 2 and 3 reports live in sessions folders.
-pedidos/dev/sessions/2026-10-05-audit-prompt-3/audit-report.md.
+- Searched Entregado orders appear on the board even when the status filter is "Pendiente".
+- Board column comes from the same function as the chip (stage after the last completed one).
+- Test 13 authorized on [3210]; reports stay in pedidos/dev/sessions/ (repo convention).
+- Period selector: go back to the previous switch, showing only the selected option in one container; on hover the container expands to show the full switch (Día, Semana, Mes, Todos). The dropdown is replaced. Mobile: tap expands.
 
 ## What we did
 
@@ -29,6 +28,7 @@ pedidos/dev/sessions/2026-10-05-audit-prompt-3/audit-report.md.
 - Part A: item 1 PASS, item 2 PARTIAL, item 3 PASS, item 4 PASS. Acceptance criteria: 4 PASS, 1 PARTIAL (Entregado search).
 - Contracts: C1 OK, C2 OK, C3 PARTIAL, C4 OK, C5 OK, C6 OK.
 - Read-only Airtable check: 11 tables and 2 automations, same as the Prompt 3 report; no new fields, formulas or rollups.
+- On-screen results so far (Axel): test 1 works but needs the redesign above; tests 2, 3 and 4 OK from screenshots (4 partly: counts and the 3 cards of [3413] not yet seen).
 - Not run: tsc (no dependencies installed in this environment) and any on-screen test.
 
 ## Part A detail
