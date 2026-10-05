@@ -1,0 +1,26 @@
+// Catch-all declarations for packages without installed types
+declare module 'mapbox-gl';
+declare module 'marked';
+declare module '@google/model-viewer';
+declare module 'lodash';
+declare module 'lodash/*';
+declare module 'uuid';
+declare module 'classnames';
+declare module 'clsx';
+declare module 'dayjs';
+declare module 'dayjs/*';
+declare module 'moment';
+declare module 'moment/*';
+declare module 'axios';
+declare module 'chart.js';
+declare module 'chart.js/*';
+declare module 'd3';
+declare module 'd3-*';
+declare module '@tanstack/*';
+declare module 'zustand';
+declare module 'zustand/*';
+declare module 'jotai';
+declare module 'jotai/*';
+declare module 'immer';
+declare module 'react-icons';
+declare module 'react-icons/*';
