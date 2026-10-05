@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas 13 a 28 pendientes. Los sets cerrados van al final del archivo (pruebas 1 a 12 cerradas).
+Estado: pruebas 18 a 28 pendientes (15, 16 y 17 OK, set de [3413] abierto). Los sets cerrados van al final del archivo (pruebas 1 a 14 cerradas).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -10,25 +10,13 @@ Reglas
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
 
-## [4074] Gaby (`recE62HJlH9SaIUoE`) — abrir el 1 oct 2026 en Pedidos
-
-| # | Prueba | Expected | Estado |
-|---|---|---|---|
-| 13 | Abre el pedido y revisa la sección "Producción" del pop-up. | La tabla muestra 3 tareas (Horneado, Glaseado, Decorado, de Sofía) con "—" en la columna "Elemento", porque no están ligadas a ningún elemento. La línea "Etapa actual…" puede mostrar la primera etapa del elemento del pedido, ya que esas tareas no cuentan para el tracker. | Pendiente |
-
-## [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`) — buscar "4148" en Pedidos
-
-| # | Prueba | Expected | Estado |
-|---|---|---|---|
-| 14 | Abre el pedido y haz clic en la fila "Galletas" para ver el tracker. | La tabla muestra 1 fila: Empacado, Rach, 100/100. Hoy el tracker marca Horneado como actual y Empacado como pendiente. Tras la corrección, las 4 etapas deben verse completas, solo en pantalla y sin crear tareas. | Pendiente |
-
 ## [3413] Rosaura Avila (`rec3OES0NemnxyyzY`) — abrir el 15 oct 2026 en Pedidos, solo lectura
 
 | # | Prueba | Expected | Estado |
 |---|---|---|---|
-| 15 | Abre el pedido y haz clic en la fila "Pastel 50 pax". | El tracker muestra 4 etapas: Horneado (actual), Embetunado, Decorado y Empacado. La tabla dice "Sin tareas." y la cantidad es 1. | Pendiente |
-| 16 | Cierra el detalle y abre la fila "Cupcakes". | Las mismas 4 etapas que Pastel (Horneado, Embetunado, Decorado, Empacado) y "Sin tareas.". | Pendiente |
-| 17 | Cierra el detalle y abre la fila "Galletas". | Etapas Horneado, Glaseado, Decorado y Empacado (con Glaseado, sin Embetunado). La cantidad se ve "—" porque el elemento no tiene cantidad. | Pendiente |
+| 15 | Abre el pedido y haz clic en la fila "Pastel 50 pax". | El tracker muestra 4 etapas: Horneado (actual), Embetunado, Decorado y Empacado. La tabla dice "Sin tareas." y la cantidad es 1. | OK |
+| 16 | Cierra el detalle y abre la fila "Cupcakes". | Las mismas 4 etapas que Pastel (Horneado, Embetunado, Decorado, Empacado) y "Sin tareas.". | OK |
+| 17 | Cierra el detalle y abre la fila "Galletas". | Etapas Horneado, Glaseado, Decorado y Empacado (con Glaseado, sin Embetunado). La cantidad se ve "—" porque el elemento no tiene cantidad. | OK |
 | 18 | Cierra el detalle y revisa "Producción" en el pop-up del pedido. | Aparece "Etapa actual del elemento más atrasado: Horneado · (uno de los 3 elementos)" y la tabla dice "Sin tareas.". | Pendiente |
 | 19 | En la tabla Elementos del pedido pulsa "+" para abrir "Agregar elemento". Prueba estos productos sin guardar: ninguno, "Calendario de 12", "Caja de repostería", "Pastel 5 pax", "Cupcakes", "Galletas". Cierra con clic afuera. | Sin producto, con "Calendario de 12" y con "Caja de repostería" no aparece la sección "Tareas de producción". Con "Pastel 5 pax" y "Cupcakes" aparecen 4 filas (Horneado, Embetunado, Decorado, Empacado). Con "Galletas" aparecen 4 filas (Horneado, Glaseado, Decorado, Empacado). El formulario se ensancha cuando aparece la sección. | Pendiente |
 | 20 | En "Agregar elemento" elige "Galletas" y escribe Cantidad 25; luego cámbiala a 30. No guardes. | Cada fila muestra Cant. 25, "Completada 0", Estatus Pendiente, título "[3413] Rosaura Avila · Etapa · 25" (por ejemplo "· Horneado · 25") y "Manual · Pedido vinculado"; Empleado "Sin asignar". Al poner 30 se actualizan cantidades y títulos. | Pendiente |
@@ -71,3 +59,15 @@ Limpieza después de las pruebas 24 a 28: borra las tareas creadas (icono de bas
 | 10 | En Pedidos abre el pedido y haz clic en la fila "Galletas" para abrir el detalle del elemento. | El tracker muestra las 4 etapas con palomita y ninguna se puede pulsar (sin zoom al pasar el cursor). La tabla de tareas tiene 4 filas con avance 50/50 y ritmo "Terminada". | OK |
 | 11 | Cierra el detalle del elemento y revisa la sección "Producción" del pop-up del pedido. | No aparece la línea "Etapa actual del elemento más atrasado…" porque todo está completo. La tabla muestra las 4 tareas con "Galletas" en la columna "Elemento". | OK |
 | 12 | Ve a la página Producción, elige la vista "Todos", ve a la semana 28 sep-4 oct y filtra por "Fátima" (en la versión publicada del 5 oct el filtro por empleado es el selector "Todo el equipo"; la caja de búsqueda decía "Buscar pedido…"). | Solo queda la fila de Fátima en el tablero, con un chip: [4160] Alice Glas. 50/50 el viernes 2 oct. Al borrar el texto vuelve todo el equipo. | OK |
+
+## [4074] Gaby (`recE62HJlH9SaIUoE`) — abrir el 1 oct 2026 en Pedidos
+
+| # | Prueba | Expected | Estado |
+|---|---|---|---|
+| 13 | Abre el pedido y revisa la sección "Producción" del pop-up. | La tabla muestra 3 tareas (Horneado, Glaseado, Decorado, de Sofía) con "—" en la columna "Elemento", porque no están ligadas a ningún elemento. La línea "Etapa actual…" puede mostrar la primera etapa del elemento del pedido, ya que esas tareas no cuentan para el tracker. | OK |
+
+## [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`) — buscar "4148" en Pedidos
+
+| # | Prueba | Expected | Estado |
+|---|---|---|---|
+| 14 | Abre el pedido y haz clic en la fila "Galletas" para ver el tracker. | La tabla muestra 1 fila: Empacado, Rach, 100/100. Hoy el tracker marca Horneado como actual y Empacado como pendiente. Tras la corrección, las 4 etapas deben verse completas, solo en pantalla y sin crear tareas. | OK (hoy; el expected final llega con la corrección) |
