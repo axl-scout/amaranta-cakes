@@ -1,11 +1,6 @@
 # Registros estándar para Smoke Tests
 
-Reutilizar estos pedidos en todos los Prompts (3 y 4 en adelante) en lugar de buscar clientes nuevos. Probar por vista (Día, Semana, Mes) y no por cliente: una pasada por vista cubre varios escenarios a la vez. Base: Producción (`appSQk87nF0WpH2gi`). Tareas de arranque creadas por Claude el 2026-10-05 (Origen Manual, Terminado, sin empleado ni fechas); se borran al cerrar cada auditoría y se recrean si hacen falta.
-
-## Pending items
-1. Key message: Decidir si estos registros se vuelven el set fijo de pruebas de todos los Prompts.
-   Argument: Evita probar con 20 clientes distintos y permite comparar versiones entre auditorías.
-   Supporting data: 9 pedidos y 1 pedido de escritura ([4161]); se necesitan 4 tareas de arranque en [4152], [4120], [4162] y [3210].
+Reutilizar estos pedidos en todos los Prompts (3 y 4 en adelante) en lugar de buscar clientes nuevos. Probar por vista (Día, Semana, Mes) y no por cliente: una pasada por vista cubre varios escenarios a la vez. Base: Producción (`appSQk87nF0WpH2gi`). Tareas de arranque creadas por Claude el 2026-10-05 (Origen Manual, Terminado, sin empleado ni fechas). Axel decidió que este es el set estándar y que pueden agregarse más registros, optimizando al máximo (menos pruebas, más cobertura por vista). Las tareas de [4159] y [4084] se borraron el 2026-10-05; se recrean cuando un Prompt necesite ver amarillo o verde lima fuera de la vista Mes.
 
 ## Registros
 
@@ -31,3 +26,8 @@ Reutilizar estos pedidos en todos los Prompts (3 y 4 en adelante) en lugar de bu
 - Vista Mes, filtro "Entregado": [4180], [4160], [4148], [4014] y (noviembre) [3838].
 - Vista Día: una fecha por escenario solo para lista, tarjeta y pop-up de un pedido por tipo de superficie.
 - Pruebas que escriben: solo en [4161] y con limpieza al final.
+
+
+# Cerradas
+
+~~Pending item: decidir si estos registros son el set fijo de pruebas. Axel: sí; pueden ser más, optimizando lo más posible.~~

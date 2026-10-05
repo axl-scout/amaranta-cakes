@@ -10,13 +10,10 @@ Pending items
 2. Key message: Correr las 6 pruebas abiertas (7, 8, 9, 12, 14, 19); solo la 19 escribe datos, en [4161] Efrain Dl Angel.
    Argument: Se consolidaron de 20 a 6 abiertas: cada color ya se verificó en la vista Mes (captura 3) y el resto se agrupa por vista, no por cliente.
    Supporting data: registros estándar reutilizables en `pedidos/dev/test-records.md`.
-3. Key message: Autorizar el borrado de las 7 tareas de arranque de [4159] y [4084] (ya no se usan).
-   Argument: Su color ya quedó verificado en la vista Mes; dejarlas ensucia los datos de los clientes.
-   Supporting data: `rec4cTgdQJ8IDWjZU`, `recx58rzi3Wbvef7v`, `recL8bxqUf8PsEaT4`, `recEE9Rhox60kNs0B`, `rec5eTOqdCZgJTCjk`, `recUpym5rsNWwSa0i`, `recWQHkxh5CEAXiKK`.
-4. Key message: Al terminar, avisar para borrar el resto de las tareas de arranque y las de la prueba 19.
-   Argument: La tabla pasó de 14 a 29 registros.
+3. Key message: Al terminar, avisar para borrar el resto de las tareas de arranque y las de la prueba 19.
+   Argument: La tabla pasó de 14 a 29 registros y hoy tiene 22 (se borraron las de [4159] y [4084]).
    Supporting data: estado final esperado: 14 tareas en `tareas_produccion` (`tblESlAFi4WqHlJtk`).
-5. Key message: Tema claro y oscuro omitido, se deja para la aplicación final (decisión de Axel).
+4. Key message: Tema claro y oscuro omitido, se deja para la aplicación final (decisión de Axel).
    Argument: Los colores salen de un solo mapa con valores claro y oscuro.
    Supporting data: `produccion/semaforo.ts:27-34`, `components/airtableColors.ts`.
 
@@ -29,12 +26,10 @@ Reglas
 - Colores del semáforo (un solo mapa, paleta de Airtable): No iniciado `purple`, Horneado listo `red`, Embetunado o Glaseado listo `orange`, Decorado listo `yellow`, Empacado listo `greenLight1`, Entregado `green`.
 - Ya verificado por Claude, sin prueba manual: no existe ningún campo de fórmula, rollup ni calculado nuevo para el semáforo (11 tablas, sin cambios) y el cálculo vive en una sola función (`semaforo.ts:62-80`).
 
-Datos de arranque creados por Claude en Airtable (autorizado por Axel): 15 tareas en `tareas_produccion`, todas Terminado, cantidad completada = asignada, Origen Manual, sin empleado ni fechas (no salen en el tablero de Producción).
+Datos de arranque creados por Claude en Airtable (autorizado por Axel): 15 tareas (las 7 de [4159] y [4084] se borraron el 2026-10-05 con autorización de Axel; quedan 8) en `tareas_produccion`, todas Terminado, cantidad completada = asignada, Origen Manual, sin empleado ni fechas (no salen en el tablero de Producción).
 - [4152] Luisa Fernanda (`recQn00xkwSusqXk1`), Pastel 10 pax (`rec8lGkJ7fe5O27j0`): Horneado `recrEBnNocx5zit9G`.
 - [4120] Yami aguillon (`recvBRPY8mGxx4Jwu`), Pastel 10 pax (`recWkvFQys1wObKSD`): Horneado `rec0RJ2n5FnVQNcZb`, Embetunado `reczJNoa7pvG1ya2t`.
 - [4162] Silvia LC (`rec6CfqDdQE6OsZHI`), Galletas 60 (`recnVJ37t1pJ50jeS`): Horneado `recnrUUUThKIlVEu2`, Glaseado `rec2Mzcbd2HCmwy9O`.
-- [4159] MARIA TERESA MERLOZ (`recfrBAAB0z7jRot4`), Pastel 20 pax (`recuMgPqdBJnNemg2`): Horneado `rec4cTgdQJ8IDWjZU`, Embetunado `recx58rzi3Wbvef7v`, Decorado `recL8bxqUf8PsEaT4`.
-- [4084] Xitlali de la rosa (`recZrcshhUS9QhoV6`), Pastel 5 pax (`rec4RvL8VNoH3bQ0Z`): Horneado `recEE9Rhox60kNs0B`, Embetunado `rec5eTOqdCZgJTCjk`, Decorado `recUpym5rsNWwSa0i`, Empacado `recWQHkxh5CEAXiKK`.
 - [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), Pastel 20 pax (`recscT1PSK1PEkfU1`): Horneado `rec9hTvx9o6h1G2TO`, Embetunado `recKFgMGso71HrKvp`, Decorado `recGGBUcZSsJ4wnPG`. Sus Cupcakes (`recdPnErWZjQiJTmP`) siguen sin tareas.
 
 ## [4152] Luisa Fernanda (`recQn00xkwSusqXk1`) — abrir el 27 oct 2026 en Pedidos
@@ -76,6 +71,8 @@ Datos de arranque creados por Claude en Airtable (autorizado por Axel): 15 tarea
 Limpieza después de la prueba 19: borra las tareas creadas en [4161] (icono de basura en el formulario de cada tarea). Estado final esperado: 0 tareas para [4161]. Cuando termines, avisa para que Claude borre las tareas de arranque.
 
 # Cerradas
+
+~~Pending item: autorizar el borrado de las 7 tareas de arranque de [4159] y [4084]. Autorizado por Axel y hecho (verificado: la tabla quedó con 22 registros).~~
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
