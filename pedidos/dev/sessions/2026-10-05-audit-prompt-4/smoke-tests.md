@@ -3,7 +3,7 @@
 Export a probar: v1.11.2 (2026-10-05). Las pruebas cerradas abajo son de v1.10.0 a v1.11.1. Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Confirmar la prueba 25 (escribe datos) en [3210] Alondra S Dávila: completar Horneado y luego Embetunado del Pastel 20 pax; Claude borra las tareas creadas. Sin tu confirmación no se corre.
+1. Borrar las tareas que dejó la prueba 25 en [3210] (Claude, tras el límite de consultas de Airtable) y confirmar 14 registros.
 
 Reglas
 - Filtro de estatus (junto al buscador): viene en "Pendiente". Para las pruebas de Entregado, ábrelo y marca "Entregado".
@@ -15,27 +15,6 @@ Reglas
 ## Pruebas por vista
 
 v1.11.2 cambió cómo se cargan los datos (una sola descarga compartida entre pedido, detalle y tablero), así que se prueban la carga, la navegación y la actualización.
-
-### Pedidos, escritorio
-Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026.
-
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-| 23 | Detalle del elemento sin carga | Selector > "Todos" (o "Día" 8 oct) > abre [3210] > fila Pastel 20 pax; ciérralo y ábrelo 3 veces; luego abre la fila Cupcakes. Mira "Pedido", "Producto", el seguimiento y "Tareas de producción". | Cada vez aparece completo al instante: "Pedido" con [3210] Alondra S Dávila, producto, seguimiento de etapas y tabla (sin barra de carga persistente). | |
-
-### Navegación entre páginas
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-| 24 | Pedidos, Producción y Finanzas | Con el menú lateral ve Pedidos > Producción > Finanzas > Pedidos > Producción; en Pedidos entra a "Todos" y recarga la página. | Cada página muestra sus datos sin quedarse cargando ni en blanco; en "Todos" salen las 4 columnas con tarjetas y conteos (Horneado 51). | |
-
-### Escritura (corre solo tras tu confirmación, pendiente 1)
-Record de la prueba 25: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026. Escribe datos: crea tareas Terminado (Horneado y luego Embetunado) y Claude las borra al final.
-
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-| 25 | Actualización tras "Sí" con datos compartidos | "Todos" visible. Abre [3210] > fila Pastel 20 pax > "Horneado" > "¿Completar tarea?" > "Sí"; cierra y mira el tablero; espera 30 s sin recargar; repite con "Embetunado". | Tras cada "Sí" el detalle muestra "Horneado listo" / "Embetunado listo" y la tabla con las tareas, y la tarjeta pasa de columna (Embetunado / Glaseado, luego Decorado) sin recargar; tras 30 s sigue ahí. | |
-
-Al cerrar, Claude confirma `tareas_produccion` (14 registros) y el esquema.
 
 ## Observaciones de Axel (ronda 5)
 - En celular el interruptor expandido no cabe (se corta "Mes"): en celular debe ser dropdown; en escritorio se queda el interruptor expandible.
@@ -52,6 +31,9 @@ Al cerrar, Claude confirma `tareas_produccion` (14 registros) y el esquema.
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| ~~23~~ | ~~[3210] Alondra S Dávila~~ | ~~Selector > "Todos" (o "Día" 8 oct) > abre [3210] > fila Pastel 20 pax; ciérralo y ábrelo 3 veces; luego abre la fila Cupcakes. Mira "Pedido", "Producto", el seguimiento y "Tareas de producción".~~ | ~~Cada vez aparece completo al instante: "Pedido" con [3210] Alondra S Dávila, producto, seguimiento de etapas y tabla (sin barra de carga persistente).~~ | ~~OK en v1.11.2 (Axel: se ve bien e instantáneo; el detalle de Pastel 20 pax abre completo con "Pedido" [3210] Alondra S Dávila, producto, seguimiento y tabla)~~ |
+| ~~24~~ | ~~Sin record (navegación)~~ | ~~Con el menú lateral ve Pedidos > Producción > Finanzas > Pedidos > Producción; en Pedidos entra a "Todos" y recarga la página.~~ | ~~Cada página muestra sus datos sin quedarse cargando ni en blanco; en "Todos" salen las 4 columnas con tarjetas y conteos (Horneado 51).~~ | ~~OK en v1.11.2 (Axel: todo bien; Pedidos, Producción y Finanzas cargan sus datos y Todos muestra las 4 columnas)~~ |
+| ~~25~~ | ~~[3210] Alondra S Dávila~~ | ~~"Todos" visible. Abre [3210] > fila Pastel 20 pax > "Horneado" > "¿Completar tarea?" > "Sí"; cierra y mira el tablero; espera 30 s sin recargar; repite con "Embetunado".~~ | ~~Tras cada "Sí" el detalle muestra "Horneado listo" / "Embetunado listo" y la tabla con las tareas, y la tarjeta pasa de columna (Embetunado / Glaseado, luego Decorado) sin recargar; tras 30 s sigue ahí.~~ | ~~OK en v1.11.2 (Axel: todo super; capturas 44 a 46: tras "Sí" en Horneado la tarjeta de Pastel 20 pax pasa a Embetunado / Glaseado con "Horneado listo" (Horneado 50); tras "Sí" en Embetunado el detalle muestra "Embetunado listo" con 2 tareas Terminadas y Decorado como etapa actual, y la tarjeta pasa a Decorado con "Embetunado listo")~~ |
 | ~~22~~ | ~~[4160] Alice~~ | ~~Página Pedidos > filtro de estatus solo en "Pendiente" > escribe "alice" en el buscador (en "Todos" y en "Día").~~ | ~~La lista muestra [4160] Alice aunque esté Entregado; el tablero y la página no cambian. Al elegirla abre su pop-up.~~ | ~~OK en v1.11.1 (Axel; capturas 42 y 43: con el filtro en "Pendiente", "alice" muestra [4160] Alice (Entregado, 30 sep) en la lista de coincidencias en Todos y en Día > Tablero, y el tablero no cambia)~~ |
 | ~~20~~ | ~~[3210] Alondra S Dávila~~ | ~~"Todos" visible. Abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí"; cierra los pop-ups sin recargar y mira el tablero; espera 30 s. Repite con "Embetunado".~~ | ~~Tras el primer "Sí" Pastel 20 pax pasa de inmediato a Embetunado / Glaseado con chip rojo "Horneado listo" y Cupcakes sigue en Horneado "No iniciado"; sigue ahí a los 30 s. Tras el segundo pasa a Decorado con chip naranja "Embetunado listo". Ninguna tarjeta queda vacía.~~ | ~~OK en v1.11.1 (Axel; capturas 36 a 39: tras "Sí" en Horneado el detalle muestra "Horneado listo", "Pedido" con [3210] Alondra S Dávila y la tabla completa, y la tarjeta pasa a Embetunado / Glaseado; tras "Sí" en Embetunado el detalle muestra "Embetunado listo" con 2 tareas y la tarjeta pasa a Decorado). Airtable: tareas `reclUhME2lqff6KmH` y `recHgU2TypJNh2Zu6` creadas por Axel y borradas por Claude el 2026-10-05; `tareas_produccion` quedó en 14 registros~~ |
 | ~~21~~ | ~~Sin record (selector, celular)~~ | ~~Celular > Pedidos > vista "Día" > toca el selector > elige "Mes"; ábrelo y toca fuera.~~ | ~~Dropdown que muestra solo la opción elegida con flecha, cabe en la pantalla; al elegir o tocar fuera se cierra. En escritorio sigue el interruptor expandible.~~ | ~~OK en v1.11.1 (Axel; capturas 40 y 41: dropdown con la opción elegida y flecha, lista vertical Día, Semana, Mes, Todos que cabe en pantalla, hamburguesa y filtro en la misma fila; export: PeriodSelect.tsx usa PeriodDropdown bajo sm y el interruptor desde sm)~~ |
