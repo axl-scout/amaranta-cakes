@@ -103,4 +103,4 @@ Limpieza después de las pruebas 24 a 28: borra las tareas creadas (icono de bas
 
 Limpieza hecha (autorizada por Axel): se borraron las 11 tareas de prueba y el elemento Galletas nuevo (`rec4y37pNvUupXVWj`) de [3413] Rosaura Avila. Estado final verificado en Airtable: 0 tareas y 3 elementos. Para las pruebas 39 y 40 habrá que crear tareas con fechas de nuevo.
 
-Limpieza pendiente (prueba 40, pre-corrección): en [3413] Rosaura Avila hay 1 elemento "Pastel 5 pax" nuevo (`rechgYrJvTX7AjMnx`) y 4 tareas de prueba (`recHm4SoeLu4j6Rbl`, `recTdvfTGGxBg57os`, `recdQucNVMzpuQDtB`, `recZi0U9cLqyFePsK`). Observación: se creó sin cantidad, por eso las tareas salieron con cantidad asignada 0 y título "· 0".
+Limpieza de la prueba 40 hecha (autorizada por Axel): se borraron el elemento "Pastel 5 pax" nuevo (`rechgYrJvTX7AjMnx`) y sus 4 tareas. Estado final verificado en Airtable: [3413] Rosaura Avila con 3 elementos y 0 tareas. Observación: ese elemento se creó sin cantidad, por eso las tareas salieron con cantidad asignada 0 y título "· 0".
