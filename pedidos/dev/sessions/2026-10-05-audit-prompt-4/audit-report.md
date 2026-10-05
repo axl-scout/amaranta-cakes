@@ -1,6 +1,6 @@
 # Audit report — Prompt 4/4 (Todos view, stage board and period selector)
 
-Status: PASS (v1.11.1): all correction items pass by code and, except the search with "Pendiente" (test 22), on screen; the Prompt 4 contracts hold.
+Status: PASS (v1.11.1). All correction items pass by code and on screen (tests 20, 21 and 22 closed) and the Prompt 4 contracts hold. Only the optional preload of the element detail, requested by Axel, is pending.
 
 Previous status: PARTIAL (v1.11.0; v1.10.0 audited first below). All correction items pass by code and the selector passes on screen; the board update after "Sí" (item 4) still needs test 22, and the Canvas reply with its cause is missing.
 
@@ -8,13 +8,9 @@ Previous status: PARTIAL (v1.10.0). Code meets the plan except the Entregado sea
 
 ## Pending items
 
-Run the last smoke test (22): with the status filter on "Pendiente", type "alice" in the search bar and check that [4160] Alice appears in the list.
-It is the only part of v1.11.1 not yet seen on screen (the export code is correct: index.tsx no longer filters the list by status).
-[4160] Alice rec2FnINtW50a2LFW (Entregado); index.tsx:216-235 of the v1.11.1 export.
-
-Decide whether to send Canvas the extra prompt that preloads the element detail when an order opens.
-It would make "Tareas de producción" appear without waiting; v1.11.1 already shares the last good data between views, so it may no longer be necessary.
-Export diff: useProduccionData.ts (shared cache and coalesced reloads); the preload was not included.
+Send Canvas the preload prompt for the element detail, then send the new export for audit.
+Axel asked for it so "Tareas de producción" shows without waiting; it touches the element detail, so it carries an explicit exception.
+v1.11.1 already shares the last good data between views (useProduccionData.ts); the preload was not part of the sent prompts.
 
 ## Decisions by Axel (this round)
 

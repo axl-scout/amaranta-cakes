@@ -3,8 +3,7 @@
 Export a probar: v1.11.0 (2026-10-05). Las pruebas cerradas abajo son de v1.10.0. Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Correr la prueba 22 (buscador con "Pendiente"); es la única abierta.
-2. Decidir si se manda el prompt adicional de precarga del detalle del elemento (no incluido en v1.11.1).
+1. Enviar a Canvas el prompt de precarga del detalle del elemento (Axel lo pidió); al llegar el export se audita y se repiten solo las pruebas del detalle del elemento.
 
 Reglas
 - Filtro de estatus (junto al buscador): viene en "Pendiente". Para las pruebas de Entregado, ábrelo y marca "Entregado".
@@ -15,14 +14,7 @@ Reglas
 
 ## Pruebas por vista
 
-### Buscador
-Record: este record es el que vas a utilizar para esta prueba: [4160] Alice (`rec2FnINtW50a2LFW`, Entregado, 30 sep 2026).
-
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-| 22 | Buscador con "Pendiente" | Página Pedidos > filtro de estatus solo en "Pendiente" > escribe "alice" en el buscador (en "Todos" y en "Día"). | La lista muestra [4160] Alice aunque esté Entregado; el tablero y la página no cambian. Al elegirla abre su pop-up. | |
-
-Al cerrar, Claude confirma `tareas_produccion` (14 registros, ya verificado) y el esquema (11 tablas, 2 automatizaciones).
+(sin pruebas abiertas en v1.11.1; la precarga del detalle del elemento se probará cuando llegue su export)
 
 ## Observaciones de Axel (ronda 5)
 - En celular el interruptor expandido no cabe (se corta "Mes"): en celular debe ser dropdown; en escritorio se queda el interruptor expandible.
@@ -39,6 +31,7 @@ Al cerrar, Claude confirma `tareas_produccion` (14 registros, ya verificado) y e
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| ~~22~~ | ~~[4160] Alice~~ | ~~Página Pedidos > filtro de estatus solo en "Pendiente" > escribe "alice" en el buscador (en "Todos" y en "Día").~~ | ~~La lista muestra [4160] Alice aunque esté Entregado; el tablero y la página no cambian. Al elegirla abre su pop-up.~~ | ~~OK en v1.11.1 (Axel; capturas 42 y 43: con el filtro en "Pendiente", "alice" muestra [4160] Alice (Entregado, 30 sep) en la lista de coincidencias en Todos y en Día > Tablero, y el tablero no cambia)~~ |
 | ~~20~~ | ~~[3210] Alondra S Dávila~~ | ~~"Todos" visible. Abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí"; cierra los pop-ups sin recargar y mira el tablero; espera 30 s. Repite con "Embetunado".~~ | ~~Tras el primer "Sí" Pastel 20 pax pasa de inmediato a Embetunado / Glaseado con chip rojo "Horneado listo" y Cupcakes sigue en Horneado "No iniciado"; sigue ahí a los 30 s. Tras el segundo pasa a Decorado con chip naranja "Embetunado listo". Ninguna tarjeta queda vacía.~~ | ~~OK en v1.11.1 (Axel; capturas 36 a 39: tras "Sí" en Horneado el detalle muestra "Horneado listo", "Pedido" con [3210] Alondra S Dávila y la tabla completa, y la tarjeta pasa a Embetunado / Glaseado; tras "Sí" en Embetunado el detalle muestra "Embetunado listo" con 2 tareas y la tarjeta pasa a Decorado). Airtable: tareas `reclUhME2lqff6KmH` y `recHgU2TypJNh2Zu6` creadas por Axel y borradas por Claude el 2026-10-05; `tareas_produccion` quedó en 14 registros~~ |
 | ~~21~~ | ~~Sin record (selector, celular)~~ | ~~Celular > Pedidos > vista "Día" > toca el selector > elige "Mes"; ábrelo y toca fuera.~~ | ~~Dropdown que muestra solo la opción elegida con flecha, cabe en la pantalla; al elegir o tocar fuera se cierra. En escritorio sigue el interruptor expandible.~~ | ~~OK en v1.11.1 (Axel; capturas 40 y 41: dropdown con la opción elegida y flecha, lista vertical Día, Semana, Mes, Todos que cabe en pantalla, hamburguesa y filtro en la misma fila; export: PeriodSelect.tsx usa PeriodDropdown bajo sm y el interruptor desde sm)~~ |
 | ~~17~~ | ~~[3210], [4180], [4160], [4148]~~ | ~~Selector > "Todos" y recarga la página (mira la carga). Filtro de estatus: "Pendiente" + "Entregado". Con Ctrl+F busca 4180, 4160 y 4148 en el tablero. Escribe "3210" y luego "alice" en el buscador.~~ | ~~Al cargar se ven las 4 columnas con barras de carga, no la tabla de Día. Ninguno de los 3 Entregados está en el tablero. Con "3210" solo se abre la lista con [3210] y con "alice" la lista con [4160]; el tablero no cambia (sigue en 51 tarjetas de Horneado, sin tarjetas nuevas).~~ | ~~OK en v1.11.0 (Axel; capturas 25 a 30 y 35: esqueleto de 4 columnas con encabezados; Ctrl+F de 4180, 4160 y 4148 da 0/0; con "3210" y "alice" solo se abre la lista y el tablero no cambia; con el filtro en "Todos" ya sale [4160] Alice en la lista, y con solo "Pendiente" no sale porque el buscador respeta el filtro, lo que Axel decide cambiar)~~ |
