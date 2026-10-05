@@ -50,3 +50,5 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Aviso de entrega de producción pasada: texto más corto. Texto: "No se puede editar: la entrega de producción ya pasó."
 - Cada prueba de los smoke tests empieza con la ruta completa: Página > pop-up o detalle > sección (por ejemplo "Página Pedidos > abre [3413] > fila Pastel 50 pax (detalle del elemento) > ..."). Nunca "en esa tabla" o "en Agregar elemento" sin decir dónde.
 - El borrado del elemento, al quitar el modal "Editar", queda como icono de basura con confirmación en el encabezado del detalle.
+- Fechas secuenciales entre etapas de un mismo elemento (tabla de "Agregar Elemento"): cada etapa posterior solo puede elegir inicio igual o posterior al fin de la etapa anterior (o a su inicio si no tiene fin). Ejemplo: Horneado del 5 al 7 oct, Embetunado solo desde el 7 oct. Si se mueve una etapa anterior más allá de las siguientes, las fechas posteriores se ajustan automáticamente. Va al prompt de corrección.
+- No se ejecutan pruebas de tema claro/oscuro. Se quita "modo claro y oscuro" de los criterios de aceptación de las pruebas manuales (queda en "No tocar").

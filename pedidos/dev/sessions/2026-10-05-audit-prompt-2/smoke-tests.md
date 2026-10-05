@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas 35 a 38 (v1.7.0, solo lectura, [3413]) y 24 a 28 (escriben datos) pendientes; 33 y 34 OK. Los sets cerrados van al final del archivo (pruebas 1 a 23 y 29 a 32 cerradas). Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: pendientes las pruebas 24 a 28 (escriben datos en [3413]) y la 39 (tras la próxima corrección). Los sets cerrados van al final del archivo (pruebas 1 a 23 y 29 a 38 cerradas; la 38 omitida). Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -10,18 +10,11 @@ Reglas
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
 
-## v1.7.0 — correcciones (solo lectura, no escriben datos)
-
-Records: [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`), [4128] Sara (`recZCPIvYm7J76UX1`), [3413] Rosaura Avila (`rec3OES0NemnxyyzY`). Rutas como en las pruebas anteriores.
+## Para la próxima versión — fechas secuenciales entre etapas
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
-| 33 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Galletas" > abre el selector "Empleado" de una fila y usa flecha abajo, flecha arriba, Enter y Escape. Cierra el pop-up con clic afuera. | Las flechas mueven la opción resaltada (da la vuelta al llegar al final o al inicio) y la lista se desplaza para mantenerla visible; el mouse también resalta. Enter elige la resaltada y Escape cierra la lista. No se crea ningún registro. | OK |
-| 34 | [3413] Rosaura Avila | Página Producción > vista "Todos" > abre el filtro "Todo el equipo" y el selector de vista y prueba flechas, Enter y Escape. | Mismo comportamiento de teclado que en la prueba 32 en todos los dropdowns. El diseño del tablero y de la vista Día no cambia. | OK |
-| 35 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax" y cantidad 30 > en la sección "Tareas de producción" del mismo pop-up elige fechas en dos filas. | La tabla muestra solo Etapa (chip con el color de la etapa), Empleado, Inicio y Fin; no hay Título, Cant. ni Estatus. No hay scroll horizontal ni columnas cortadas con fechas elegidas. | Pendiente |
-| 36 | [3413] Rosaura Avila | En el mismo pop-up "Agregar Elemento" (Pedidos > [3413] Rosaura Avila > "+"), sección "Tareas de producción": clic en "Inicio" de una fila, elige el 8 oct y luego el 10 oct; abre "Fin" de la misma fila; usa la "X" de Inicio y de Fin. | Un solo calendario: elegir el inicio no lo cierra y la siguiente selección es el fin; el periodo 8-10 oct queda resaltado. Tocar "Fin" abre el mismo calendario. Cada "X" limpia su fecha. Solo se pueden elegir días del 4 al 15 oct. Dejar fechas vacías es válido. | Pendiente |
-| 37 | [3413] Rosaura Avila | Regresión de Esc, en tres lugares: (a) página Pedidos > abre [3413] Rosaura Avila > abre el cake topper (pop-up) y pulsa Esc; (b) página Pedidos > "Nuevo pedido" (pop-up) y pulsa Esc; (c) página Producción > vista "Día" > clic en un pedido de "Por atender" (pop-up) y pulsa Esc. | Cada Esc cierra solo la capa superior y no se guarda nada. | Pendiente |
-| 38 | [3413] Rosaura Avila | Repite las pruebas 30 y 36 en modo claro y modo oscuro (botón de tema del menú lateral) y con la ventana angosta (celular). | El globo, el calendario de rango y los dropdowns se ven bien y se pueden usar en los tres casos. | Pendiente |
+| 39 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax" > en "Tareas de producción" pon Horneado del 5 al 7 oct y abre el selector de "Inicio" de Embetunado. Después cambia el fin de Horneado al 9 oct. | Embetunado solo permite elegir desde el 7 oct (el fin de Horneado) en adelante; los días anteriores salen deshabilitados. Lo mismo aplica a Decorado respecto a Embetunado y a Empacado respecto a Decorado. Al mover el fin de Horneado al 9 oct, las fechas de las etapas siguientes que quedaron antes del 9 se ajustan al 9 oct. | Pendiente (se prueba tras la corrección) |
 
 ## [3413] Rosaura Avila (`rec3OES0NemnxyyzY`) — ESCRIBEN datos en Producción
 
@@ -93,3 +86,16 @@ Limpieza después de las pruebas 24 a 28: borra las tareas creadas (icono de bas
 | 30 | [4128] Sara | Abre el pedido (1 oct), clic en la fila "Galletas" y clic en el círculo "Glaseado". Prueba cerrarlo con clic afuera y con Esc. | Aparece un globo pequeño junto a la etapa, sin fondo oscuro, con "¿Completar tarea?", el texto "Sí: completa esta etapa y las anteriores. No: solo crea la tarea, sin completar." y los botones "Sí" y "No" del mismo ancho. "Sí" no tiene foco automático. Se cierra con clic afuera y con Esc sin escribir nada; siguen 4 tareas. | OK (funciona cerrar con clic afuera y con Esc; cambio pedido: quitar el texto explicativo, dejar solo "Sí" y "No") |
 | 31 | [4128] Sara | En el detalle del elemento pulsa "Editar" y luego Esc; después Esc otra vez. No cambies ningún campo. | El primer Esc cierra solo el modal "Editar elemento" y el detalle sigue abierto. El segundo Esc cierra el detalle. | Obsoleta: "Editar" abre un modal y se reemplaza por edición en línea de los campos del detalle; se probará con la corrección |
 | 32 | [4128] Sara | Abre el pedido, clic en la fila Horneado de la tabla de tareas y abre el selector de fechas. No cambies nada. | Aparece el aviso "La entrega de producción de este pedido ya pasó. Cambia esa fecha en el pedido para poder fechar la tarea." en lugar del mensaje "anterior a hoy". Todos los días siguen deshabilitados. En una tarea ya creada el Inicio no se puede quitar, solo el Fin. | OK (aviso funciona; cambio pedido: texto más corto) |
+
+## v1.7.0 — [3413] Rosaura Avila (solo lectura)
+
+Records: [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`), [4128] Sara (`recZCPIvYm7J76UX1`), [3413] Rosaura Avila (`rec3OES0NemnxyyzY`). Rutas como en las pruebas anteriores.
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 33 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Galletas" > abre el selector "Empleado" de una fila y usa flecha abajo, flecha arriba, Enter y Escape. Cierra el pop-up con clic afuera. | Las flechas mueven la opción resaltada (da la vuelta al llegar al final o al inicio) y la lista se desplaza para mantenerla visible; el mouse también resalta. Enter elige la resaltada y Escape cierra la lista. No se crea ningún registro. | OK |
+| 34 | [3413] Rosaura Avila | Página Producción > vista "Todos" > abre el filtro "Todo el equipo" y el selector de vista y prueba flechas, Enter y Escape. | Mismo comportamiento de teclado que en la prueba 32 en todos los dropdowns. El diseño del tablero y de la vista Día no cambia. | OK |
+| 35 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > en Elementos pulsa "+" (pop-up "Agregar Elemento") > elige "Pastel 5 pax" y cantidad 30 > en la sección "Tareas de producción" del mismo pop-up elige fechas en dos filas. | La tabla muestra solo Etapa (chip con el color de la etapa), Empleado, Inicio y Fin; no hay Título, Cant. ni Estatus. No hay scroll horizontal ni columnas cortadas con fechas elegidas. | OK |
+| 36 | [3413] Rosaura Avila | En el mismo pop-up "Agregar Elemento" (Pedidos > [3413] Rosaura Avila > "+"), sección "Tareas de producción": clic en "Inicio" de una fila, elige el 8 oct y luego el 10 oct; abre "Fin" de la misma fila; usa la "X" de Inicio y de Fin. | Un solo calendario: elegir el inicio no lo cierra y la siguiente selección es el fin; el periodo 8-10 oct queda resaltado. Tocar "Fin" abre el mismo calendario. Cada "X" limpia su fecha. Solo se pueden elegir días del 4 al 15 oct. Dejar fechas vacías es válido. | OK |
+| 37 | [3413] Rosaura Avila | Regresión de Esc, en tres lugares: (a) página Pedidos > abre [3413] Rosaura Avila > abre el cake topper (pop-up) y pulsa Esc; (b) página Pedidos > "Nuevo pedido" (pop-up) y pulsa Esc; (c) página Producción > vista "Día" > clic en un pedido de "Por atender" (pop-up) y pulsa Esc. | Cada Esc cierra solo la capa superior y no se guarda nada. | OK |
+| 38 | [3413] Rosaura Avila | Repite las pruebas 30 y 36 en modo claro y modo oscuro (botón de tema del menú lateral) y con la ventana angosta (celular). | El globo, el calendario de rango y los dropdowns se ven bien y se pueden usar en los tres casos. | Omitida (Axel decidió no probar tema claro/oscuro) |
