@@ -1,6 +1,8 @@
 # Audit report — Prompt 4/4 (Todos view, stage board and period selector)
 
-Status: PASS (v1.11.1). All correction items pass by code and on screen (tests 20, 21 and 22 closed) and the Prompt 4 contracts hold. Only the optional preload of the element detail, requested by Axel, is pending.
+Status: PARTIAL (v1.11.2). v1.11.1 passed (tests 20, 21 and 22 closed). The preload round changed the data-loading code; it matches the request by code and the contracts hold, but it needs screen tests 23 to 25.
+
+Previous status: PASS (v1.11.1).
 
 Previous status: PARTIAL (v1.11.0; v1.10.0 audited first below). All correction items pass by code and the selector passes on screen; the board update after "Sí" (item 4) still needs test 22, and the Canvas reply with its cause is missing.
 
@@ -8,9 +10,13 @@ Previous status: PARTIAL (v1.10.0). Code meets the plan except the Entregado sea
 
 ## Pending items
 
-Send Canvas the preload prompt for the element detail, then send the new export for audit.
-Axel asked for it so "Tareas de producción" shows without waiting; it touches the element detail, so it carries an explicit exception.
-v1.11.1 already shares the last good data between views (useProduccionData.ts); the preload was not part of the sent prompts.
+Confirm smoke test 25 (writes data) in [3210] Alondra S Dávila: complete Horneado, then Embetunado of Pastel 20 pax; Claude deletes the created tasks.
+v1.11.2 replaced how Producción data is loaded (one leader instance downloads the tables and the others read from it), so the instant update after "Sí" and the board must be re-verified on screen.
+recY1WRFAEYXZhe50 (Pastel 20 pax recscT1PSK1PEkfU1); tareas_produccion has 14 records.
+
+Run smoke tests 23 and 24 (no data written): element detail loading and navigation between Pedidos, Producción and Finanzas.
+The leader hand-off when a page closes is the main risk of the new loading code.
+useProduccionData.ts leader election (lines 63-136 of the v1.11.2 export).
 
 ## Decisions by Axel (this round)
 
@@ -93,8 +99,17 @@ OK by diff: tables, fields, select options, automations (11 tables, 2 automation
 - Schema: read-only check 11 tables, 2 automations (autoincrement and weekly payroll), tareas_produccion 14 records; field names, types and counts match the Prompt 3 report.
 - Observations: Canvas reported that the preview went blank and the published app failed with "Failed to load the compiled bundle" during this round (compiled files missing; it rebuilt them); the bundle weighs about 15.5 MB, about 11 MB of it a debug map; the published app worked; the cache in useProduccionData.ts is module-level and never cleared (stale data only until the first load finishes); the element detail preload was not part of the sent prompt.
 
+## v1.11.2 audit (preload round)
+
+- Export: diff -rq against v1.11.1 shows 1 code file changed (produccion/useProduccionData.ts) plus README.md, lib/changelog.ts and MANIFEST.json. Everything else is identical, including lib/airtable-hooks.tsx, package.json, ElementoDetalle.tsx, semaforo.ts and the pages. MANIFEST.json lists 67 files and the ZIP has 67 (match); Canvas wrote 110 in chat, the ZIP has 67. README of the ZIP equals the attached readme_7.md. The transcript includes Canvas's reply. tsc not run.
+- Item 1 (element detail preload) PARTIAL by code, unverified on screen: instead of preloading when an order opens, Canvas shares one download between all instances: the first mounted instance becomes the "leader" and downloads the seven tables (useProduccionData.ts:63-136); the others read the leader's records through a module-level store and a window event, and reload requests are forwarded to the leader (:338-350). A new instance starts with the shared data, so the element detail and the order should open complete. Risks to verify: leader hand-off when the leader unmounts (cleanup dispatches an event and another instance claims), leader chosen during render (useState initializer), first-load bar if an element opens before the first download ends (Canvas disclosed it), and the instant update after "Sí".
+- Contracts: C1 to C6 OK (semaforo.ts and the display components unchanged; shared data keeps the last good values, C6). No Airtable writes.
+- Schema: read-only check on 2026-10-05: 2 automations unchanged, tareas_produccion 14 records; tables not listed again this round because the prompt was read-only and only a hook changed.
+- Open: tests 23 to 25 in smoke-tests.md.
+
 ## Version history
 
+- v1.11.2 (2026-10-05): shared one-time data download so the element detail opens complete; audited by code (1 code file changed, 67 files); screen tests open. Replaced pedidos/source, README and transcript in the repo.
 - v1.11.1 (2026-10-05): mobile dropdown selector, element detail loads complete, search finds all orders; audited by code (6 files changed, 67 files) and on screen. Replaced pedidos/source, README and transcript in the repo. Final version for Prompt 4.
 - v1.11.0 (2026-10-05): correction round plus mobile burger menu; audited by code (7 files changed, 67 files); selector confirmed on screen. Replaced pedidos/source, README and transcript in the repo.
 - v1.10.0 (2026-10-05): period selector, Todos board, Día Lista/Tablero. Audited by code; on-screen tests open. Replaced pedidos/source (67 files), README and transcript in the repo.

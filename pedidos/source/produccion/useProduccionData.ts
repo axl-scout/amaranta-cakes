@@ -60,8 +60,39 @@ function useCoalesced(fn: () => void, ms = 300) {
   return useCallback(() => { clearTimeout(t.current); t.current = setTimeout(() => f.current(), ms); }, [ms]);
 }
 
+/**
+ * One instance (the "leader", the first one mounted) downloads the tables; every other instance reads the same
+ * records from here, so opening an order or an element never repeats the requests and always starts complete.
+ */
+const LEADER_EVENT = 'prod-leader-changed';
+const SHARED_EVENT = 'prod-shared-changed';
+let leaderId: object | null = null;
+const shared: { base: any; raw: Record<string, AirtableRecord[]>; ready: Record<string, boolean>; refetch: Record<string, () => any>; lastForced: number } =
+  { base: null, raw: {}, ready: {}, refetch: {}, lastForced: 0 };
+
 export function useProduccionData() {
-  const { base, loading: baseLoading, error: baseError } = useBase();
+  const meRef = useRef<object>(null as any);
+  if (!meRef.current) meRef.current = {};
+  const [isLeader, setIsLeader] = useState(() => { if (!leaderId) { leaderId = meRef.current; return true; } return false; });
+  const [, bumpShared] = useState(0);
+  useEffect(() => {
+    const me = meRef.current;
+    const claim = () => { if (!leaderId) { leaderId = me; setIsLeader(true); } };
+    const onShared = () => bumpShared((v) => v + 1);
+    claim();
+    window.addEventListener(LEADER_EVENT, claim);
+    window.addEventListener(SHARED_EVENT, onShared);
+    return () => {
+      window.removeEventListener(LEADER_EVENT, claim);
+      window.removeEventListener(SHARED_EVENT, onShared);
+      if (leaderId === me) { leaderId = null; shared.refetch = {}; window.dispatchEvent(new Event(LEADER_EVENT)); }
+    };
+  }, []);
+
+  const baseRes = useBase(isLeader ? undefined : '');
+  const base: any = (isLeader ? baseRes.base : null) ?? shared.base;
+  const baseLoading = isLeader ? baseRes.loading && !shared.base : !shared.base;
+  const baseError = isLeader ? baseRes.error : null;
   const pedidosT = base?.getTableById(TABLE_IDS.pedidos) ?? null;
   const elementosT = base?.getTableById(TABLE_IDS.elementos) ?? null;
   const empT = base?.getTableById(EMPLEADOS.TABLE) ?? null;
@@ -70,13 +101,39 @@ export function useProduccionData() {
   const capT = base?.getTableById(CAPACIDAD.TABLE) ?? null;
   const catT = base?.getTableById(TABLE_IDS.catalogo) ?? null;
 
-  const pedidosR = useRecords(pedidosT);
-  const elementosR = useRecords(elementosT);
-  const empR = useRecords(empT);
-  const horR = useRecords(horT);
-  const tareasR = useRecords(tareasT);
-  const capR = useRecords(capT);
-  const catR = useRecords(catT);
+  const ownDone = useRef<Record<string, boolean>>({});
+  const own: Record<string, any> = {
+    pedidos: useRecords(isLeader ? pedidosT : null),
+    elementos: useRecords(isLeader ? elementosT : null),
+    emp: useRecords(isLeader ? empT : null),
+    hor: useRecords(isLeader ? horT : null),
+    tareas: useRecords(isLeader ? tareasT : null),
+    cap: useRecords(isLeader ? capT : null),
+    cat: useRecords(isLeader ? catT : null),
+  };
+  const view = (key: string): { records: AirtableRecord[]; loading: boolean; error: any; refetch: () => any } => {
+    const r = own[key];
+    if (isLeader && !r.loading) ownDone.current[key] = true;
+    if (isLeader && (ownDone.current[key] || !shared.ready[key])) return r;
+    return { records: shared.raw[key] ?? [], loading: !shared.ready[key], error: null, refetch: () => shared.refetch[key]?.() ?? Promise.resolve() };
+  };
+  const pedidosR = view('pedidos');
+  const elementosR = view('elementos');
+  const empR = view('emp');
+  const horR = view('hor');
+  const tareasR = view('tareas');
+  const capR = view('cap');
+  const catR = view('cat');
+  useEffect(() => {
+    if (!isLeader) return;
+    let changed = false;
+    if (baseRes.base && !shared.base) { shared.base = baseRes.base; changed = true; }
+    for (const key of Object.keys(own)) {
+      shared.refetch[key] = own[key].refetch;
+      if (ownDone.current[key] && shared.raw[key] !== own[key].records) { shared.raw[key] = own[key].records; shared.ready[key] = true; changed = true; }
+    }
+    if (changed) window.dispatchEvent(new Event(SHARED_EVENT));
+  });
 
   // Latches once a table has loaded for the first time (used by the semáforo so it is never evaluated on half-loaded data).
   const elLoaded = useRef(false); const taLoaded = useRef(false); const caLoaded = useRef(false);
@@ -278,18 +335,19 @@ export function useProduccionData() {
   }, [activeEmps, hoursFor]);
 
   const rawRefetch = useCallback(() => { tareasR.refetch(); elementosR.refetch(); }, [tareasR.refetch, elementosR.refetch]);
-  // Every refetch is broadcast so other mounted views (e.g. the order detail under the element detail) refresh too.
-  const refetch = useCallback(() => { rawRefetch(); notifyProduccionChanged(); }, [rawRefetch]);
+  // Only the leader downloads; a reload requested by anyone is done once and every view receives it.
+  const refetch = useCallback(() => { shared.lastForced = Date.now(); rawRefetch(); }, [rawRefetch]);
   const refetchAsync = useCallback(async () => {
-    notifyProduccionChanged();
+    shared.lastForced = Date.now();
     await Promise.all([tareasR.refetch(), elementosR.refetch()]);
-    await new Promise((r) => setTimeout(r, 400)); // let other mounted views (order detail) finish loading too
+    await new Promise((r) => setTimeout(r, 150));
   }, [tareasR.refetch, elementosR.refetch]);
-  const onProdEvent = useCoalesced(rawRefetch);
+  const onProdEvent = useCoalesced(() => { if (Date.now() - shared.lastForced < 1000) return; rawRefetch(); });
   useEffect(() => {
+    if (!isLeader) return;
     window.addEventListener(PROD_EVENT, onProdEvent);
     return () => window.removeEventListener(PROD_EVENT, onProdEvent);
-  }, [onProdEvent]);
+  }, [onProdEvent, isLeader]);
   const refetchCap = useCallback(() => { capR.refetch(); }, [capR.refetch]);
   const refetchEmps = useCallback(() => { empR.refetch(); }, [empR.refetch]);
 

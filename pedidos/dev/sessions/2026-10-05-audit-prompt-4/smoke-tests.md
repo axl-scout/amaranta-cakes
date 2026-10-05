@@ -1,9 +1,9 @@
 # Smoke tests — Prompt 4/4 (vista Todos, tablero y selector de periodo)
 
-Export a probar: v1.11.0 (2026-10-05). Las pruebas cerradas abajo son de v1.10.0. Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
+Export a probar: v1.11.2 (2026-10-05). Las pruebas cerradas abajo son de v1.10.0 a v1.11.1. Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Enviar a Canvas el prompt de precarga del detalle del elemento (Axel lo pidió); al llegar el export se audita y se repiten solo las pruebas del detalle del elemento.
+1. Confirmar la prueba 25 (escribe datos) en [3210] Alondra S Dávila: completar Horneado y luego Embetunado del Pastel 20 pax; Claude borra las tareas creadas. Sin tu confirmación no se corre.
 
 Reglas
 - Filtro de estatus (junto al buscador): viene en "Pendiente". Para las pruebas de Entregado, ábrelo y marca "Entregado".
@@ -14,7 +14,28 @@ Reglas
 
 ## Pruebas por vista
 
-(sin pruebas abiertas en v1.11.1; la precarga del detalle del elemento se probará cuando llegue su export)
+v1.11.2 cambió cómo se cargan los datos (una sola descarga compartida entre pedido, detalle y tablero), así que se prueban la carga, la navegación y la actualización.
+
+### Pedidos, escritorio
+Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026.
+
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 23 | Detalle del elemento sin carga | Selector > "Todos" (o "Día" 8 oct) > abre [3210] > fila Pastel 20 pax; ciérralo y ábrelo 3 veces; luego abre la fila Cupcakes. Mira "Pedido", "Producto", el seguimiento y "Tareas de producción". | Cada vez aparece completo al instante: "Pedido" con [3210] Alondra S Dávila, producto, seguimiento de etapas y tabla (sin barra de carga persistente). | |
+
+### Navegación entre páginas
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 24 | Pedidos, Producción y Finanzas | Con el menú lateral ve Pedidos > Producción > Finanzas > Pedidos > Producción; en Pedidos entra a "Todos" y recarga la página. | Cada página muestra sus datos sin quedarse cargando ni en blanco; en "Todos" salen las 4 columnas con tarjetas y conteos (Horneado 51). | |
+
+### Escritura (corre solo tras tu confirmación, pendiente 1)
+Record de la prueba 25: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026. Escribe datos: crea tareas Terminado (Horneado y luego Embetunado) y Claude las borra al final.
+
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 25 | Actualización tras "Sí" con datos compartidos | "Todos" visible. Abre [3210] > fila Pastel 20 pax > "Horneado" > "¿Completar tarea?" > "Sí"; cierra y mira el tablero; espera 30 s sin recargar; repite con "Embetunado". | Tras cada "Sí" el detalle muestra "Horneado listo" / "Embetunado listo" y la tabla con las tareas, y la tarjeta pasa de columna (Embetunado / Glaseado, luego Decorado) sin recargar; tras 30 s sigue ahí. | |
+
+Al cerrar, Claude confirma `tareas_produccion` (14 registros) y el esquema.
 
 ## Observaciones de Axel (ronda 5)
 - En celular el interruptor expandido no cabe (se corta "Mes"): en celular debe ser dropdown; en escritorio se queda el interruptor expandible.

@@ -1,6 +1,9 @@
 /** Version history of the app. Add a new entry (newest first) with every update; the README is built from it. */
 export interface ChangelogEntry { version: string; date: string; changes: string[] }
 export const CHANGELOG: ChangelogEntry[] = [
+  { version: '1.11.2', date: '2026-10-05', changes: [
+    'Detalle del elemento: los datos de elementos, tareas y seguimiento se descargan una sola vez al abrir la página y se comparten con el pedido y el detalle del elemento, así que aparecen completos al instante, sin barra de carga y sin pedidos repetidos a Airtable.',
+  ] },
   { version: '1.11.1', date: '2026-10-05', changes: [
     'Pedidos: en celular el selector de periodo es una lista desplegable (Día, Semana, Mes, Todos) que cabe en la pantalla; tablet y escritorio sin cambios.',
     'Detalle del elemento: abre siempre completo y de inmediato (Pedido, Producto, tareas y seguimiento de etapas), con la vista Todos abierta o no; las recargas simultáneas se agrupan.',

@@ -1,6 +1,6 @@
 # Amaranta Cakes
 
-Versión 1.11.1 — 2026-10-05
+Versión 1.11.2 — 2026-10-05
 
 Sistema de gestión para la pastelería Amaranta Cakes. Interfaz en React con datos en una base de Airtable.
 
@@ -24,6 +24,9 @@ El botón de descarga ofrece: source.pdf, source.zip, readme.pdf y readme.md.
 Con cada actualización: agregar una entrada en `lib/changelog.ts` (versión y fecha) y ejecutar `node scripts/gen-source.mjs`.
 
 ## Historial de versiones
+### v1.11.2 — 2026-10-05
+- Detalle del elemento: los datos de elementos, tareas y seguimiento se descargan una sola vez al abrir la página y se comparten con el pedido y el detalle del elemento, así que aparecen completos al instante, sin barra de carga y sin pedidos repetidos a Airtable.
+
 ### v1.11.1 — 2026-10-05
 - Pedidos: en celular el selector de periodo es una lista desplegable (Día, Semana, Mes, Todos) que cabe en la pantalla; tablet y escritorio sin cambios.
 - Detalle del elemento: abre siempre completo y de inmediato (Pedido, Producto, tareas y seguimiento de etapas), con la vista Todos abierta o no; las recargas simultáneas se agrupan.

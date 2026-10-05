@@ -6428,3 +6428,62 @@ Para probar la versión móvil, la vista previa no sirve porque ocupa toda la pa
 En modo móvil debes ver el menú de hamburguesa en lugar de la barra lateral, y el selector de periodo como lista desplegable (Día / Semana / Mes / Todos).
 
 Si en la prueba ves algo que no cuadra, mándame una captura y lo ajusto.
+
+---
+
+### User — Oct 5, 2026, 5:44 AM CST
+
+Canvas, ajusta el detalle del elemento de la página Pedidos (v1.11.1). Solo lectura: no escribas en Airtable ni cambies tablas, campos, opciones o automatizaciones. No cambies nada fuera de lo que se pide aquí.
+
+1. Carga más rápida del detalle del elemento: cuando se abre el pop-up de un pedido, empieza a cargar de inmediato los datos que necesita el detalle de cada uno de sus elementos (datos del elemento, tareas de producción y seguimiento de etapas) y consérvalos listos, para que al abrir el detalle de un elemento aparezcan sin esperar y "Tareas de producción" no muestre una barra de carga. Reutiliza los datos compartidos que ya existen (la caché de elementos, tareas y pedidos) y no agregues recargas duplicadas ni pedidos simultáneos repetidos a Airtable al abrir el pedido. La actualización instantánea al completar una etapa y la del tablero deben seguir funcionando igual.
+
+Criterios de aceptación
+- Al abrir un pedido y luego el detalle de uno de sus elementos, "Pedido", "Producto", el seguimiento y la tabla de "Tareas de producción" aparecen completos sin barra de carga visible.
+- Completar etapas con "Sí" sigue actualizando el detalle y el tablero al instante.
+
+Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable.
+- C3. El color y la etapa de cada tarjeta salen de la misma función del semáforo del Prompt 3; no los recalcules aparte.
+- C4. Una tarea está completa cuando su Estatus es Terminado.
+- C5. Los colores de las tarjetas salen del mapa único de colores del Prompt 3 (basado en los colores de opciones select de Airtable) y la etapa se muestra con el componente EtapaChip del Prompt 3; no escribas colores sueltos ni dupliques el componente.
+- C6. Un valor derivado (etapa, color, columna del tablero) se calcula solo en el frontend, sin campos de fórmula, rollup ni calculados en Airtable, y conserva su último valor mientras los datos se recargan; nunca se muestra vacío.
+
+No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- La página de Producción.
+- Las vistas Semana y Mes y el tablero por etapas.
+- El contenido y los flujos del detalle del pedido y del detalle del elemento; solo cambia cuándo se cargan sus datos.
+- La búsqueda y los filtros existentes.
+- El menú lateral y la hamburguesa del celular.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+Al terminar reporta, en este orden:
+1. Cada punto de este prompt como hecho o no hecho.
+2. Cada tabla, campo, opción de select o automatización que hayas creado o cambiado (se espera: ninguna).
+3. Lo que no pudiste hacer o lo que asumiste.
+4. Un export COMPLETO del proyecto, confirmando que MANIFEST.json lista todos los archivos importados (en especial los nuevos o movidos) y cuántos archivos son (el número debe coincidir con el del ZIP).
+
+---
+
+### Assistant — Oct 5, 2026, 5:47 AM CST
+
+Terminé el cambio y el export. Subí la versión a 1.11.2.
+
+**1. Puntos del prompt**
+- **Carga más rápida del detalle del elemento: hecho.** Los datos de elementos, tareas y pedidos ahora se descargan una sola vez al entrar a Pedidos. El detalle del pedido y el de cada elemento leen esos mismos datos, así que ya no repiten los pedidos a Airtable. Antes, cada pop-up descargaba todo otra vez. Con los datos ya cargados, "Pedido", "Producto", el seguimiento y la tabla de "Tareas de producción" deberían aparecer completos y sin barra de carga.
+- **Completar etapas con "Sí" y el tablero: sin cambios.** Mantuve la actualización instantánea de ambos. Solo la recarga de fondo es ahora una sola. No lo probé a mano; lo verifiqué solo con la validación y la compilación.
+- **Contratos C1–C6: respetados.** No toqué el semáforo, las etapas, los colores ni los textos.
+
+**2. Tablas, campos, opciones o automatizaciones creados o cambiados:** ninguno. No escribí nada en Airtable.
+
+**3. Lo que no pude hacer o asumí**
+- No pude comprobar la carga real en tu vista previa. La captura de mi lado solo muestra la página de inicio.
+- Si abres un elemento antes de que termine la primera carga de la página, verás la barra unos instantes. En uso normal ya estará cargado.
+- Si una pantalla se cierra mientras otras siguen abiertas, otra toma su lugar y vuelve a descargar los datos una vez.
+
+**4. Export completo:** `exports/amaranta-v1.11.2.zip`. El MANIFEST.json lista 110 archivos y el ZIP trae los mismos 110, incluidos `produccion/useProduccionData.ts`, el changelog, el README y la transcripción.
