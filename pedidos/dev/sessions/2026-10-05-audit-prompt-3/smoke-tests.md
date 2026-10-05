@@ -1,21 +1,15 @@
 # Smoke tests — Prompt 3/4 (semáforo y etiquetas de etapa)
 
 Export probado: v1.9.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pruebas cerradas 1 a 18 y 20 (ver "Cerradas"). Abierta: 19 (falla parcial; faltan Decorado y Empacado). Fecha de hoy en las pruebas: lunes 5 oct 2026.
+Estado: todas las pruebas cerradas (ver "Cerradas"); la 19 con falla parcial. Fecha de hoy en las pruebas: lunes 5 oct 2026.
 
 Pending items
 1. Key message: Incluir en el Prompt de corrección que la etapa del semáforo no se quede vacía ni tarde en actualizarse: debe mantener el último valor y cambiar de inmediato al completar una etapa.
    Argument: Al abrir la vista Día, al abrir un pop-up y, sobre todo, tras pulsar "Sí" en una etapa, la columna "Etapa" sale "—" y la tarjeta queda neutra; la etapa nueva aparece mucho después, sin recargar.
    Supporting data: pruebas 7 y 8 (capturas 11 y 12), prueba 19 (capturas 24 y 25); causa probable: `utils.ts:197` usa el id como nombre cuando el nombre del producto aún no llega, y `etapasDeProducto` devuelve vacío (`semaforo.ts:65`); además `useProduccionData.ts:67` no espera a la tabla de elementos y `index.tsx` no usa `semaforo.loading`.
-2. Key message: Correr la prueba abierta (19); escribe datos, en [4161] Efrain Dl Angel.
-   Argument: Se consolidaron de 20 a 1 abierta: cada color ya se verificó en la vista Mes (captura 3) y el resto se agrupa por vista, no por cliente.
-   Supporting data: registros estándar reutilizables en `pedidos/dev/test-records.md`.
-3. Key message: Al terminar, avisar para borrar el resto de las tareas de arranque y las de la prueba 19.
-   Argument: La tabla pasó de 14 a 29 registros y hoy tiene 22 (se borraron las de [4159] y [4084]).
-   Supporting data: estado final esperado: 14 tareas en `tareas_produccion` (`tblESlAFi4WqHlJtk`). Hoy hay 24: 14 originales, 8 de arranque y 2 de [4161].
-4. Key message: Tema claro y oscuro omitido, se deja para la aplicación final (decisión de Axel).
-   Argument: Los colores salen de un solo mapa con valores claro y oscuro.
-   Supporting data: `produccion/semaforo.ts:27-34`, `components/airtableColors.ts`.
+2. Key message: Enviar el Prompt de corrección a Canvas y auditar la v1.9.1.
+   Argument: Quedan 2 FAIL (C3, C4), 1 PARTIAL (colores sueltos) y el defecto de carga del semáforo.
+   Supporting data: Audit report `audit-report.md` de esta carpeta.
 
 Reglas
 - Cada prueba nombra el pedido y la fecha de calendario donde abrirlo.
@@ -32,20 +26,13 @@ Datos de arranque creados por Claude en Airtable (autorizado por Axel): 15 tarea
 - [4162] Silvia LC (`rec6CfqDdQE6OsZHI`), Galletas 60 (`recnVJ37t1pJ50jeS`): Horneado `recnrUUUThKIlVEu2`, Glaseado `rec2Mzcbd2HCmwy9O`.
 - [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), Pastel 20 pax (`recscT1PSK1PEkfU1`): Horneado `rec9hTvx9o6h1G2TO`, Embetunado `recKFgMGso71HrKvp`, Decorado `recGGBUcZSsJ4wnPG`. Sus Cupcakes (`recdPnErWZjQiJTmP`) siguen sin tareas.
 
-## [4161] Efrain Dl Angel (`recpD5i15hQsj0PSl`) — ESCRIBEN datos en Producción (abrir el 14 oct 2026)
-
-| # | Prueba | Expected | Estado |
-|---|---|---|---|
-| 19 | En Pedidos, vista "Día", ve al 14 oct y deja visible la lista. Abre el pop-up de [4161] Efrain Dl Angel > fila "Pastel 10 pax" > clic en el círculo "Horneado" > "Sí" en el globo. Cierra el detalle y el pop-up sin recargar y mira la fila y la tarjeta. Repite lo mismo con "Embetunado", "Decorado" y "Empacado". | Tras cada "Sí", sin recargar, la fila (etiqueta) y la tarjeta (texto con fondo suave) del 14 oct cambian en este orden: rojo "Horneado listo", naranja "Embetunado listo", amarillo "Decorado listo" y verde lima "Empacado listo". El encabezado del elemento cambia igual. | FALLA parcial (en curso). Airtable muestra 2 tareas creadas en [4161]: Horneado y Embetunado Terminado (`recHaXSVtgH5dpMfl`, `recOhChQZh9O0Z34L`). Capturas 23 a 25: el globo "¿Completar tarea?" y el elemento con "No iniciado" OK. Tras la escritura, la lista y la tarjeta de [4161] se quedaron sin etapa ni color ("—" y tarjeta neutra, captura 24) y tardaron mucho en mostrar "Embetunado listo" (captura 25), sin recargar. El cambio sí llega sin recargar, pero con demora y con un estado vacío intermedio. Faltan Decorado y Empacado |
-
-Limpieza después de la prueba 19: borra las tareas creadas en [4161] (icono de basura en el formulario de cada tarea). Estado final esperado: 0 tareas para [4161]. Cuando termines, avisa para que Claude borre las tareas de arranque.
-
 # Cerradas
 
 ~~Pending item: autorizar el borrado de las 7 tareas de arranque de [4159] y [4084]. Autorizado por Axel y hecho (verificado: la tabla quedó con 22 registros).~~
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| ~~19~~ | ~~[4161] Efrain Dl Angel~~ | ~~En Pedidos, vista "Día", ve al 14 oct y deja visible la lista. Abre el pop-up de [4161] Efrain Dl Angel > fila "Pastel 10 pax" > clic en el círculo "Horneado" > "Sí" en el globo. Cierra el detalle y el pop-up sin recargar y mira la fila y la tarjeta. Repite lo mismo con "Embetunado", "Decorado" y "Empacado".~~ | ~~Tras cada "Sí", sin recargar, la fila (etiqueta) y la tarjeta (texto con fondo suave) del 14 oct cambian en este orden: rojo "Horneado listo", naranja "Embetunado listo", amarillo "Decorado listo" y verde lima "Empacado listo". El encabezado del elemento cambia igual.~~ | ~~FALLA parcial (en curso). Airtable muestra 2 tareas creadas en [4161]: Horneado y Embetunado Terminado (`recHaXSVtgH5dpMfl`, `recOhChQZh9O0Z34L`). Capturas 23 a 25: el globo "¿Completar tarea?" y el elemento con "No iniciado" OK. Tras la escritura, la lista y la tarjeta de [4161] se quedaron sin etapa ni color ("—" y tarjeta neutra, captura 24) y tardaron mucho en mostrar "Embetunado listo" (captura 25), sin recargar. El cambio sí llega sin recargar, pero con demora y con un estado vacío intermedio. Faltan Decorado y Empacado. Cerrada por decisión de Axel con lo observado (falla parcial); el defecto va al Prompt de corrección~~ |
 | ~~12~~ | ~~[3210] Alondra S Dávila~~ | ~~Vista "Día", 8 oct: fila y tarjeta de [3210] Alondra S Dávila. Abre su pop-up y revisa la tabla Elementos (filas "Pastel 20 pax" y "Cupcakes") y la línea "Etapa actual…".~~ | ~~El pedido se ve morado "No iniciado" (el elemento más atrasado son los Cupcakes). En la tabla Elementos, Pastel 20 pax lleva punto amarillo "Decorado listo" y Cupcakes punto morado "No iniciado". La línea "Etapa actual…" dirá Horneado · Cupcakes.~~ | ~~OK (captura 19: tabla Elementos con punto amarillo "Decorado listo" en Pastel 20 pax y punto morado "No iniciado" en Cupcakes; línea "Etapa actual…: Horneado · Cupcakes" con punto morado y etiqueta en el color de Producción, C4; el pedido se ve morado en Mes, captura 3 de la ronda anterior)~~ |
 | ~~14~~ | ~~Entregados y sin semáforo~~ | ~~Con el filtro de estatus en "Entregado", vista "Mes": revisa octubre y luego noviembre. Después abre el pop-up de [4148] Blanca Valdes (29 sep, desde la vista "Día").~~ | ~~Octubre: [4180] Elizabeth martinez (4 oct) en verde "Entregado"; [4160] Alice (30 sep) y [4148] Blanca Valdes (29 sep) en verde, atenuados en la fila de septiembre; [4014] Gisela torres (3 oct) sin etapa ni color (su elemento no tiene producto). Noviembre: [3838] Jarumi (1 nov) sin etapa ni color (no tiene elementos). Pop-up de [4148]: la tabla Elementos muestra punto verde "Entregado" aunque solo tiene Empacado terminado. Por código la línea "Etapa actual…" aparecerá igual ("Horneado · Galletas") porque sale de otra lógica (hallazgo C4).~~ | ~~OK (captura 20, Mes octubre con "Entregado": [4074], [4173], [4175], [4178], [4180] en verde y [4160], [4148] y demás de septiembre en verde atenuado; [4014] Gisela Torres sin color ni etapa. Captura 21, noviembre: [3838] Jarumi sin color ni etapa. Captura 22, pop-up de [4148]: Etapa "Entregado" con punto verde; la línea "Etapa actual…" no aparece, porque el Tracker da por completas las etapas previas a Empacado; la expectativa por código era distinta y se corrige)~~ |
 | ~~7~~ | ~~[4152] Luisa Fernanda~~ | ~~Reintento (espera unos segundos a que carguen los datos). Abre [4152] Luisa Fernanda desde la vista "Día", 27 oct, y revisa en su pop-up la tabla Elementos y la línea "Etapa actual…".~~ | ~~En la fila "Pastel 10 pax", columna "Etapa": punto rojo y "Horneado listo". Debajo, en "Producción", la línea "Etapa actual del elemento más atrasado: Embetunado · Pastel 10 pax" con un punto rojo (la etiqueta sale de otra lógica; hallazgo C4).~~ | ~~OK (captura 15: tabla Elementos con punto rojo y "Horneado listo"; línea "Etapa actual…: Embetunado · Pastel 10 pax" con punto rojo y la etiqueta en el verde azulado de Producción, hallazgo C4 confirmado en pantalla; la carga ya salió completa)~~ |
@@ -65,3 +52,5 @@ Limpieza después de la prueba 19: borra las tareas creadas en [4161] (icono de 
 | ~~17~~ | ~~[4014] Gisela torres~~ | ~~Con el filtro en "Entregado", vista "Día", 3 oct: fila y tarjeta de [4014] Gisela torres.~~ | ~~Sin semáforo (el elemento no tiene producto, así que no cuenta). "—" en "Etapa" y tarjeta neutra.~~ | ~~Consolidada: consolidada en la prueba 14~~ |
 | ~~18~~ | ~~[4128] Sara~~ | ~~Vista "Día", 1 oct: abre el pop-up de [4128] Sara y compara títulos, botones y pastilla de Estatus con lo que ya conocías.~~ | ~~Los textos son los mismos que antes salvo la columna "Etapa" y los puntos de color. El Estatus sigue editable como dato.~~ | ~~Consolidada: cubierta por el diff contra v1.8.4 (solo cambian los archivos esperados) y por las pruebas 4 y 5~~ |
 | ~~20~~ | ~~[4161] Efrain Dl Angel~~ | ~~Con [4161] Efrain Dl Angel (14 oct) repite el flujo y pulsa "Sí" en "Embetunado", luego en "Decorado" y luego en "Empacado". Tras cada paso cierra los pop-ups y mira su fila y su tarjeta.~~ | ~~Naranja "Embetunado listo", amarillo "Decorado listo" y verde lima "Empacado listo", en ese orden, sin recargar, en lista, tarjeta y pop-up.~~ | ~~Consolidada: consolidada en la prueba 19~~ |
+
+~~Pending item: borrar las tareas de prueba. Hecho el 2026-10-05 con autorización de Axel: se borraron las 8 de arranque y las 2 de [4161]; `tareas_produccion` quedó con 14 registros (verificado).~~

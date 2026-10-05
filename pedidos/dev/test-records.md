@@ -1,6 +1,6 @@
 # Registros estándar para Smoke Tests
 
-Reutilizar estos pedidos en todos los Prompts (3 y 4 en adelante) en lugar de buscar clientes nuevos. Probar por vista (Día, Semana, Mes) y no por cliente: una pasada por vista cubre varios escenarios a la vez. Base: Producción (`appSQk87nF0WpH2gi`). Tareas de arranque creadas por Claude el 2026-10-05 (Origen Manual, Terminado, sin empleado ni fechas). Axel decidió que este es el set estándar y que pueden agregarse más registros, optimizando al máximo (menos pruebas, más cobertura por vista). Las tareas de [4159] y [4084] se borraron el 2026-10-05; se recrean cuando un Prompt necesite ver amarillo o verde lima fuera de la vista Mes.
+Reutilizar estos pedidos en todos los Prompts (3 y 4 en adelante) en lugar de buscar clientes nuevos. Probar por vista (Día, Semana, Mes) y no por cliente: una pasada por vista cubre varios escenarios a la vez. Base: Producción (`appSQk87nF0WpH2gi`). Tareas de arranque creadas por Claude el 2026-10-05 (Origen Manual, Terminado, sin empleado ni fechas). Axel decidió que este es el set estándar y que pueden agregarse más registros, optimizando al máximo (menos pruebas, más cobertura por vista). Todas las tareas de arranque se borraron el 2026-10-05 al cerrar la auditoría del Prompt 3 (la tabla volvió a 14 registros). Se recrean cuando un Prompt necesite ver colores por etapa; ver el escenario y las tareas en la tabla de abajo.
 
 ## Registros
 
