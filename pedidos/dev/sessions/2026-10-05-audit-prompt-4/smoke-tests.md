@@ -3,7 +3,7 @@
 Export a probar: v1.11.2 (2026-10-05). Las pruebas cerradas abajo son de v1.10.0 a v1.11.1. Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Borrar las tareas que dejó la prueba 25 en [3210] (Claude, tras el límite de consultas de Airtable) y confirmar 14 registros.
+Sin pendientes. Auditoría cerrada con v1.11.2; las tareas de prueba se borraron y `tareas_produccion` tiene 14 registros.
 
 Reglas
 - Filtro de estatus (junto al buscador): viene en "Pendiente". Para las pruebas de Entregado, ábrelo y marca "Entregado".

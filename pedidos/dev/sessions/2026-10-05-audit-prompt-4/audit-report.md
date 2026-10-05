@@ -1,6 +1,6 @@
 # Audit report — Prompt 4/4 (Todos view, stage board and period selector)
 
-Status: PASS (v1.11.2). Final version for Prompt 4. All items and contracts pass; screen tests 23, 24 and 25 (element detail, navigation and update after "Sí") are closed. Only the cleanup of the test tasks of test 25 is pending (Airtable rate limit).
+Status: PASS (v1.11.2). Final version for Prompt 4. All items and contracts pass; screen tests 23, 24 and 25 (element detail, navigation and update after "Sí") are closed. Test tasks of test 25 deleted; tareas_produccion has 14 records.
 
 Previous status: PASS (v1.11.1).
 
@@ -10,9 +10,9 @@ Previous status: PARTIAL (v1.10.0). Code meets the plan except the Entregado sea
 
 ## Pending items
 
-Claude deletes the two test tasks that smoke test 25 left in [3210] and confirms tareas_produccion is back to 14 records.
-The Airtable API returned rate-limit errors (429) on every attempt after the test, so the cleanup is still pending; the tasks are Terminado, Manual, linked to Pastel 20 pax recscT1PSK1PEkfU1.
-Order recY1WRFAEYXZhe50; tareas_produccion should have 14 records after the cleanup.
+No pending items. The audit of Prompt 4 is closed with v1.11.2.
+All items, contracts and screen tests pass; the test tasks were deleted and tareas_produccion is back to 14 records.
+Deleted: recFTbJR23N6mHMVi (Horneado) and recPT5zyugPF5LMxb (Embetunado), 2026-10-05.
 
 ## Decisions by Axel (this round)
 
@@ -101,7 +101,7 @@ OK by diff: tables, fields, select options, automations (11 tables, 2 automation
 - Item 1 (element detail preload) PASS (code and screen: tests 23, 24 and 25 OK, Axel): instead of preloading when an order opens, Canvas shares one download between all instances: the first mounted instance becomes the "leader" and downloads the seven tables (useProduccionData.ts:63-136); the others read the leader's records through a module-level store and a window event, and reload requests are forwarded to the leader (:338-350). A new instance starts with the shared data, so the element detail and the order should open complete. Risks to verify: leader hand-off when the leader unmounts (cleanup dispatches an event and another instance claims), leader chosen during render (useState initializer), first-load bar if an element opens before the first download ends (Canvas disclosed it), and the instant update after "Sí".
 - Contracts: C1 to C6 OK (semaforo.ts and the display components unchanged; shared data keeps the last good values, C6). No Airtable writes.
 - Schema: read-only check on 2026-10-05: 2 automations unchanged, tareas_produccion 14 records; tables not listed again this round because the prompt was read-only and only a hook changed.
-- Screen tests: 23 (element detail opens complete and instantly), 24 (Pedidos, Producción and Finanzas load without hanging) and 25 (Horneado and Embetunado "Sí" update the detail and move the card) all OK. Nothing open except the test-task cleanup.
+- Screen tests: 23 (element detail opens complete and instantly), 24 (Pedidos, Producción and Finanzas load without hanging) and 25 (Horneado and Embetunado "Sí" update the detail and move the card) all OK. Nothing open.
 
 ## Version history
 
@@ -124,5 +124,6 @@ None created or changed. Read-only check: 11 tables, 2 automations (autoincremen
 ## Data created or changed
 
 Test 13 (authorized by Axel): task rechbrn8oPFAgZV9d created by Axel in tareas_produccion (Horneado, Terminado, Manual, element recscT1PSK1PEkfU1, order recY1WRFAEYXZhe50) and deleted by Claude on 2026-10-05 (action actGTSnkgDp3fe5F1).
+Test 25 (v1.11.2, authorized by Axel): tasks recFTbJR23N6mHMVi (Horneado) and recPT5zyugPF5LMxb (Embetunado), both Terminado and Manual, created by Axel for Pastel 20 pax (recscT1PSK1PEkfU1) of [3210]; deleted by Claude on 2026-10-05 (action actnLSb2OKASj1g99); tareas_produccion verified at 14 records.
 Test 20 repeated after the correction prompt (authorized by Axel): tasks reclUhME2lqff6KmH (Horneado) and recHgU2TypJNh2Zu6 (Embetunado), both Terminado and Manual, created by Axel for Pastel 20 pax (recscT1PSK1PEkfU1) of [3210]; deleted by Claude on 2026-10-05 (action actOTC9PrPphZDwVZ). Verified read-only afterwards: tareas_produccion has 14 records.
 None other so far. tareas_produccion has 14 records (verified read-only). If smoke test 13 is confirmed, one task will be created in [3210] and deleted; its ID will be recorded here.
