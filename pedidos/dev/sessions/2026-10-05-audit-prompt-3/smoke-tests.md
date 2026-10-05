@@ -4,16 +4,19 @@ Export probado: v1.9.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
 Estado: pruebas 1, 2, 3 y 6 cerradas (capturas de Axel en tema oscuro); las pruebas 4 y 5 quedan abiertas por el cambio a chip; pruebas 7 a 13 con confirmación parcial; el resto pendiente. Fecha de hoy en las pruebas: lunes 5 oct 2026.
 
 Pending items
-1. Key message: En la columna "Etapa" de la tabla Elementos y en el encabezado del detalle del elemento, la etapa debe ser una etiqueta (chip) con el color del semáforo, no punto con texto.
+1. Key message: Incluir en el Prompt de corrección que la etapa del semáforo no se muestre vacía ("—", tarjeta neutra) mientras cargan los datos.
+   Argument: Al abrir la vista Día o un pop-up, durante unos segundos la columna "Etapa" sale "—", la tarjeta sin color y la línea "Etapa actual…" no aparece, y después se llenan solas.
+   Supporting data: pruebas 7 y 8 (capturas 11 y 12); `produccion/useProduccionData.ts:67` no espera a la tabla de elementos y `index.tsx` no usa `semaforo.loading`.
+2. Key message: En la columna "Etapa" de la tabla Elementos y en el encabezado del detalle del elemento, la etapa debe ser una etiqueta (chip) con el color del semáforo, no punto con texto.
    Argument: Axel lo pidió al probar 4, 5 y 7 y es consistente con la etiqueta de la lista del Día.
    Supporting data: `PedidoDetailModal.tsx:349-352`, `ElementoDetalle.tsx:71-78`; va al Prompt de corrección.
-2. Key message: Corre las pruebas 1 a 20 y marca el Estado; solo las pruebas 19 y 20 escriben datos, y solo en [4161] Efrain Dl Angel.
+3. Key message: Corre las pruebas 1 a 20 y marca el Estado; solo las pruebas 19 y 20 escriben datos, y solo en [4161] Efrain Dl Angel.
    Argument: Los colores rojo, naranja, amarillo y verde lima solo se ven con tareas Terminado. Claude ya las creó en 5 pedidos, así que solo falta verlos en pantalla.
    Supporting data: 15 tareas creadas (ver "Datos de arranque") y [4161] (`recpD5i15hQsj0PSl`) sin tareas para el recálculo en vivo.
-3. Key message: Avisa a Claude al terminar para borrar las 15 tareas de arranque (y las de las pruebas 19 y 20 si no las borras tú).
+4. Key message: Avisa a Claude al terminar para borrar las 15 tareas de arranque (y las de las pruebas 19 y 20 si no las borras tú).
    Argument: Dejan los pedidos con tareas que no existían y la tabla pasó de 14 a 29 registros.
    Supporting data: estado final esperado: 14 tareas en `tareas_produccion` (`tblESlAFi4WqHlJtk`).
-4. Key message: Las pruebas de tema claro y oscuro quedan para la aplicación final (decisión de Axel); el mapa de colores se verificó por código.
+5. Key message: Las pruebas de tema claro y oscuro quedan para la aplicación final (decisión de Axel); el mapa de colores se verificó por código.
    Argument: Los colores salen de un solo mapa con valores claro y oscuro.
    Supporting data: `produccion/semaforo.ts:27-34`, `components/airtableColors.ts`.
 
@@ -50,7 +53,7 @@ Pastel 10 pax con Horneado Terminado.
 
 | # | Prueba | Expected | Estado |
 |---|---|---|---|
-| 7 | En Pedidos, vista "Día", ve al 27 oct y revisa la fila y la tarjeta de [4152] Luisa Fernanda. Abre su pop-up, revisa la tabla Elementos y abre la fila "Pastel 10 pax". | "Horneado listo" en rojo: etiqueta en la lista, texto en la tarjeta con fondo rojo suave, y en la tabla Elementos y en el encabezado del elemento una etiqueta (chip) roja (no punto con texto). La línea "Etapa actual…" dirá Embetunado con un punto rojo (la etiqueta sale de otra lógica; es el hallazgo C4 del Audit report). | Parcial. Captura 9: lista con etiqueta roja "Horneado listo" OK y tarjeta con texto y fondo rojo suave OK. Captura 10: encabezado del elemento con punto rojo + texto (Axel pide chip) y tracker coherente (Horneado completo, Embetunado actual). Faltan tabla Elementos y línea "Etapa actual…" del pop-up del pedido |
+| 7 | En Pedidos, vista "Día", ve al 27 oct y revisa la fila y la tarjeta de [4152] Luisa Fernanda. Abre su pop-up, revisa la tabla Elementos y abre la fila "Pastel 10 pax". | "Horneado listo" en rojo: etiqueta en la lista, texto en la tarjeta con fondo rojo suave, y en la tabla Elementos y en el encabezado del elemento una etiqueta (chip) roja (no punto con texto). La línea "Etapa actual…" dirá Embetunado con un punto rojo (la etiqueta sale de otra lógica; es el hallazgo C4 del Audit report). | FALLA transitoria. Captura 11: en el pop-up de [4152] la columna "Etapa" salió "—" y no apareció la línea "Etapa actual…", aunque la lista y la tarjeta (captura 9) y el encabezado del elemento (captura 10) sí mostraban "Horneado listo". Causa en código: la carga de elementos no se espera (ver Pending item 2). Reintentar tras la corrección |
 
 ## [4120] Yami aguillon (`recvBRPY8mGxx4Jwu`) — abrir el 23 oct 2026 en Pedidos
 
@@ -58,7 +61,7 @@ Pastel 10 pax con Horneado y Embetunado Terminado.
 
 | # | Prueba | Expected | Estado |
 |---|---|---|---|
-| 8 | Vista "Día", 23 oct: fila y tarjeta de [4120] Yami aguillon. Abre su pop-up (tabla Elementos y encabezado de la fila "Pastel 10 pax"). | "Embetunado listo" en naranja en todos los lugares. | Parcial (captura 3: en Mes naranja con "Embetun…" truncado); faltan lista, tarjeta del Día y pop-up |
+| 8 | Vista "Día", 23 oct: fila y tarjeta de [4120] Yami aguillon. Abre su pop-up (tabla Elementos y encabezado de la fila "Pastel 10 pax"). | "Embetunado listo" en naranja en todos los lugares. | FALLA transitoria en lista y tarjeta: captura 12 muestra "—" en "Etapa" y la tarjeta sin etapa ni color; segundos después el fondo de la captura 13 ya muestra "Embetunado listo" en la tarjeta. Pop-up OK (captura 13): fila "Pastel 10 pax" con punto naranja y "Embetunado listo" (Axel pide chip) y línea "Etapa actual…: Decorado" con punto naranja (la etiqueta con otro color, C4). Falta el encabezado del elemento |
 
 ## [4162] Silvia LC (`rec6CfqDdQE6OsZHI`) — abrir el 1 nov 2026 en Pedidos
 
@@ -66,7 +69,7 @@ Galletas x60 con Horneado y Glaseado Terminado.
 
 | # | Prueba | Expected | Estado |
 |---|---|---|---|
-| 9 | Vista "Día", 1 nov: fila y tarjeta de [4162] Silvia LC. Abre su pop-up (tabla Elementos y encabezado de la fila "Galletas"). | "Glaseado listo" en el mismo naranja que Embetunado, con el nombre de la etapa de galletas. | Parcial (captura 3: en Mes naranja con "Glaseado…" truncado, día 1 nov atenuado); faltan lista, tarjeta del Día y pop-up |
+| 9 | Vista "Día", 1 nov: fila y tarjeta de [4162] Silvia LC. Abre su pop-up (tabla Elementos y encabezado de la fila "Galletas"). | "Glaseado listo" en el mismo naranja que Embetunado, con el nombre de la etapa de galletas. | Parcial. Captura 14: pop-up de [4162] con "Glaseado listo" y punto naranja en la tabla Elementos y línea "Etapa actual…: Decorado · Galletas" con punto naranja (etiqueta con otro color, C4); el fondo muestra la tarjeta con "Glaseado listo". Faltan la fila de la lista y el encabezado del elemento "Galletas" |
 
 ## [4159] MARIA TERESA MERLOZ (`recfrBAAB0z7jRot4`) — abrir el 12 oct 2026 en Pedidos
 
