@@ -1,20 +1,16 @@
 # Audit report — Prompt 3/4 (traffic light and stage labels)
 
-Status: PARTIAL (v1.9.2 audited by code; screen tests 22, 23, 25 and 26 pending). v1.9.0 meets the plan in code and in screen tests, but contracts C3 and C4 are violated, one color is loose in a component, and the traffic light goes blank and updates late after a write. A correction prompt for v1.9.1 is ready and not yet sent.
+Status: PASS (v1.9.2). All correction items are done and verified on screen; the findings of v1.9.0 (C3, C4, loose colors, blank traffic light) are fixed. Open notes below are non-blocking.
 
 ## Pending items
 
-1. Key message: Send the correction prompt to Canvas and audit v1.9.1.
-   Argument: 2 FAIL (C3, C4), 1 PARTIAL (loose colors) and a loading defect remain.
-   Supporting data: StageTracker.tsx:14,18 (C3); PedidoTareasSection.tsx:207-226 (C4); Calendar.tsx:171 and semaforo.ts:21 (C5); useProduccionData.ts:67 and index.tsx (loading).
+1. Key message: Send the next prompt (Prompt 4) using pedidos/dev/test-records.md as the fixed test set.
+   Argument: The set covers each color, multi-element, Entregado and no-traffic-light cases and avoids testing with 20 different clients.
+   Supporting data: 14 standard records in pedidos/dev/test-records.md; contracts C1 to C5 in contracts-and-no-tocar.md.
 
-2. Key message: Ask Canvas for a real MANIFEST.json in the next export.
-   Argument: v1.9.0 shipped without one, so the file list cannot be confirmed; the audit used diff -rq instead.
-   Supporting data: 64 files in the ZIP (63 in v1.8.4 plus produccion/semaforo.ts); Canvas reported 63.
-
-3. Key message: Decide later whether Mes cards should show the full stage name on small widths.
-   Argument: The stage text is truncated in Mes ("Hornea…", "Embetunado…"); Axel chose not to include it in the correction.
-   Supporting data: Calendar.tsx:179 (shown only from the sm breakpoint) and screenshot 3 of the smoke tests.
+2. Key message: Ask Canvas for a real MANIFEST.json (done in v1.9.1) and keep the file count equal to the ZIP.
+   Argument: Canvas reported 103 files in chat but the ZIP and MANIFEST.json have 65.
+   Supporting data: MANIFEST.json (65 entries) and diff -rq.
 
 ## What we did
 
@@ -46,7 +42,7 @@ Status: PARTIAL (v1.9.2 audited by code; screen tests 22, 23, 25 and 26 pending)
 
 - v1.9.0 (2026-10-05): traffic light in Pedidos (audited here). Replaced pedidos/source, README and transcript in the repo; old exports removed.
 - v1.9.1 (2026-10-05): correction audited by code and partly on screen (tests 21 and 24 OK).
-- v1.9.2 (2026-10-05): stage chip everywhere; audited by code, test 21 OK on screen.
+- v1.9.2 (2026-10-05): stage chip everywhere; audited by code and on screen, all smoke tests OK. Final version for Prompt 3.
 
 ## Schema and automation changes
 
@@ -57,6 +53,7 @@ None created or changed by Canvas. Verified read-only: 11 tables and 2 automatio
 - Test by view, not by client: one pass over Mes covers all colors at once. Use the fixed set in pedidos/dev/test-records.md.
 - Check loading states: a derived value (traffic light) must keep its last value while data refetches and must not render empty.
 - Closed items go to the end of each file, struck through.
+- A shared component (EtapaChip) keeps the same display across views and makes later visual changes one-file edits.
 - Baseline comparison needs the previous version in the repo; keep only the latest version afterwards.
 
 ## Data created or changed
@@ -69,4 +66,5 @@ Created by Claude in tareas_produccion (tblESlAFi4WqHlJtk), all Terminado, Orige
 - [4084] recZrcshhUS9QhoV6: recEE9Rhox60kNs0B, rec5eTOqdCZgJTCjk, recUpym5rsNWwSa0i, recWQHkxh5CEAXiKK.
 - [3210] recY1WRFAEYXZhe50: rec9hTvx9o6h1G2TO, recKFgMGso71HrKvp, recGGBUcZSsJ4wnPG.
 Created by Axel during test 19 in [4161] recpD5i15hQsj0PSl (deleted by Claude): recHaXSVtgH5dpMfl (Horneado), recOhChQZh9O0Z34L (Embetunado).
+Created for the v1.9.2 round (authorized by Axel, Terminado, Origen Manual) and deleted on 2026-10-05: [4120] rec4rZeA3OFQmZ51J, recB2gJt3uj5nqQ22; [3210] recxRDFxqxjHS0RUP, recIQLk3tgh0m7gY2, reczj7tInX1TvB0wc; [4162] recTogDsMTHjPXeS2 (Horneado 30 of 60); and by Axel in [4161] recGY71JMDn7TGzlC.
 Final state verified: tareas_produccion has 14 records, as before the audit.

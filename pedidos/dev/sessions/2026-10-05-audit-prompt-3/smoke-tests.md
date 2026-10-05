@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 3/4 (semáforo y etiquetas de etapa)
 
 Export probado: v1.9.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: todas las pruebas cerradas (ver "Cerradas"); la 19 con falla parcial. Fecha de hoy en las pruebas: lunes 5 oct 2026.
+Estado: todas las pruebas cerradas (ver "Cerradas"). Versión final probada: v1.9.2. Fecha de hoy en las pruebas: lunes 5 oct 2026.
 
 Pending items
 1. Key message: Incluir en el Prompt de corrección que la etapa del semáforo no se quede vacía ni tarde en actualizarse: debe mantener el último valor y cambiar de inmediato al completar una etapa.
@@ -26,20 +26,11 @@ Datos de arranque creados por Claude en Airtable (autorizado por Axel): 15 tarea
 - [4162] Silvia LC (`rec6CfqDdQE6OsZHI`), Galletas 60 (`recnVJ37t1pJ50jeS`): Horneado `recnrUUUThKIlVEu2`, Glaseado `rec2Mzcbd2HCmwy9O`.
 - [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), Pastel 20 pax (`recscT1PSK1PEkfU1`): Horneado `rec9hTvx9o6h1G2TO`, Embetunado `recKFgMGso71HrKvp`, Decorado `recGGBUcZSsJ4wnPG`. Sus Cupcakes (`recdPnErWZjQiJTmP`) siguen sin tareas.
 
-## v1.9.2 — Smoke tests de la corrección (abiertas)
-
-Export probado: v1.9.2 (2026-10-05; las pruebas 21 y 24 corrieron con v1.9.1 y v1.9.2). Hoy es lunes 5 oct 2026. Se prueba solo lo que cambió: la línea "Etapa actual…" (C4), el Tracker (C3) y el estado de carga del semáforo. Los colores por etapa ya se cerraron en v1.9.0.
-
-Pending items
-Sin pendientes abiertos.
-
-| # | Prueba | Expected | Estado |
-|---|---|---|---|
-| 26 | [4148] Blanca Valdes (29 sep; filtro "Entregado") y Producción. Abre el pop-up de [4148] y revisa "Producción". Luego ve a Producción, vista "Todos", semana 5-11 oct. | En [4148] la columna "Etapa" dice "Entregado" y la línea (si aparece) dice "Entregado · Galletas" con punto verde. En Producción todo se ve igual que antes: chips por etapa de [4128] Sara el lunes 5 y los indicadores de riesgo. | |
-
-Limpieza tras la prueba 25: borra las tareas creadas en [4161]. Claude borra las tareas de arranque al cerrar; estado final esperado: 14 tareas en `tareas_produccion`.
+Todas las pruebas de v1.9.2 están cerradas (ver abajo).
 
 # Cerradas
+
+~~Pending item: borrar las tareas de prueba de v1.9.2. Hecho el 2026-10-05: se borraron las 6 de arranque ([4120] `rec4rZeA3OFQmZ51J`, `recB2gJt3uj5nqQ22`; [3210] `recxRDFxqxjHS0RUP`, `recIQLk3tgh0m7gY2`, `reczj7tInX1TvB0wc`; [4162] `recTogDsMTHjPXeS2`) y la de [4161] (`recGY71JMDn7TGzlC`); `tareas_produccion` quedó con 14 registros (verificado).~~
 
 ~~Pending item: usar chip para la etapa en todas las superficies con valor de etapa. Confirmado por Axel; corregido en v1.9.2 (EtapaChip) y verificado en la prueba 21.~~
 
@@ -55,6 +46,7 @@ Limpieza tras la prueba 25: borra las tareas creadas en [4161]. Claude borra las
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| ~~26~~ | ~~[4148] Blanca Valdes y Producción~~ | ~~[4148] Blanca Valdes (29 sep; filtro "Entregado") y Producción. Abre el pop-up de [4148] y revisa "Producción". Luego ve a Producción, vista "Todos", semana 5-11 oct.~~ | ~~En [4148] la columna "Etapa" dice "Entregado" y la línea (si aparece) dice "Entregado · Galletas" con punto verde. En Producción todo se ve igual que antes: chips por etapa de [4128] Sara el lunes 5 y los indicadores de riesgo.~~ | ~~OK en v1.9.2 (capturas 39 a 41: con el filtro Entregado la lista del 29 sep muestra el chip verde Entregado y las tarjetas el texto Entregado; en el pop-up de [4148] la columna Etapa y la línea Etapa actual… muestran el chip verde Entregado · Galletas; en Producción, Todos, 5-11 oct, siguen los chips por etapa de [4128] Sara y los indicadores de riesgo, sin cambios)~~ |
 | ~~23~~ | ~~[4162] Silvia LC~~ | ~~[4162] Silvia LC (1 nov, con la tarea de arranque). Vista "Día", 1 nov > pop-up > fila "Galletas" (detalle del elemento).~~ | ~~El Tracker marca Horneado como completo aunque la tarea tenga avance 30/60 (solo cuenta Terminado), con Glaseado como etapa actual. El encabezado dice "Horneado listo" como chip.~~ | ~~OK en v1.9.2 (captura 35: el Tracker de Galletas marca Horneado completo y Glaseado como etapa actual aunque la tarea tenga 30 de 60 en Airtable; el encabezado muestra el chip rojo Horneado listo; C3 confirmado)~~ |
 | ~~25~~ | ~~[4161] Efrain Dl Angel~~ | ~~[4161] Efrain Dl Angel (14 oct). **ESCRIBE.** Vista "Día", 14 oct > pop-up > fila "Pastel 10 pax" > "Horneado" > "Sí", y cierra los pop-ups sin recargar. Repite con "Embetunado".~~ | ~~Tras cada "Sí" la fila y la tarjeta cambian de inmediato a "Horneado listo" (rojo) y luego "Embetunado listo" (naranja), sin pasar por "—" ni quedar neutras y sin demora.~~ | ~~OK en v1.9.2 (Axel: funciona como era esperado; capturas 36 a 38: tras Sí en Horneado el encabezado del elemento, la columna Etapa y la línea Etapa actual… del pop-up muestran el chip rojo Horneado listo, y la fila y la tarjeta del 14 oct quedan en Horneado listo, sin recargar, sin pasar por — ni quedar neutras; Tracker con Horneado completo y Embetunado actual). Airtable: tarea `recGY71JMDn7TGzlC` creada en [4161]~~ |
 | ~~22~~ | ~~[3210] Alondra S Dávila~~ | ~~[3210] Alondra S Dávila (8 oct, con las tareas de arranque). Vista "Día", 8 oct: abre el pop-up.~~ | ~~La tarjeta y la línea dicen "No iniciado"; la línea nombra el elemento Cupcakes (el más atrasado). En Elementos, Pastel 20 pax "Decorado listo" y Cupcakes "No iniciado", ambos como chip.~~ | ~~OK en v1.9.2 (capturas 31 y 32: la fila muestra el chip morado No iniciado y la tarjeta el texto No iniciado; en el pop-up Pastel 20 pax lleva el chip amarillo Decorado listo y Cupcakes el chip morado No iniciado; la línea Etapa actual… muestra el chip morado No iniciado · Cupcakes, el elemento más atrasado)~~ |
