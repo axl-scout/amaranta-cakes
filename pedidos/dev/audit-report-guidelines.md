@@ -47,4 +47,6 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Dropdowns (selector de Empleado en la tabla del formulario y los demás de la app): navegación con teclado, flecha arriba/abajo, Enter para elegir y Escape para cerrar, como el buscador de pedidos. Va al prompt de corrección.
 - "¿Completar tarea?" (mini pop-up): quitar el texto explicativo; solo la pregunta y los botones "Sí" y "No".
 - Detalle del elemento: reemplazar el botón "Editar" y su modal por edición en línea: los campos del detalle (nombre del producto, cantidad, descripción, etc.) son editables directamente y se guardan solos. El borrado del elemento queda como icono de basura con confirmación. Va al prompt de corrección.
-- Aviso de entrega de producción pasada: texto más corto. Propuesta: "La entrega de producción ya pasó."
+- Aviso de entrega de producción pasada: texto más corto. Texto: "No se puede editar: la entrega de producción ya pasó."
+- Cada prueba de los smoke tests empieza con la ruta completa: Página > pop-up o detalle > sección (por ejemplo "Página Pedidos > abre [3413] > fila Pastel 50 pax (detalle del elemento) > ..."). Nunca "en esa tabla" o "en Agregar elemento" sin decir dónde.
+- El borrado del elemento, al quitar el modal "Editar", queda como icono de basura con confirmación en el encabezado del detalle.
