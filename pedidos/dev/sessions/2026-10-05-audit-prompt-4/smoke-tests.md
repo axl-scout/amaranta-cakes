@@ -25,7 +25,7 @@ Record de la prueba 20: este record es el que vas a utilizar para esta prueba: [
 ### Celular (cuando llegue la corrección)
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 21 | Selector en celular | Celular > Pedidos > vista "Día" > toca el selector > elige "Mes"; ábrelo y toca fuera. | Dropdown que muestra solo la opción elegida con flecha, cabe en la pantalla; al elegir o tocar fuera se cierra. En escritorio sigue el interruptor expandible. | |
+| 21 | Selector en celular | Celular > Pedidos > vista "Día" > toca el selector > elige "Mes"; ábrelo y toca fuera. | Dropdown que muestra solo la opción elegida con flecha, cabe en la pantalla; al elegir o tocar fuera se cierra. En escritorio sigue el interruptor expandible. | EN VISTA PREVIA (capturas 40 y 41, versión 1.11.1 según Canvas, por confirmar con el export): en el ancho de celular de la vista previa el selector es un dropdown con la opción elegida y una flecha ("Día" y "Mes"); al tocarlo abre la lista vertical Día, Semana, Mes, Todos y cabe en la pantalla; la hamburguesa sale a la izquierda y el filtro de estatus ("Todos") y el botón "Tablero" caben en la misma fila. |
 
 Al cerrar el set Claude verifica `tareas_produccion` (14 registros) y el esquema (11 tablas, 2 automatizaciones).
 
