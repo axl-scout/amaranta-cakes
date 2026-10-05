@@ -18,10 +18,12 @@ Datos de arranque creados por Claude en Airtable (autorizado por Axel): elemento
 |---|---|---|---|---|
 ## v1.8.3 — [3413] Rosaura Avila (ESCRIBEN datos, en este orden)
 
-Datos de arranque creados por Claude en Airtable (autorizado por Axel): elemento "Pastel 5 pax" cantidad 2 (`recy4pgQnp8u1DWmx`) con 4 tareas Pendiente 0/2 (Horneado con Ale 5 a 7 oct, Embetunado 7 a 8 oct, Decorado con Fátima, Empacado sin empleado) y elemento "Pastel 10 pax" cantidad 1 (`recifWvlDYThKZsmG`) sin tareas. El borrado real ocurre unos 10 s después de confirmar, cuando termina el aviso "Elemento eliminado"; espera ese tiempo antes de revisar Airtable.
+Datos de arranque (autorizados por Axel; las 4 tareas huérfanas de la prueba 56 en v1.8.3 se borraron y se recrearon): elemento "Pastel 5 pax" cantidad 2 (`recBZVhwNTYBxc8dO`) con 4 tareas Pendiente 0/2 (Horneado con Ale 5 a 7 oct, Embetunado 7 a 8 oct, Decorado con Fátima, Empacado sin empleado) y elemento "Pastel 10 pax" cantidad 1 (`recifWvlDYThKZsmG`) sin tareas. Estas pruebas se hacen con la v1.8.4. El borrado real ocurre unos 10 s después de confirmar, cuando termina el aviso "Elemento eliminado"; espera ese tiempo antes de revisar Airtable.
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| 58 | [3413] Rosaura Avila | Abre "Pastel 5 pax" > icono de basura y mira la confirmación. Pulsa "Cancelar". | La confirmación mantiene el título "¿Eliminar elemento?" y su texto ya no dice que la acción no se puede deshacer; dice "Se eliminarán también sus tareas de producción." Al cancelar no se borra nada. | Pendiente (v1.8.4) |
+| 56 | [3413] Rosaura Avila | Repite la prueba 56 de v1.8.3: borra "Pastel 5 pax" y deja pasar el aviso. Mientras el aviso está visible mira la sección "Producción" del pop-up del pedido y, en otra pestaña, Producción > "Todos", semana 5-11 oct. | Desaparecen al instante la tabla "Pastel 5 pax" y sus tareas, y no aparece ningún grupo "Sin elemento". Pasados ~10 s, en Airtable el elemento y sus 4 tareas ya no existen. | Pendiente de retest en v1.8.4 |
 | 57 | [3413] Rosaura Avila | Abre "Pastel 10 pax" (sin tareas) > icono de basura > confirma "¿Eliminar elemento?" y deja pasar el aviso. | El detalle se cierra y la fila desaparece de Elementos. Pasados ~10 s, en Airtable el elemento no existe. No se borra ninguna otra tarea del pedido. | Pendiente (v1.8.3) |
 
 # Sets cerrados

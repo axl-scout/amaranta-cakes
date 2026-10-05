@@ -64,3 +64,5 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Desplegables dentro de tablas y pop-ups (p. ej. Empleado en la última fila del detalle del elemento): no deben cortarse al fondo de la ventana; abren hacia arriba o se desplazan para verse completos. Va al prompt de corrección v1.8.2.
 - Eliminar un elemento debe eliminar también sus tareas de producción (decidido por Axel tras la prueba 49: hoy quedan huérfanas). Va al prompt de corrección v1.8.3.
 - Antes de pegar un prompt en Canvas, reemplazar el marcador [PEGAR AQUÍ: No tocar y contratos C1-C3] con el texto de contracts-and-no-tocar.md; en la v1.8.2 se pegó sin reemplazar.
+- Confirmación "¿Eliminar elemento?": su texto debe decir que también se eliminan sus tareas de producción (ya no "Esta acción no se puede deshacer."), porque existe el aviso "Deshacer". Texto propuesto: "Se eliminarán también sus tareas de producción." Va al prompt de corrección v1.8.4.
+- Cuando Axel pregunte por el marcador [PEGAR AQUÍ…], entregar el prompt con el texto de No tocar y contratos ya insertado.
