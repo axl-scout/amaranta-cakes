@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pendientes solo las pruebas que escriben datos en [3413], la 48 (retest en v1.8.2) y la 49. Las demás están cerradas (39, 40, 47, 48, 50 y 52 hechas) (54 omitida) y al final del archivo. Revisión por código de la v1.8.1: auto-refresco y dependencias restaurados. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: todas las pruebas de los Prompts 2 (v1.5.0 a v1.8.4) están cerradas. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -22,7 +22,6 @@ Datos de arranque (autorizados por Axel; las 4 tareas huérfanas de la prueba 56
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
-| 57 | [3413] Rosaura Avila | Abre "Pastel 10 pax" (sin tareas) > icono de basura > confirma "¿Eliminar elemento?" y deja pasar el aviso. | El detalle se cierra y la fila desaparece de Elementos. Pasados ~10 s, en Airtable el elemento no existe. No se borra ninguna otra tarea del pedido. | Pendiente (v1.8.3) |
 
 # Sets cerrados
 
@@ -33,6 +32,7 @@ Datos de arranque (autorizados por Axel; las 4 tareas huérfanas de la prueba 56
 | 58 | [3413] Rosaura Avila | Abre "Pastel 5 pax" > icono de basura y mira la confirmación. Pulsa "Cancelar". | La confirmación mantiene el título "¿Eliminar elemento?" y su texto ya no dice que la acción no se puede deshacer; dice "Se eliminarán también sus tareas de producción." Al cancelar no se borra nada. | OK (la confirmación muestra "¿Eliminar elemento?" y "Se eliminarán también sus tareas de producción."; Cancelar no se probó en esta ronda, ya estaba OK en la prueba 46) |
 | 56 | [3413] Rosaura Avila | Repite la prueba 56 de v1.8.3: borra "Pastel 5 pax" y deja pasar el aviso. Mientras el aviso está visible mira la sección "Producción" del pop-up del pedido y, en otra pestaña, Producción > "Todos", semana 5-11 oct. | Desaparecen al instante la tabla "Pastel 5 pax" y sus tareas, y no aparece ningún grupo "Sin elemento". Pasados ~10 s, en Airtable el elemento y sus 4 tareas ya no existen. | OK en v1.8.4 (con el aviso visible el pop-up del pedido ya no muestra el grupo "Sin elemento" y desaparece la tabla de Pastel 5 pax; verificado en Airtable: el elemento y sus 4 tareas ya no existen, [3413] con 4 elementos y 0 tareas). En v1.8.3 había fallado. |
 | 55 | [3413] Rosaura Avila | Repetida en v1.8.4: borra "Pastel 5 pax" y pulsa "Deshacer" antes de que termine el aviso. | Vuelve el elemento con sus 4 tareas y los mismos valores. | OK en v1.8.4 (Horneado Ale 5-7 oct, Embetunado 7-8 oct, Decorado Fátima, Empacado, todas 0/2) |
+| 57 | [3413] Rosaura Avila | Abre "Pastel 10 pax" (sin tareas) > icono de basura > confirma "¿Eliminar elemento?" y deja pasar el aviso. | El detalle se cierra y la fila desaparece de Elementos. Pasados ~10 s, en Airtable el elemento no existe. No se borra ninguna otra tarea del pedido. | OK en v1.8.4 (verificado en Airtable: "Pastel 10 pax" ya no existe y [3413] quedó con 3 elementos y 0 tareas; sin captura de pantalla) |
 
 
 ## v1.8.3 — [3413] Rosaura Avila (resultados)
@@ -168,4 +168,8 @@ Auditoría del export v1.8.3: `lib/airtable-hooks.tsx` y `package.json` sin camb
 
 Estado de datos tras la prueba 56: el elemento "Pastel 5 pax" se borró, pero sus 4 tareas siguen en Airtable sin elemento (`recdKe2FFoO3CO6ds`, `reczAlwft0TIUWxnU`, `rec1MCaG0ABqQkI5P`, `recbJBeg9pJYdE7to`). "Pastel 10 pax" (`recifWvlDYThKZsmG`) sigue para la prueba 57.
 
-Estado de datos tras la prueba 56 en v1.8.4: borrado "Pastel 5 pax" y sus 4 tareas; "Pastel 10 pax" (`recifWvlDYThKZsmG`) sigue para la prueba 57. Falta recibir el export v1.8.4 para comparar `lib/airtable-hooks.tsx` y `package.json`.
+Estado de datos tras la prueba 56 en v1.8.4: borrado "Pastel 5 pax" y sus 4 tareas; "Pastel 10 pax" (`recifWvlDYThKZsmG`) sigue para la prueba 57. 
+
+Auditoría del export v1.8.4: `lib/airtable-hooks.tsx` y `package.json` sin cambios respecto a v1.8.3. Cambios: nuevo `produccion/airtableDirect.ts` (lee la tabla de tareas y borra registros directo por el proxy de Airtable con las mismas cabeceras del hook, y confirma cada borrado), `deleteElemento.ts` (lee las tareas en ese momento, las borra, vuelve a leer y solo entonces borra el elemento), `useProduccionData.ts` (oculta las tareas del elemento en todas las vistas mientras dura el aviso), `PedidoTareasSection.tsx` (el grupo "Sin elemento" solo muestra tareas sin elemento real) y `ElementoDetalle.tsx` (texto nuevo de la confirmación). Observación: `airtableDirect.ts` llama al proxy sin pasar por `airtable-hooks.tsx`; depende de los exports BASE_ID y PROJECT_ID de ese archivo.
+
+Estado final de datos verificado en Airtable: [3413] Rosaura Avila con 3 elementos (Pastel 50 pax, Cupcakes, Galletas) y 0 tareas.
