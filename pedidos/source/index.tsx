@@ -181,27 +181,21 @@ function PedidosApp(): React.ReactElement {
       });
   }, [pedidoRecords, pedidosTable, calendarDate, selectedEstatus, hiddenPedidoIds]);
 
-  // Tablero por etapas (Todos / Día + Tablero): mismos pedidos, filtros y búsqueda; Entregado solo aparece al buscar.
+  // Tablero por etapas (Todos / Día + Tablero): mismos pedidos y filtro de estatus; el buscador no filtra y los Entregados nunca aparecen.
   const pedidosTablero = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
     const selStr = formatDateForComparison(calendarDate);
     const out: { id: string; pid: string; fecha: string | null; estatus: string }[] = [];
     for (const r of pedidoRecords) {
       if (hiddenPedidoIds.has(r.id)) continue;
       const estatus = readSelect(cv(r, pedidosTable, FIELD_IDS.ESTATUS));
+      if (estatus === 'Entregado') continue;
       const fecha = (cv(r, pedidosTable, FIELD_IDS.FECHA_ENTREGA) as string | null) || null;
       if (selectedEstatus.length > 0 && !selectedEstatus.includes(estatus)) continue;
       if (view === 'dia' && (!fecha || formatDateForComparison(new Date(fecha)) !== selStr)) continue;
-      const pid = cvs(r, pedidosTable, FIELD_IDS.PEDIDO_ID);
-      if (q) {
-        const hit = [pid, cvs(r, pedidosTable, FIELD_IDS.NUMERO_NOTA), cvs(r, pedidosTable, FIELD_IDS.CLIENTE), cvs(r, pedidosTable, FIELD_IDS.NUMERO_TELEFONO)]
-          .some((x) => x.toLowerCase().includes(q));
-        if (!hit) continue;
-      } else if (estatus === 'Entregado') continue;
-      out.push({ id: r.id, pid, fecha, estatus });
+      out.push({ id: r.id, pid: cvs(r, pedidosTable, FIELD_IDS.PEDIDO_ID), fecha, estatus });
     }
     return out;
-  }, [pedidoRecords, pedidosTable, calendarDate, selectedEstatus, hiddenPedidoIds, searchQuery, view]);
+  }, [pedidoRecords, pedidosTable, calendarDate, selectedEstatus, hiddenPedidoIds, view]);
 
   const filteredPedidosCalendar = useMemo(() => {
     return pedidoRecords.filter((r) => {
@@ -398,7 +392,7 @@ function PedidosApp(): React.ReactElement {
         </button>
       </PageToolbar>
       <div className="flex-1 min-h-0 mx-auto w-[90%] flex flex-col overflow-hidden pt-4">
-      {dataLoading ? <div className="px-3 sm:px-5 lg:px-7 pb-6 flex-1 min-h-0 flex flex-col"><PedidosContentSkeleton /></div> : dataError ? (
+      {dataLoading && !(view === 'todos' || (view === 'dia' && diaForma === 'tablero')) ? <div className="px-3 sm:px-5 lg:px-7 pb-6 flex-1 min-h-0 flex flex-col"><PedidosContentSkeleton /></div> : dataError ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
             <h2 className="text-lg font-semibold text-gray-800 mb-2 dark:text-[#F5F3EF]">No se pudo cargar</h2>

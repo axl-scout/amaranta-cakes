@@ -1,12 +1,18 @@
 # Audit report — Prompt 4/4 (Todos view, stage board and period selector)
 
-Status: PARTIAL (v1.10.0). Code meets the plan except the Entregado search rule, the column/chip consistency (C3) and the 4-column loading skeleton; nothing was verified on screen yet (smoke tests 1 to 15 open).
+Status: PARTIAL (v1.11.0; v1.10.0 audited first below). All correction items pass by code and the selector passes on screen; the board update after "Sí" (item 4) still needs test 22, and the Canvas reply with its cause is missing.
+
+Previous status: PARTIAL (v1.10.0). Code meets the plan except the Entregado search rule, the column/chip consistency (C3) and the 4-column loading skeleton; nothing was verified on screen yet (smoke tests 1 to 15 open).
 
 ## Pending items
 
-Send Canvas the correction prompt and the separate mobile-menu prompt, then send the new export for audit.
-Smoke test 13 failed and four decisions changed the scope, so one correction round covers everything.
-Test 13 (screenshot 17 and a second one minutes later); decisions below; the correction and menu prompts are in the chat message of this audit.
+Confirm the two smoke tests that write data on v1.11.0: test 22 in [3210] Alondra S Dávila (complete Horneado, then Embetunado of Pastel 20 pax; Claude deletes the created tasks) and test 23 in [4161] Efrain Dl Angel (delete its only element and press "Deshacer").
+They are the only way to verify that the board moves a card after "Sí" (the v1.10.0 failure) and that deleting the last element removes its cards.
+recY1WRFAEYXZhe50 (Pastel 20 pax recscT1PSK1PEkfU1, Cupcakes recdPnErWZjQiJTmP); recpD5i15hQsj0PSl (Pastel 10 pax rec1exvwATKbn7zup); tareas_produccion has 14 records.
+
+Send the Canvas reply of the v1.11.0 round (its report, points 1 to 4), which is not in the transcript.
+The transcript ends at the prompt, so the cause Canvas found for the board not updating (point 4) is unknown and the export count it announced cannot be compared.
+conversation-transcript_39.md ends at line 6251 with the user prompt; the ZIP and MANIFEST.json have 67 files.
 
 ## Decisions by Axel (this round)
 
@@ -69,8 +75,19 @@ OK by diff: tables, fields, select options, automations (11 tables, 2 automation
 - Canvas could not view the new screens (403 in its preview): nothing was seen rendered.
 - pedidos.estatus description (fldxy88bESBs57F9r) still says its color is used on cards (carried over).
 
+## v1.11.0 audit (correction round)
+
+- Export: diff -rq against v1.10.0 shows 7 changed files plus MANIFEST.json (README.md, components/PeriodSelect.tsx, components/SideMenu.tsx, index.tsx, lib/changelog.ts, produccion/semaforo.ts, produccion/useProduccionData.ts). No new files. lib/airtable-hooks.tsx, package.json, Calendar.tsx, TableroEtapas.tsx, PedidoDetailModal.tsx, ElementoDetalle.tsx, Producción and Finanzas pages are identical. MANIFEST.json lists 67 files and the ZIP has 67 (match). README of the ZIP equals the attached readme_5.md.
+- Correction items: 1 selector PASS (code; Axel confirmed on screen: works), 2 column from the same function PASS (semaforo.ts:77-87 returns columna from calcSemaforoElemento; columnaElemento removed; consistent with chip), 3 search only opens the list PASS (index.tsx:184-198 no text filter, Entregado always skipped at :191), 4 board update after "Sí" PARTIAL (no root cause reported; code removes the freeze caused by any element with productoPendiente, semaforo.ts:129-145, but the real cause is unconfirmed; needs test 22), 5 4-column skeleton PASS (index.tsx:395 skips the table skeleton in Todos and Día > Tablero; TableroEtapas shows its skeleton while loading), 6 last element deleted PASS (semaforo.ts:131-132, 145 and elementoOculto in useProduccionData.ts:45).
+- Mobile menu prompt: PASS by code. SideRail is hidden below sm (SideMenu.tsx:39); MobileMenu (SideMenu.tsx:77-125) renders a 40 px hamburger inside PageToolbar (SideMenu.tsx:133), so it shows on Pedidos, Producción and Finanzas; panel closes on choosing, outside tap and Escape; theme and download inside. Desktop unchanged.
+- Contracts: C1 OK, C2 OK, C3 OK (column, color and stage from calcSemaforoElemento), C4 OK, C5 OK, C6 OK (last value kept per element only while its product is pending, semaforo.ts:136-143).
+- Schema: read-only check 11 tables, 2 automations, tareas_produccion 14 records.
+- Observations: the expanded switch is 20 rem wide and anchors to the left below lg (PeriodSelect.tsx:41), so on a phone it may overflow the right edge (test 16); Producción and Finanzas toolbars also gained the hamburger on mobile (intended by the menu prompt); Canvas reply missing from the transcript; tsc not run.
+- Open: tests 16 to 24 in smoke-tests.md.
+
 ## Version history
 
+- v1.11.0 (2026-10-05): correction round plus mobile burger menu; audited by code (7 files changed, 67 files); selector confirmed on screen. Replaced pedidos/source, README and transcript in the repo.
 - v1.10.0 (2026-10-05): period selector, Todos board, Día Lista/Tablero. Audited by code; on-screen tests open. Replaced pedidos/source (67 files), README and transcript in the repo.
 
 ## Schema and automation changes

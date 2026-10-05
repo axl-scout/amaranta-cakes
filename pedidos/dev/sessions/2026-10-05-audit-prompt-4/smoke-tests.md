@@ -1,9 +1,9 @@
 # Smoke tests — Prompt 4/4 (vista Todos, tablero y selector de periodo)
 
-Export a probar: v1.10.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
+Export a probar: v1.11.0 (2026-10-05). Las pruebas cerradas abajo son de v1.10.0. Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Enviar a Canvas el prompt de corrección y el prompt aparte del menú móvil (están en el mensaje de la auditoría); al llegar v1.10.1 se repiten las pruebas 1, 13 y las de búsqueda.
+1. Confirmar las pruebas que escriben datos: 22 en [3210] Alondra S Dávila (completar Horneado y luego Embetunado del Pastel 20 pax; Claude borra las tareas creadas) y 23 en [4161] Efrain Dl Angel (eliminar su único elemento y pulsar "Deshacer"). Sin tu confirmación no se corren.
 
 Reglas
 - Filtro de estatus (junto al buscador): viene en "Pendiente". Para las pruebas de Entregado, ábrelo y marca "Entregado".
@@ -14,16 +14,48 @@ Reglas
 
 ## Pruebas por vista
 
-### Selector (sin record)
+### Selector de periodo
 | # | Área | Pasos | Resultado esperado | Pass/Fail |
 |---|---|---|---|---|
-| 1 | Selector, escritorio | Página Pedidos > selector de periodo. Pasa el cursor; elige "Semana"; vuelve a pasar el cursor; clic en el selector; con Tab enfoca el selector, ↓ ↑ Enter y Escape. | Muestra solo la opción elegida con flecha, misma altura que el buscador (40 px). Al pasar el cursor despliega Día, Semana, Mes, Todos y se cierra al elegir. Con teclado: ↓/↑ mueven, Enter elige, Escape cierra. Nota: si ya está abierto por el hover, el clic lo cierra. | FUNCIONA, pero Axel pide cambiar el diseño (ver Observaciones). |
+| 16 | Interruptor, celular | Celular (o emulación táctil) > Pedidos > vista "Día" (con el botón "Lista") > toca el interruptor > toca "Mes"; ábrelo y toca fuera. | Con un toque se expande y cabe en la pantalla sin recortarse a la derecha; al elegir o tocar fuera se contrae. | |
 
-## Observaciones de Axel (ronda 3 y 4)
-- Buscador: Axel decide que en todas las vistas (Todos incluida) solo abra la lista de coincidencias y no filtre la página. Se elimina la regla de mostrar Entregados en el tablero al buscar.
-- Menú lateral en celular: debe ser la hamburguesa; va en un prompt aparte.
-- El tablero debe reflejar el "Sí" de una etapa (prueba 13 falla).
-- Esqueleto de 4 columnas en la primera carga: Axel pide incluirlo en la corrección.
+### Buscador y tablero
+Record de la prueba 17: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026.
+
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 17 | Buscador solo lista | Escribe "3210" en el buscador en "Todos", en "Día" (8 oct), en "Semana" (5-11 oct) y en "Mes" (octubre). | En todas las vistas solo se abre la lista con [3210] Alondra S Dávila; la página no cambia (en Todos las 51 tarjetas de Horneado siguen igual, en Semana y Mes siguen todos los pedidos). | |
+
+Records de la prueba 18: este record es el que vas a utilizar para esta prueba: [4180] Elizabeth martinez (`recDcAiYcYQINykVw`), [4160] Alice (`rec2FnINtW50a2LFW`) y [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`); abre "Todos".
+
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 18 | Entregados nunca en el tablero | Selector > "Todos"; filtro "Pendiente" + "Entregado". Con Ctrl+F busca 4180, 4160 y 4148 en el tablero. Luego escribe "alice" en el buscador. | Ninguno aparece en el tablero. Al escribir "alice" la lista muestra [4160] Alice, pero el tablero no agrega ninguna tarjeta ni columna Entregado. | |
+| 19 | Esqueletos de 4 columnas | Selector > "Todos" y recarga la página; repite en "Día" con "Tablero". | Mientras carga se ven las 4 columnas con sus encabezados y barras de carga, no la tabla de Día. | |
+
+### Menú lateral
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 20 | Hamburguesa, celular | Celular > Pedidos, luego Producción y Finanzas > toca el botón de hamburguesa (arriba a la izquierda) > elige otra sección; ábrelo y toca fuera; ábrelo y pulsa Escape. | No hay columna lateral y el contenido usa todo el ancho. El botón mide lo mismo que los demás controles. El panel muestra Inicio/Pedidos/Producción/Finanzas con iconos, la sección activa marcada, tema y descarga; se cierra al elegir, tocar fuera o Escape. | |
+| 21 | Escritorio sin cambios | Escritorio > Pedidos, Producción y Finanzas > chevron del menú (colapsa y expande) y recarga. | No hay hamburguesa; el menú lateral es el de antes y recuerda si estaba expandido. | |
+
+### Escritura (corren solo tras tu confirmación, pendiente 1)
+Record de la prueba 22: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026. Escribe datos: crea tareas Terminado (Horneado y luego Embetunado) y Claude las borra al final.
+
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 22 | Tablero se actualiza al completar etapa | "Todos" visible. Abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí"; cierra los pop-ups sin recargar y mira el tablero; espera 30 s. Repite con "Embetunado". | Tras el primer "Sí" Pastel 20 pax pasa de inmediato a Embetunado / Glaseado con chip rojo "Horneado listo" y Cupcakes sigue en Horneado "No iniciado"; sigue ahí a los 30 s. Tras el segundo pasa a Decorado con chip naranja "Embetunado listo". Ninguna tarjeta queda vacía. | |
+
+Record de la prueba 23 (propuesto): este record es el que vas a utilizar para esta prueba: [4161] Efrain Dl Angel (`recpD5i15hQsj0PSl`), abre el 14 oct 2026. Escribe datos: elimina su único elemento y se deshace.
+
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 23 | Eliminar el último elemento | "Todos" visible con [4161] en Horneado. Abre [4161] > fila Pastel 10 pax > icono de basura > confirma; mira el tablero con el aviso visible; pulsa "Deshacer". | Con el aviso la tarjeta de [4161] desaparece del tablero; al deshacer vuelve con el mismo contenido. | |
+
+### Transversal
+| # | Área | Pasos | Resultado esperado | Pass/Fail |
+|---|---|---|---|---|
+| 24 | Sin escrituras | Claude, al terminar: lista `tareas_produccion` y esquema. | 14 tareas y esquema sin cambios (11 tablas, 2 automatizaciones). | |
 
 # Cerradas
 
@@ -37,6 +69,8 @@ Reglas
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| ~~1~~ | ~~Sin record (interruptor, escritorio)~~ | ~~Página Pedidos > interruptor de periodo (arriba a la derecha). Pasa el cursor; elige "Semana"; quita el cursor; clic en el interruptor; con Tab enfócalo, usa ← → (o ↑ ↓), Enter y Escape.~~ | ~~Contraído muestra solo la opción elegida dentro de un contenedor de 40 px de alto. Al pasar el cursor o hacer clic se expande con las 4 opciones (Día, Semana, Mes, Todos) y la elegida resaltada en rosa; al elegir una se contrae. Con teclado: flechas mueven, Enter elige, Escape cierra.~~ | ~~OK en v1.11.0 (Axel: todo funciona bien con el selector; capturas 18 y 19: expandido en Todos con las 4 opciones y la elegida en rosa, contraído en Semana mostrando solo "Semana")~~ |
+| ~~15~~ | ~~Claude, al final de v1.10.0~~ | ~~Listar `tareas_produccion` y esquema.~~ | ~~14 tareas, esquema sin cambios.~~ | ~~OK (2026-10-05: 14 tareas tras borrar `rechbrn8oPFAgZV9d`, 11 tablas y 2 automatizaciones sin cambios)~~ |
 | ~~13~~ | ~~[3210] Alondra S Dávila~~ | ~~[3210] (8 oct). **ESCRIBE.** Con "Todos" visible, abre [3210] > Pastel 20 pax > "Horneado" > "Sí" y regresa al tablero sin recargar.~~ | ~~[3210] aparece 2 veces: Pastel 20 pax en Embetunado / Glaseado ("Horneado listo") y Cupcakes en Horneado ("No iniciado"), sin recargar y sin vacíos.~~ | ~~FALLA en v1.10.0 (captura 17 y una segunda captura minutos después: las 2 tarjetas siguen en Horneado con "No iniciado"; Airtable sí tenía la tarea `rechbrn8oPFAgZV9d` ligada a Pastel 20 pax y a [3210], así que el tablero no refleja el cambio ni con el tiempo; va al prompt de corrección). Airtable: tarea `rechbrn8oPFAgZV9d` creada por Axel y borrada por Claude el 2026-10-05~~ |
 | ~~14~~ | ~~Sin record (refresco)~~ | ~~En "Todos" con tarjetas visibles, cambia de pestaña y regresa, y espera 30 s.~~ | ~~Las tarjetas y conteos no desaparecen ni parpadean a vacío.~~ | ~~OK (Axel: ok)~~ |
 | ~~12~~ | ~~[3210] Alondra S Dávila y [3413] Rosaura Avila~~ | ~~Selector > "Semana" (semana del 5 oct) y "Mes" (octubre), filtro Pendiente.~~ | ~~Tarjetas con nombre de etapa y fondo suave, igual que en v1.9.2; flechas y selector de fecha funcionan.~~ | ~~OK (capturas 14 y 15: Semana 5-11 oct y Mes octubre, filtro Pendiente, tarjetas con "No iniciado" como en v1.9.2; flechas y selector de fecha funcionan)~~ |

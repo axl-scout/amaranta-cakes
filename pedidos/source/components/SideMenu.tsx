@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { DownloadMenu } from './DownloadMenu';
 import { ThemeToggle, useThemeMode } from './ThemeToggle';
-import { ClipboardText as ClipboardIcon, Cookie as CookieIcon, Wallet as WalletIcon, House as HouseIcon, CaretLeft as CaretLeftIcon, CaretRight as CaretRightIcon } from '@phosphor-icons/react';
+import { List as ListIcon, ClipboardText as ClipboardIcon, Cookie as CookieIcon, Wallet as WalletIcon, House as HouseIcon, CaretLeft as CaretLeftIcon, CaretRight as CaretRightIcon } from '@phosphor-icons/react';
 
 /** Sections of the app (one page each). */
 const SECTIONS: Array<{ key: string; label: string; Icon: any; pages: Array<{ path: string; label: string }> }> = [
@@ -36,7 +36,7 @@ export function SideRail(): React.ReactElement | null {
 
   return (
     <nav aria-label="Navegación principal"
-      className={`relative z-40 h-screen flex-shrink-0 flex flex-col bg-white dark:bg-[#231B1D] border-r border-[#E9D9D9] dark:border-[#382C2E] transition-[width] duration-300 ease-out ${expanded ? 'w-56' : 'w-[3.75rem]'}`}>
+      className={`relative z-40 h-screen flex-shrink-0 hidden sm:flex flex-col bg-white dark:bg-[#231B1D] border-r border-[#E9D9D9] dark:border-[#382C2E] transition-[width] duration-300 ease-out ${expanded ? 'w-56' : 'w-[3.75rem]'}`}>
       {/* Chevron and section icons share one column with the same spacing (centered on the toolbar height). */}
       <div className="flex-1 py-3 px-2.5 flex flex-col gap-2">
         <div>
@@ -74,6 +74,55 @@ export function SideRail(): React.ReactElement | null {
   );
 }
 
+/** Mobile menu: hamburger button (same height as the toolbar controls) that opens the sections as an overlay panel. */
+function MobileMenu(): React.ReactElement | null {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [themeMode, setThemeMode] = useThemeMode();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } };
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
+  }, [open]);
+  useEffect(() => { setOpen(false); }, [location.pathname]);
+  if (location.pathname === '/' || !SECTIONS.some((sec) => sec.pages.some((pg) => pg.path !== '/' && isOn(location.pathname, pg.path)))) return null;
+  const activeKey = SECTIONS.find((sec) => sec.pages.some((pg) => isOn(location.pathname, pg.path)))?.key;
+  const go = (path: string) => { setOpen(false); if (!isOn(location.pathname, path)) navigate({ pathname: path, search: location.search }); };
+  return (
+    <div className="sm:hidden order-first">
+      <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menú" aria-expanded={open} aria-haspopup="dialog"
+        className="h-10 w-10 flex-shrink-0 rounded-xl border border-gray-300 dark:border-[#2E352C] bg-white dark:bg-[#251D1F] text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600">
+        <ListIcon size={18} />
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-[200]">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-hidden />
+          <nav role="dialog" aria-label="Navegación principal" className="absolute left-0 top-0 h-full w-64 max-w-[80%] flex flex-col bg-white dark:bg-[#231B1D] border-r border-[#E9D9D9] dark:border-[#382C2E] shadow-xl">
+            <div className="flex-1 py-3 px-2.5 flex flex-col gap-2">
+              {SECTIONS.map(({ key, label, Icon, pages }) => {
+                const active = key === activeKey;
+                const tone = active ? 'bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10';
+                return (
+                  <button key={key} type="button" onClick={() => go(pages[0]!.path)} aria-current={active ? 'page' : undefined}
+                    className={`w-full h-10 px-2.5 flex items-center gap-3 rounded-xl text-base font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 ${tone}`}>
+                    <Icon size={19} weight={active ? 'fill' : 'regular'} className="flex-shrink-0" />{label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex-shrink-0 p-2.5 border-t border-[#E9D9D9] dark:border-[#382C2E] flex flex-row items-center gap-1">
+              <ThemeToggle mode={themeMode} onChange={setThemeMode} bare />
+              <DownloadMenu bare />
+            </div>
+          </nav>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * Page toolbar: the page's tools. Rendered right away (never waits for data),
  * with its own fill and a line separating it from the content.
@@ -81,6 +130,7 @@ export function SideRail(): React.ReactElement | null {
 export function PageToolbar({ children, className = '' }: { children?: React.ReactNode; className?: string }): React.ReactElement {
   return (
     <header className={`relative z-30 flex-shrink-0 bg-white dark:bg-[#231B1D] border-b border-[#E9D9D9] dark:border-[#382C2E] px-3 sm:px-5 py-3 flex items-center gap-2 sm:gap-3 flex-wrap ${className}`}>
+      <MobileMenu />
       {children}
     </header>
   );

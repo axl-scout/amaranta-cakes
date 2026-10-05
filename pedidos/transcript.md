@@ -6179,3 +6179,73 @@ La versión 1.10.0 está terminada y exportada. No pude ver la vista Todos ni el
 - Archivos nuevos incluidos: `components/PeriodSelect.tsx` y `components/TableroEtapas.tsx`.
 - Los archivos de datos y dependencias (`airtable-hooks.tsx` y `package.json`) no cambiaron, y la actualización cada 30 segundos sigue activa.
 - El README del ZIP es mínimo: solo el título y la referencia a `lib/changelog.ts`. A diferencia de los ZIP anteriores, no lo armé desde `lib/readme.ts`.
+
+---
+
+### User — Oct 5, 2026, 4:36 AM CST
+
+Canvas, ajusta la página Pedidos (v1.10.0). Solo lectura: no escribas en Airtable ni cambies tablas, campos, opciones o automatizaciones. No cambies nada fuera de lo que se pide aquí.
+
+1. Selector de periodo: reemplaza el dropdown por el interruptor de antes (el control deslizante con Día, Semana, Mes y Todos), con este cambio: normalmente se ve solo la opción elegida dentro de un contenedor; al pasar el cursor el contenedor se expande y muestra el interruptor completo con las 4 opciones; al elegir una se vuelve a contraer. En celular (sin cursor) se expande con un toque y se contrae al elegir o al tocar fuera. También se opera con teclado (Enter, flechas, Escape). Misma altura que el resto de la barra de herramientas, conserva la opción elegida entre sesiones y el valor por defecto sigue siendo Día. En Todos siguen ocultas las flechas de fecha, el selector de fecha y el botón "Hoy".
+2. Columna de cada tarjeta del tablero: calcúlala con la misma función del semáforo que da el color y la etapa (no con un segundo ciclo aparte, hoy columnaElemento). La columna es la etapa siguiente a la última completada (Estatus = Terminado): sin etapas completas va en Horneado; con Horneado completo, en Embetunado / Glaseado; con Embetunado o Glaseado completo, en Decorado; con Decorado completo, en Empacado; con Empacado completo y el pedido sin entregar, también en Empacado. Elimina la lógica duplicada.
+3. Buscador: en todas las vistas (Todos incluida) el buscador solo abre la lista de coincidencias; no filtra la página. Quita el filtrado del tablero por texto y quita la regla de mostrar pedidos Entregados en el tablero al buscar. Los pedidos Entregados nunca aparecen en el tablero. El filtro de estatus sigue funcionando como hoy.
+4. Actualización del tablero: al completar una etapa con "Sí" (en el detalle del elemento o del pedido), la tarjeta del tablero (en Todos y en Día > Tablero) debe pasar de inmediato a la columna que le corresponde, sin recargar, y quedar así tras la recarga de datos. Hoy no pasa: con Pastel 20 pax de [3210] se completó Horneado, la tarea quedó bien guardada en Airtable (Terminado, ligada al elemento y al pedido) y el tablero siguió mostrando el elemento en Horneado con "No iniciado" minutos después. Encuentra la causa (por ejemplo la caché del último valor del tablero o una recarga que no llega al tablero), corrígela y repórtala.
+5. Carga inicial: mientras se cargan los datos en la vista Todos y en Día > Tablero, muestra esqueletos de las 4 columnas con sus encabezados y no el esqueleto de la tabla de Día. Al refrescar, conserva lo ya mostrado.
+6. Si se elimina el último elemento de un pedido, sus tarjetas deben desaparecer del tablero (no conservar el último valor de un pedido sin elementos).
+
+Criterios de aceptación
+- El selector muestra solo la opción elegida y se expande con el cursor (o con un toque en celular) para mostrar las 4 opciones como interruptor.
+- Cada tarjeta está en la columna que corresponde a la misma etapa que muestra su chip y su color.
+- Escribir en el buscador solo abre la lista de coincidencias, en todas las vistas.
+- Tras completar una etapa, la tarjeta cambia de columna al instante y sigue ahí después de recargar los datos.
+- La primera carga de Todos muestra 4 columnas de esqueleto.
+
+Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable.
+- C3. El color y la etapa de cada tarjeta salen de la misma función del semáforo del Prompt 3; no los recalcules aparte.
+- C4. Una tarea está completa cuando su Estatus es Terminado.
+- C5. Los colores de las tarjetas salen del mapa único de colores del Prompt 3 (basado en los colores de opciones select de Airtable) y la etapa se muestra con el componente EtapaChip del Prompt 3; no escribas colores sueltos ni dupliques el componente.
+- C6. Un valor derivado (etapa, color, columna del tablero) se calcula solo en el frontend, sin campos de fórmula, rollup ni calculados en Airtable, y conserva su último valor mientras los datos se recargan; nunca se muestra vacío.
+
+No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- La página de Producción.
+- Las vistas Semana y Mes, el detalle del pedido y el detalle del elemento.
+- La búsqueda y los filtros existentes (la lista de coincidencias del buscador y el filtro de estatus).
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+Al terminar reporta, en este orden:
+1. Cada punto de este prompt como hecho o no hecho.
+2. Cada tabla, campo, opción de select o automatización que hayas creado o cambiado (se espera: ninguna).
+3. Lo que no pudiste hacer o lo que asumiste, incluida la causa del punto 4.
+4. Un export COMPLETO del proyecto, confirmando que MANIFEST.json lista todos los archivos importados (en especial los nuevos o movidos) y cuántos archivos son (el número debe coincidir con el del ZIP).
+
+Canvas, ajusta el menú lateral de la aplicación (componente SideRail). Solo lectura: no escribas en Airtable ni cambies tablas, campos, opciones o automatizaciones. No cambies nada fuera de lo que se pide aquí.
+
+1. En celular (pantallas pequeñas, sin cursor) el menú lateral no debe ocupar la columna izquierda. En su lugar, la barra superior de cada página donde hoy aparece el menú lateral muestra un botón de hamburguesa que abre el menú (Inicio, Pedidos, Producción, Finanzas, con los mismos iconos, nombres y orden) como panel que se superpone al contenido. El panel se cierra al elegir una sección, al tocar fuera o con Escape; la sección activa se ve marcada igual que hoy.
+2. En tablet y escritorio el menú lateral queda exactamente como está hoy (colapsado con chevron y expandido), incluido que recuerda si estaba expandido.
+3. El botón de hamburguesa tiene la misma altura que el resto de los controles de la barra y funciona en modo claro y oscuro.
+
+Criterios de aceptación
+- En celular no hay columna lateral y el contenido usa todo el ancho; el botón de hamburguesa abre y cierra el menú.
+- En escritorio nada cambia.
+
+No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Finanzas, cake toppers y recibos.
+- El contenido y la lógica de las páginas de Pedidos, Producción y Finanzas.
+- La búsqueda y los filtros existentes.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+Al terminar reporta, en este orden:
+1. Cada punto de este prompt como hecho o no hecho.
+2. Cada tabla, campo, opción de select o automatización que hayas creado o cambiado (se espera: ninguna).
+3. Lo que no pudiste hacer o lo que asumiste.
+4. Un export COMPLETO del proyecto, confirmando que MANIFEST.json lista todos los archivos importados (en especial los nuevos o movidos) y cuántos archivos son (el número debe coincidir con el del ZIP).

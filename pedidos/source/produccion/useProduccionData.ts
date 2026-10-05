@@ -42,6 +42,7 @@ export function setElementTasksHidden(elementoId: string, hidden: boolean) {
   if (hidden) hiddenEl.add(elementoId); else hiddenEl.delete(elementoId);
   window.dispatchEvent(new Event(OVERLAY_EVENT));
 }
+export function elementoOculto(elementoId: string) { return hiddenEl.has(elementoId); }
 export function setTaskOverlay(elementoId: string, tasks: Task[] | null) {
   if (tasks) overlay.set(elementoId, tasks); else overlay.delete(elementoId);
   window.dispatchEvent(new Event(OVERLAY_EVENT));

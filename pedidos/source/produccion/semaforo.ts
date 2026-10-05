@@ -1,6 +1,6 @@
 import { useMemo, createElement } from 'react';
 import { choiceStyle, useIsDark } from '../components/airtableColors';
-import { useProduccionData, type Elemento, type Task } from './useProduccionData';
+import { useProduccionData, elementoOculto, type Elemento, type Task } from './useProduccionData';
 import type { Etapa } from './constants';
 
 /**
@@ -44,7 +44,13 @@ export interface Semaforo {
   nivel: number;
   /** Nombre de la etapa/estado, p. ej. "Horneado listo", "Glaseado listo", "No iniciado", "Entregado". */
   etapa: string;
+  /** Columna del tablero: etapa siguiente a la última completada (0 Horneado, 1 Embetunado/Glaseado, 2 Decorado, 3 Empacado). */
+  columna: number;
 }
+
+/** Columnas del tablero por etapa. */
+export const COLUMNAS_TABLERO = ['Horneado', 'Embetunado / Glaseado', 'Decorado', 'Empacado'];
+const COLUMNA_ETAPA: Record<string, number> = { Horneado: 0, Embetunado: 1, Glaseado: 1, Decorado: 2, Empacado: 3 };
 
 function etiqueta(nivel: number, etapaNombre?: string): string {
   if (nivel === 2 && etapaNombre === 'Glaseado') return 'Glaseado listo';
@@ -68,13 +74,16 @@ export function EtapaChip({ nivel, etapa }: { nivel: number; etapa: string }) {
 /** Estado de un elemento: última etapa completa (Estatus = Terminado). Entregado si el pedido lo está. */
 export function calcSemaforoElemento(el: Pick<Elemento, 'etapas'>, tasksDelElemento: Task[], pedidoEntregado: boolean): Semaforo | null {
   if (!el.etapas.length) return null; // C1: solo Pastel, Plancha de cupcakes y Galletas
-  if (pedidoEntregado) return { nivel: 5, etapa: 'Entregado' };
-  let nivel = 0; let nombre: Etapa | undefined;
-  el.etapas.forEach((e) => {
+  if (pedidoEntregado) return { nivel: 5, etapa: 'Entregado', columna: 3 };
+  let nivel = 0; let nombre: Etapa | undefined; let ultima = -1;
+  el.etapas.forEach((e, i) => {
     const mine = tasksDelElemento.filter((t) => t.etapa === e);
-    if (mine.length > 0 && mine.every((t) => t.estatus === 'Terminado') && (NIVEL_ETAPA[e] ?? 0) >= nivel) { nivel = NIVEL_ETAPA[e] ?? 0; nombre = e; }
+    if (mine.length > 0 && mine.every((t) => t.estatus === 'Terminado') && (NIVEL_ETAPA[e] ?? 0) >= nivel) { nivel = NIVEL_ETAPA[e] ?? 0; nombre = e; ultima = i; }
   });
-  return { nivel, etapa: etiqueta(nivel, nombre) };
+  // Misma función que da color y etapa: la columna es la etapa siguiente a la última completada.
+  const siguiente = el.etapas[ultima + 1];
+  const columna = ultima < 0 ? 0 : siguiente ? (COLUMNA_ETAPA[siguiente] ?? 0) : 3;
+  return { nivel, etapa: etiqueta(nivel, nombre), columna };
 }
 
 /** Estado de un pedido: el del elemento más atrasado (menor avance). null si no tiene elementos con etapas. */
@@ -87,25 +96,12 @@ export function calcSemaforoPedido(elementos: Elemento[], tasksDe: (elementoId: 
   return best;
 }
 
-/** Columna del tablero por etapa: 0 Horneado, 1 Embetunado / Glaseado, 2 Decorado, 3 Empacado. */
-export const COLUMNAS_TABLERO = ['Horneado', 'Embetunado / Glaseado', 'Decorado', 'Empacado'];
-const COLUMNA_ETAPA: Record<string, number> = { Horneado: 0, Embetunado: 1, Glaseado: 1, Decorado: 2, Empacado: 3 };
-
 export interface TarjetaTablero { elemento: Elemento; nivel: number; etapa: string; columna: number }
-
-/** Etapa actual de un elemento = primera etapa no completa (C3); si todas están completas, la última (Empacado). */
-export function columnaElemento(el: Pick<Elemento, 'etapas'>, tasksDelElemento: Task[], pedidoEntregado: boolean): number {
-  if (pedidoEntregado) return 3;
-  for (const e of el.etapas) {
-    const mine = tasksDelElemento.filter((t) => t.etapa === e);
-    if (!(mine.length > 0 && mine.every((t) => t.estatus === 'Terminado'))) return COLUMNA_ETAPA[e] ?? 0;
-  }
-  return 3;
-}
 
 /** Último valor conocido por pedido: se conserva mientras se recargan los datos. */
 const ultimo = new Map<string, Semaforo & { elemento: Elemento }>();
 const ultimoTablero = new Map<string, TarjetaTablero[]>();
+const ultimoElemento = new Map<string, TarjetaTablero>();
 
 /** Hook compartido: se recalcula solo cuando cambian las tareas (incluye cambios instantáneos). */
 export function useSemaforo() {
@@ -130,16 +126,23 @@ export function useSemaforo() {
       },
       /** Tarjetas del tablero (una por elemento con etapas). Conserva el último valor mientras carga. */
       tarjetas: (pedidoId: string, estatus: string | null | undefined): TarjetaTablero[] => {
-        const els = porPedido.get(pedidoId);
-        if (incompleto(els)) return ultimoTablero.get(pedidoId) ?? [];
+        if (!listo) return ultimoTablero.get(pedidoId) ?? [];
+        // Pedido sin elementos (p. ej. se eliminó el último): no hay tarjetas ni valor conservado.
+        const els = (porPedido.get(pedidoId) ?? []).filter((e) => !elementoOculto(e.id));
         const ent = entregado(estatus);
         const out: TarjetaTablero[] = [];
-        for (const el of els!) {
-          const tk = porElemento.get(el.id) ?? [];
-          const sem = calcSemaforoElemento(el, tk, ent);
-          if (sem) out.push({ elemento: el, nivel: sem.nivel, etapa: sem.etapa, columna: columnaElemento(el, tk, ent) });
+        for (const el of els) {
+          const sem = el.productoPendiente ? null : calcSemaforoElemento(el, porElemento.get(el.id) ?? [], ent);
+          if (sem) {
+            const t = { elemento: el, nivel: sem.nivel, etapa: sem.etapa, columna: sem.columna };
+            ultimoElemento.set(el.id, t); out.push(t);
+          } else if (el.productoPendiente) {
+            // Solo ese elemento conserva su último valor; los demás se calculan con datos actuales.
+            const prev = ultimoElemento.get(el.id);
+            if (prev) out.push({ ...prev, elemento: el });
+          }
         }
-        ultimoTablero.set(pedidoId, out);
+        if (out.length) ultimoTablero.set(pedidoId, out); else ultimoTablero.delete(pedidoId);
         return out;
       },
       /** true mientras el semáforo del pedido todavía no puede calcularse (estado de carga neutro). */
