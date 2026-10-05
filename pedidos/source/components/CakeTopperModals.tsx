@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useEscClose } from '../lib/escStack';
 import { useDraft, clearDraft } from './useDraft';
 import { X as XIcon, Calendar as CalendarIcon, UploadSimple as UploadIcon } from '@phosphor-icons/react';
 import { useCreateRecord, useUpdateRecord, useUploadAttachment, type AirtableRecord, type Table } from '../lib/airtable-hooks';
@@ -45,11 +46,7 @@ export function CakeTopperDetailModal({ record, cakeTopperTable, onClose, onSave
     else setFechaDateDisplay(fechaDate ? formatFriendlyDate(formatDateForComparison(fechaDate)) : '');
   };
 
-  useEffect(() => {
-    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [onClose]);
+  useEscClose(onClose);
 
   return (
     <div className="fixed inset-0 z-[65] flex items-center justify-center p-5" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
@@ -149,11 +146,7 @@ export function NuevoCakeTopperModal({ pedidoRecordId, cakeTopperTable, onClose,
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [onClose]);
+  useEscClose(onClose);
 
   const handleFechaDateBlur = () => {
     if (!fechaDateDisplay.trim()) return;

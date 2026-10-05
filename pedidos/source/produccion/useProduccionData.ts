@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback, useRef, useEffect, useState } from 'react';
 import { etapasDeProducto, toKey } from './constants';
 import { useBase, useRecords, type AirtableRecord, type Table } from '../lib/airtable-hooks';
 import { FIELD_IDS, TABLE_IDS, cv, cvs, readSelect, readLinked } from '../utils';
@@ -26,6 +26,24 @@ export interface Elemento {
 export interface OrderStats { assigned: Record<Etapa, number>; done: Record<Etapa, number>; count: number }
 
 const zero = (): Record<Etapa, number> => ({ Horneado: 0, Embetunado: 0, Glaseado: 0, Decorado: 0, Empacado: 0 });
+
+const PROD_EVENT = 'prod-data-changed';
+/** Tells every mounted Producción data view to reload tasks and elements. */
+export function notifyProduccionChanged() { window.dispatchEvent(new Event(PROD_EVENT)); }
+
+/** Instant (optimistic) tasks per element, shared by every mounted view so tracker, table and order line change together. */
+const OVERLAY_EVENT = 'prod-overlay-changed';
+const overlay = new Map<string, Task[]>();
+/** Elements being deleted: their tasks are hidden everywhere (table, "Sin elemento", board) until the deletion ends or is undone. */
+const hiddenEl = new Set<string>();
+export function setElementTasksHidden(elementoId: string, hidden: boolean) {
+  if (hidden) hiddenEl.add(elementoId); else hiddenEl.delete(elementoId);
+  window.dispatchEvent(new Event(OVERLAY_EVENT));
+}
+export function setTaskOverlay(elementoId: string, tasks: Task[] | null) {
+  if (tasks) overlay.set(elementoId, tasks); else overlay.delete(elementoId);
+  window.dispatchEvent(new Event(OVERLAY_EVENT));
+}
 
 export function useProduccionData() {
   const { base, loading: baseLoading, error: baseError } = useBase();
@@ -143,7 +161,7 @@ export function useProduccionData() {
     return m;
   }, [pedidosR.records, elementosR.records, pedidosT, elementosT]);
 
-  const tasks: Task[] = useMemo(() => tareasR.records.map((r) => {
+  const baseTasks: Task[] = useMemo(() => tareasR.records.map((r) => {
     const ped = readLinked(cv(r, tareasT, TAREAS.PEDIDO))[0];
     return {
       id: r.id,
@@ -163,6 +181,18 @@ export function useProduccionData() {
       creada: r.createdTime ? toKey(new Date(r.createdTime)) : '',
     };
   }), [tareasR.records, tareasT, orders]);
+  const [ovVer, setOvVer] = useState(0);
+  useEffect(() => {
+    const h = () => setOvVer((v) => v + 1);
+    window.addEventListener(OVERLAY_EVENT, h);
+    return () => window.removeEventListener(OVERLAY_EVENT, h);
+  }, []);
+  const tasks: Task[] = useMemo(() => {
+    if (overlay.size === 0 && hiddenEl.size === 0) return baseTasks;
+    const kept = baseTasks.filter((t) => !t.elementoId || (!overlay.has(t.elementoId) && !hiddenEl.has(t.elementoId)));
+    const extra = Array.from(overlay.entries()).filter(([id]) => !hiddenEl.has(id)).flatMap(([, v]) => v);
+    return [...kept, ...extra];
+  }, [baseTasks, ovVer]); // eslint-disable-line
 
   /** Every element of every order, with the stages its product type goes through. */
   const elementos: Elemento[] = useMemo(() => elementosR.records.map((el) => {
@@ -212,14 +242,25 @@ export function useProduccionData() {
     return n;
   }, [activeEmps, hoursFor]);
 
-  const refetch = useCallback(() => { tareasR.refetch(); elementosR.refetch(); }, [tareasR.refetch, elementosR.refetch]);
+  const rawRefetch = useCallback(() => { tareasR.refetch(); elementosR.refetch(); }, [tareasR.refetch, elementosR.refetch]);
+  // Every refetch is broadcast so other mounted views (e.g. the order detail under the element detail) refresh too.
+  const refetch = useCallback(() => { rawRefetch(); notifyProduccionChanged(); }, [rawRefetch]);
+  const refetchAsync = useCallback(async () => {
+    notifyProduccionChanged();
+    await Promise.all([tareasR.refetch(), elementosR.refetch()]);
+    await new Promise((r) => setTimeout(r, 400)); // let other mounted views (order detail) finish loading too
+  }, [tareasR.refetch, elementosR.refetch]);
+  useEffect(() => {
+    window.addEventListener(PROD_EVENT, rawRefetch);
+    return () => window.removeEventListener(PROD_EVENT, rawRefetch);
+  }, [rawRefetch]);
   const refetchCap = useCallback(() => { capR.refetch(); }, [capR.refetch]);
   const refetchEmps = useCallback(() => { empR.refetch(); }, [empR.refetch]);
 
   return {
     loading, error, tareasT: tareasT as Table | null, capT: capT as Table | null, empT: empT as Table | null, allActiveEmps, refetchEmps,
     emps, activeEmps, empName, hoursFor, shiftFor, capacity, rateFor, teamRateFor, workDaysBetween,
-    orders, activeOrders, tasks, today, refetch, refetchCap, elementos, elementoById, pedidoInfo,
+    orders, activeOrders, tasks, today, refetch, refetchAsync, refetchCap, elementos, elementoById, pedidoInfo,
   };
 }
 

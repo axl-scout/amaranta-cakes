@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { CaretLeft as CaretLeftIcon, CaretRight as CaretRightIcon, CaretDown as CaretDownIcon } from '@phosphor-icons/react';
 import type { AirtableRecord, Table } from '../lib/airtable-hooks';
 import { useFloating } from './useFloating';
-import { estatusStyle, toneStyle, useIsDark } from './airtableColors';
+import { toneStyle, useIsDark } from './airtableColors';
+import { semaforoStyle, type SemaforoApi } from '../produccion/semaforo';
 import { FIELD_IDS, MONTHS_ES, MONTHS_ES_SHORT, DAYS_ES, getCalendarDays, formatDateForComparison, toTitleCase, cvs } from '../utils';
 
 const MONTH_MAX = 3;
@@ -106,7 +107,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, onClose, align = 'lef
   );
 }
 
-export function CalendarioView({ filteredPedidos, calendarDate, period, onRecordClick, getFechaField, getEstatusField, pedidosTable, elementosTable, elementoRecords, isSemana }: {
+export function CalendarioView({ filteredPedidos, calendarDate, period, onRecordClick, getFechaField, getEstatusField, pedidosTable, elementosTable, elementoRecords, isSemana, semaforo }: {
   filteredPedidos: AirtableRecord[];
   calendarDate: Date;
   period: 'mes' | 'semana';
@@ -117,6 +118,7 @@ export function CalendarioView({ filteredPedidos, calendarDate, period, onRecord
   elementosTable: Table | null;
   elementoRecords: AirtableRecord[];
   isSemana: boolean;
+  semaforo: SemaforoApi;
 }): React.ReactElement {
   const dark = useIsDark();
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -165,7 +167,8 @@ export function CalendarioView({ filteredPedidos, calendarDate, period, onRecord
     const elementosLinkField = pedidosTable.getFieldIfExists(FIELD_IDS.ELEMENTOS);
     const pid = pidField ? r.getCellValueAsString(pidField) : 'Sin ID';
     const estatus = getEstatusField(r);
-    const style = estatusStyle(estatus, dark) ?? { backgroundColor: dark ? '#2E2F30' : '#E5E9F0', color: dark ? '#C4C7CD' : '#1D1F25' };
+    const sem = semaforo.pedido(r.id, estatus);
+    const style = (sem ? semaforoStyle(sem.nivel, 'suave', dark) : null) ?? { backgroundColor: dark ? '#2E2F30' : '#E5E9F0', color: dark ? '#C4C7CD' : '#1D1F25' };
 
     if (month) {
       return (
@@ -173,6 +176,7 @@ export function CalendarioView({ filteredPedidos, calendarDate, period, onRecord
           className={'w-full flex items-center gap-1 min-w-0 text-left px-1.5 py-0.5 rounded font-semibold hover:opacity-80 transition-opacity font-sans text-xs ' + (shadow ? 'shadow-md' : '')}
           style={style}>
           <span className="truncate">{toTitleCase(pid)}</span>
+          {sem && <span className="truncate font-normal opacity-85 hidden sm:inline">· {sem.etapa}</span>}
         </button>
       );
     }
@@ -192,6 +196,7 @@ export function CalendarioView({ filteredPedidos, calendarDate, period, onRecord
         <div className="truncate">{toTitleCase(pid)}</div>
         {/* Always render the second line so every week card has the same height */}
         <div className="truncate opacity-85 font-normal">{primerElemento || '—'}</div>
+        <div className="truncate opacity-85 font-normal">{sem ? sem.etapa : '\u00a0'}</div>
       </button>
     );
   }

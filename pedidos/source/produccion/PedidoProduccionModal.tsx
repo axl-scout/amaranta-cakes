@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { useEscClose } from '../lib/escStack';
 import { Plus as PlusIcon, Check as CheckIcon, Warning as WarningIcon, CaretRight as CaretRightIcon } from '@phosphor-icons/react';
 import { ETAPAS, ETAPA_STYLE, type Etapa, fmtInt, parseKey, toKey } from './constants';
 import type { Order, OrderStats, Task } from './useProduccionData';
@@ -19,11 +20,7 @@ export function PedidoProduccionModal({ order, tasks, stats, risk, empName, toda
   openModal: (m: TaskModalMode) => void;
   onClose: () => void;
 }): React.ReactElement {
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, [onClose]);
+  useEscClose(onClose);
 
   const s = statOf(stats, order.id);
   const mine = useMemo(() => tasks.filter((t) => t.pedidoId === order.id), [tasks, order.id]);

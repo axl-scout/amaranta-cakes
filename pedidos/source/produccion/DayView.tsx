@@ -1,4 +1,6 @@
+import { useUrlParam } from '../lib/useUrlParam';
 import React, { useMemo, useState, useEffect } from 'react';
+import { useEscClose } from '../lib/escStack';
 import {
   Plus as PlusIcon, Check as CheckIcon, Warning as WarningIcon, CheckCircle as CheckCircleIcon,
   CaretRight as CaretRightIcon,
@@ -77,7 +79,7 @@ export function DayView(p: DayViewProps): React.ReactElement {
   const { day, tasks, emps, orders, stats, risks } = p;
   const dayKey = toKey(day);
   const dayTasks = useMemo(() => tasks.filter((t) => t.fecha === dayKey), [tasks, dayKey]);
-  const [detail, setDetail] = useState<string | null>(null); // employee id, or 'none' for unassigned
+  const [detail, setDetail] = useUrlParam('empleado'); // employee id, or 'none' for unassigned
   const [showStale, setShowStale] = useState(false);
 
   const rows: Row[] = useMemo(() => {
@@ -268,11 +270,7 @@ function EmployeeDayModal({ emp, row, day, orders, risks, completing, onComplete
   emp: Emp | null; row: Row | null; day: Date; orders: Map<string, Order>; risks: Map<string, OrderRisk>;
   completing: Set<string>; onComplete: (t: Task) => void; openModal: (m: TaskModalMode) => void; onClose: () => void;
 }): React.ReactElement {
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, [onClose]);
+  useEscClose(onClose);
   const list = row?.list ?? [];
   const asg = list.reduce((s, t) => s + t.asignada, 0);
   const done = list.reduce((s, t) => s + Math.min(t.completada, t.asignada), 0);

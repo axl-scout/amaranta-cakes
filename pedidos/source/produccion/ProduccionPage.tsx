@@ -11,12 +11,14 @@ import {
   ETAPAS, ETAPA_STYLE, type Etapa, toKey, parseKey, mondayOf, addDays, fmtInt, startOfDay,
 } from './constants';
 import { TaskModal, type TaskModalMode } from './TaskModal';
+import { useUrlParam } from '../lib/useUrlParam';
 import { DayView } from './DayView';
 import { PedidoProduccionModal } from './PedidoProduccionModal';
 import { computeRisks, RiskPill, type Risk } from './risk';
 import { TAREAS } from './constants';
 import { MiniCalendar } from '../components/Calendar';
 import { toneStyle, useIsDark } from '../components/airtableColors';
+import { PedidoSearch } from '../components/PedidoSearch';
 import { ProduccionContentSkeleton } from '../components/Skeletons';
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -77,9 +79,15 @@ export function ProduccionPage(): React.ReactElement {
   const [completing, setCompleting] = useState<Set<string>>(new Set());
   const [etapaFilter, setEtapaFilter] = usePersisted<string[]>('prod-etapas', []);
   const [empFilter, setEmpFilter] = usePersisted<string[]>('prod-empleados', []);
-  const [modal, setModal] = useState<TaskModalMode | null>(null);
-  const [pedidoDetail, setPedidoDetail] = useState<string | null>(null);
-  const [empQuery, setEmpQuery] = useState('');
+  const [newModal, setNewModal] = useState<TaskModalMode | null>(null);
+  const [taskId, setTaskId] = useUrlParam('task');
+  const [pedidoDetail, setPedidoDetail] = useUrlParam('pedido');
+  const editTask = taskId ? D.tasks.find((t) => t.id === taskId) ?? null : null;
+  const modal: TaskModalMode | null = editTask ? { kind: 'edit', task: editTask } : newModal;
+  const setModal = (m: TaskModalMode | null) => {
+    if (m && m.kind === 'edit') { setNewModal(null); setTaskId(m.task.id); }
+    else { setNewModal(m); if (editTask) setTaskId(null); }
+  };
 
   // Soft delete with 10s undo
   const [pending, setPending] = useState<Array<{ key: string; id: string }>>([]);
@@ -168,13 +176,13 @@ export function ProduccionPage(): React.ReactElement {
     if (tipo !== 'todos') { const big = orderOf(t)?.big ?? false; if (tipo === 'grandes' ? !big : big) return false; }
     return true;
   };
-  const q = empQuery.trim().toLowerCase();
-  const matchEmp = (id: string | null) => !q || (!!id && (D.empName.get(id) ?? '').toLowerCase().includes(q));
-  const viewTasks = q ? tasks.filter((t) => matchEmp(t.empleadoId)) : tasks;
-  const viewEmps = q ? D.activeEmps.filter((e) => e.name.toLowerCase().includes(q)) : D.activeEmps;
+  const empIdsSel = new Set(D.activeEmps.filter((e) => empFilter.includes(e.name)).map((e) => e.id));
+  const filterEmp = empFilter.length > 0;
+  const viewTasks = filterEmp ? tasks.filter((t) => !!t.empleadoId && empIdsSel.has(t.empleadoId)) : tasks;
+  const viewEmps = filterEmp ? D.activeEmps.filter((e) => empFilter.includes(e.name)) : D.activeEmps;
   const boardTasks = viewTasks.filter((t) => weekKeys.has(t.fecha) && passes(t));
   const empNames = D.activeEmps.map((e) => e.name);
-  const rows = viewEmps.filter((e) => empFilter.length === 0 || empFilter.includes(e.name));
+  const rows = viewEmps;
   const unassignedInWeek = boardTasks.filter((t) => !t.empleadoId);
 
   const modalOrders = useMemo(() => {
@@ -235,15 +243,11 @@ export function ProduccionPage(): React.ReactElement {
                 className="h-10 px-3 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-[#251D1F] dark:border-[#2E352C] dark:text-gray-300">Hoy</button>
             )}
           </div>
+          <PedidoSearch items={Array.from(D.orders.values())} onSelect={setPedidoDetail} />
+          <FilterDropdown label="" values={empFilter} options={empNames} onChange={setEmpFilter} allLabel="Todo el equipo" />
           {!isDay && <>
             <FilterDropdown label="" values={etapaFilter} options={ETAPAS} onChange={setEtapaFilter} allLabel="Todas las etapas" />
-            <FilterDropdown label="" values={empFilter} options={empNames} onChange={setEmpFilter} allLabel="Todo el equipo" />
           </>}
-          <div className="relative">
-            <MagnifyingGlassIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <input type="search" value={empQuery} onChange={(e: any) => setEmpQuery(e.target.value)} placeholder="Buscar empleado…" aria-label="Buscar tareas por empleado"
-              className="h-10 w-44 sm:w-52 pl-9 pr-3 rounded-xl border border-gray-300 bg-white text-sm text-gray-800 outline-none focus:border-rose-600 focus:ring-1 focus:ring-rose-200 dark:bg-[#251D1F] dark:border-[#2E352C] dark:text-gray-100" />
-          </div>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <SelectDropdown value={vista} options={VISTAS.map((x) => ({ value: x.v, label: x.label }))} ariaLabel="Vista"
               onChange={(v) => { setVista(v); setShowPicker(false); }} />

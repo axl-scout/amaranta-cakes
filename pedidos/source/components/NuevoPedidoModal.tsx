@@ -1,4 +1,5 @@
 import { EstatusDot } from './Pills';
+import { useEscClose } from '../lib/escStack';
 import { toneStyle, estatusStyle, useIsDark } from './airtableColors';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Calendar as CalendarIcon, CaretDown as CaretDownIcon, Plus as PlusIcon } from '@phosphor-icons/react';
@@ -89,12 +90,7 @@ export function NuevoPedidoModal({ pedidosTable, onClose }: { pedidosTable: Tabl
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
   }, []);
-  useEffect(() => {
-    if (draftModal || elModal) return; // the sub-form handles Escape while open
-    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [onClose, draftModal, elModal]);
+  useEscClose(onClose);
 
   const handleCalClose = useCallback(() => { preventReopenCalRef.current = true; setShowCal(false); requestAnimationFrame(() => { preventReopenCalRef.current = false; }); }, []);
   const handleCalClienteClose = useCallback(() => { preventReopenCalClienteRef.current = true; setShowCalCliente(false); requestAnimationFrame(() => { preventReopenCalClienteRef.current = false; }); }, []);

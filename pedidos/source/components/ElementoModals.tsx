@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEscClose } from '../lib/escStack';
 import { Trash as TrashIcon } from '@phosphor-icons/react';
 import { useDraft, clearDraft } from './useDraft';
 import { useCreateRecord, useUpdateRecord, type AirtableRecord, type Table } from '../lib/airtable-hooks';
 import { FIELD_IDS, formatCurrency, esProductoConRellenoYPan, readLinked, cv, cvs } from '../utils';
 import { CatalogDropdown, type CatalogOption } from './Dropdowns';
-import { DateField } from './DateField';
-import { useProduccionData } from '../produccion/useProduccionData';
+import { DateRangeScope, RangeTrigger } from './DateRange';
+import { ETAPA_STYLE } from '../produccion/constants';
+import { prevEnd, cascade, type SeqItem } from '../produccion/seqDates';
+import { useProduccionData, notifyProduccionChanged } from '../produccion/useProduccionData';
 import { EmpleadoSelect } from '../produccion/EmpleadoSelect';
 import { TAREAS, etapasDeProducto, toKey, type Etapa } from '../produccion/constants';
 
@@ -68,11 +71,7 @@ export function NuevoElementoModal({ pedidoRecordId, elementosTable, catalogoPro
   const [showPanDropdown, setShowPanDropdown] = useState(false);
   const [showRellenoDropdown, setShowRellenoDropdown] = useState(false);
 
-  useEffect(() => {
-    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [onClose]);
+  useEscClose(onClose);
 
   const showPastelFields = esProductoConRellenoYPan(selectedNombre);
   const costoTotalPreview = useMemo(() => (parseFloat(neCantidad) || 0) * (parseFloat(neCostoUnit) || 0), [neCantidad, neCostoUnit]);
@@ -85,16 +84,27 @@ export function NuevoElementoModal({ pedidoRecordId, elementosTable, catalogoPro
   const qty = parseFloat(neCantidad) || 0;
   const rowOf = (e: string): TRow => taskRows[e] ?? { emp: '', ini: '', fin: '' };
   const setRow = (e: string, patch: Partial<TRow>) => setTaskRows((r) => ({ ...r, [e]: { ...rowOf(e), ...patch } }));
-  const inB = (k: string) => k >= minKey && (!maxKey || k <= maxKey);
+  const itemsOf = (rows: Record<string, TRow>): SeqItem[] => etapas.map((e) => ({ id: e, etapa: e, ini: (rows[e] ?? { ini: '' }).ini ?? '', fin: (rows[e] ?? { fin: '' }).fin ?? '' }));
+  /** Earliest start for a stage: today (or later) and the end of the previous stage that has dates. */
+  const minFor = (e: string) => { const p = prevEnd(itemsOf(taskRows), etapas, e, maxKey); return p && p > minKey ? p : minKey; };
+  const inB = (e: string, k: string) => k >= minFor(e) && (!maxKey || k <= maxKey);
+  /** Applies a change to one stage and pushes the later stages' dates forward so they stay consistent. */
+  const apply = (e: string, patch: Partial<TRow>) => setTaskRows((rows) => {
+    const next = { ...rows, [e]: { ...(rows[e] ?? { emp: '', ini: '', fin: '' }), ...patch } };
+    const fixed = cascade(itemsOf(next), etapas, e, maxKey);
+    fixed.forEach((i) => { if (i.id !== e && next[i.id]) next[i.id] = { ...next[i.id]!, ini: i.ini, fin: i.fin }; });
+    return next;
+  });
   const onIni = (e: string, d: string) => {
-    if (!inB(d)) return;
+    if (!inB(e, d)) return;
     const r = rowOf(e);
-    setRow(e, { ini: d, fin: r.fin && r.fin < d ? d : r.fin });
+    apply(e, { ini: d, fin: r.fin && r.fin < d ? d : r.fin });
   };
   const onFin = (e: string, d: string) => {
-    if (!inB(d)) return;
+    if (maxKey && d > maxKey) return;
     const r = rowOf(e);
-    setRow(e, { fin: d, ini: r.ini && r.ini > d ? d : r.ini });
+    if (r.ini ? d < r.ini && !inB(e, d) : !inB(e, d)) return;
+    apply(e, { fin: d, ini: r.ini && r.ini > d ? d : r.ini });
   };
   const tituloOf = (e: string) => `${pInfo?.label ?? ''} · ${e} · ${qty}`;
 
@@ -143,7 +153,7 @@ export function NuevoElementoModal({ pedidoRecordId, elementosTable, catalogoPro
           } catch (err) { console.error('Error al crear tarea:', err); failed = true; break; }
         }
       }
-      onSaved();
+      onSaved(); notifyProduccionChanged();
       if (failed) { setWarning('El elemento se creó, pero no se pudieron crear todas las tareas. Puedes crearlas después desde el detalle del elemento.'); return; }
       onClose();
     } catch (err) { console.error('Error al guardar elemento:', err); }
@@ -156,7 +166,7 @@ export function NuevoElementoModal({ pedidoRecordId, elementosTable, catalogoPro
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-5" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       onClick={(e: any) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={`bg-white rounded-2xl w-full ${etapas.length > 0 ? 'max-w-[860px]' : 'max-w-[580px]'} max-h-[92vh] overflow-y-auto shadow-2xl p-5 dark:bg-[#251D1F]`} onClick={(e: any) => e.stopPropagation()}>
+      <div className={`bg-white rounded-2xl w-full ${etapas.length > 0 ? 'max-w-[760px]' : 'max-w-[580px]'} max-h-[92vh] overflow-y-auto shadow-2xl p-5 dark:bg-[#251D1F]`} onClick={(e: any) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <span className="font-bold text-lg text-gray-900 dark:text-[#F5F3EF]">{draft ? 'Editar Elemento' : 'Agregar Elemento'}</span>
           {onRemove && (
@@ -212,23 +222,24 @@ export function NuevoElementoModal({ pedidoRecordId, elementosTable, catalogoPro
         {etapas.length > 0 && (
           <div className="mb-4">
             <span className={lCls}>Tareas de producción</span>
-            <div className="rounded-xl border border-[#E5E1DA] overflow-x-auto dark:border-[#382C2E]">
-              <table className="w-full min-w-[760px]">
-                <thead className="bg-gray-50 border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
-                  <tr>{['Etapa', 'Título', 'Cant.', 'Empleado', 'Inicio', 'Fin', 'Estatus'].map((h) => <th key={h} className="px-2 py-2 text-xs font-semibold text-gray-700 text-left dark:text-gray-300">{h}</th>)}</tr>
+            <div className="rounded-xl border border-[#E5E1DA] dark:border-[#382C2E]">
+              <table className="w-full table-fixed">
+                <thead className="bg-gray-50 border-b border-gray-200 rounded-t-xl dark:bg-white/5 dark:border-white/10">
+                  <tr>{['Etapa', 'Empleado', 'Inicio', 'Fin'].map((h) => <th key={h} className="px-2 py-2 text-xs font-semibold text-gray-700 text-left dark:text-gray-300">{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {etapas.map((e) => {
                     const r = rowOf(e);
+                    const inp = 'w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm bg-[#F7F2F2] dark:bg-[#1B1517] dark:border-[#382C2E] dark:text-gray-100';
                     return (
                       <tr key={e} className="border-b border-gray-100 last:border-b-0 dark:border-white/5">
-                        <td className="px-2 py-1.5 text-sm font-medium text-gray-800 whitespace-nowrap dark:text-gray-200">{e}</td>
-                        <td className="px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 max-w-[190px]"><span className="line-clamp-2">{tituloOf(e)}<br />Manual · Pedido vinculado</span></td>
-                        <td className="px-2 py-1.5 text-sm text-gray-600 tabular-nums dark:text-gray-400">{qty}<span className="block text-xs text-gray-400">Completada 0</span></td>
-                        <td className="px-2 py-1.5 w-[170px]"><EmpleadoSelect value={r.emp} emps={PD.activeEmps} onChange={(id) => setRow(e, { emp: id })} ariaLabel={`Empleado de ${e}`} /></td>
-                        <td className="px-2 py-1.5 w-[150px]"><DateField value={r.ini} onChange={(d) => onIni(e, d)} min={minKey} max={maxKey || undefined} ariaLabel={`Inicio de ${e}`} placeholder="Inicio" className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm bg-[#F7F2F2] dark:bg-[#1B1517] dark:border-[#382C2E] dark:text-gray-100" /></td>
-                        <td className="px-2 py-1.5 w-[150px]"><DateField value={r.fin} onChange={(d) => onFin(e, d)} min={minKey} max={maxKey || undefined} ariaLabel={`Fin de ${e}`} placeholder="Fin" className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm bg-[#F7F2F2] dark:bg-[#1B1517] dark:border-[#382C2E] dark:text-gray-100" /></td>
-                        <td className="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">Pendiente</td>
+                        <DateRangeScope start={r.ini} end={r.fin} min={minFor(e)} max={maxKey || undefined} onStart={(d) => onIni(e, d)} onEnd={(d) => onFin(e, d)}
+                          onClear={(w) => setRow(e, w === 'start' ? { ini: '' } : { fin: '' })}>
+                          <td className="px-2 py-1.5 w-[22%]"><span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${ETAPA_STYLE[e].chip}`}>{e}</span></td>
+                          <td className="px-2 py-1.5 w-[28%]"><EmpleadoSelect value={r.emp} emps={PD.activeEmps} onChange={(id) => setRow(e, { emp: id })} ariaLabel={`Empleado de ${e}`} /></td>
+                          <td className="px-2 py-1.5 w-[25%]"><RangeTrigger which="start" ariaLabel={`Inicio de ${e}`} placeholder="Inicio" className={inp} /></td>
+                          <td className="px-2 py-1.5 w-[25%]"><RangeTrigger which="end" ariaLabel={`Fin de ${e}`} placeholder="Fin" className={inp} /></td>
+                        </DateRangeScope>
                       </tr>
                     );
                   })}
@@ -243,124 +254,6 @@ export function NuevoElementoModal({ pedidoRecordId, elementosTable, catalogoPro
             className="px-5 py-2 rounded-md bg-gray-900 text-white text-base font-medium hover:bg-gray-700 transition-colors disabled:opacity-60 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
             {onDraft ? (draft ? 'Guardar' : 'Agregar') : saving ? 'Creando...' : warning ? 'Reintentar tareas' : 'Crear'}
           </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function EditElementoModal({ record, elementosTable, catalogoProductos, catalogoPanes, catalogoRellenos, onClose, onSaved, onDelete }: ElementoModalCommon & { record: AirtableRecord; onDelete: (recordId: string) => void }): React.ReactElement {
-  const { mutate: updateRecord } = useUpdateRecord(elementosTable);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const handleDelete = () => { setShowDeleteConfirm(false); onDelete(record.id); onClose(); };
-
-  const initProductoId = readLinked(cv(record, elementosTable, FIELD_IDS.EL_PRODUCTO))[0]?.id ?? null;
-  const initNombre = cvs(record, elementosTable, FIELD_IDS.EL_NOMBRE);
-  const initPan = readLinked(cv(record, elementosTable, FIELD_IDS.EL_PAN))[0]?.name ?? '';
-  const initRelleno = readLinked(cv(record, elementosTable, FIELD_IDS.EL_RELLENO))[0]?.name ?? '';
-
-  const [, setSelectedProductoId] = useState<string | null>(initProductoId);
-  const [nombre, setNombre] = useState(initNombre);
-  const [pan, setPan] = useState(initPan);
-  const [relleno, setRelleno] = useState(initRelleno);
-  const [descrip, setDescrip] = useState(cvs(record, elementosTable, FIELD_IDS.EL_DESCRIPCION));
-  const cantidadRaw = cv(record, elementosTable, FIELD_IDS.EL_CANTIDAD) as number | null;
-  const costoUnitRaw = cv(record, elementosTable, FIELD_IDS.EL_COSTO_UNITARIO) as number | null;
-  const [cantidad, setCantidad] = useState(cantidadRaw !== null ? String(cantidadRaw) : '');
-  const [costoUnit, setCostoUnit] = useState(costoUnitRaw !== null ? String(costoUnitRaw) : '');
-  const [showNombreDropdown, setShowNombreDropdown] = useState(false);
-  const [showPanDropdown, setShowPanDropdown] = useState(false);
-  const [showRellenoDropdown, setShowRellenoDropdown] = useState(false);
-
-  const showPastelFields = esProductoConRellenoYPan(nombre);
-  const costoTotalRecord = cv(record, elementosTable, FIELD_IDS.EL_COSTO_TOTAL) as number | null;
-  const costoTotalPreview = useMemo(() => (parseFloat(cantidad) || 0) * (parseFloat(costoUnit) || 0), [cantidad, costoUnit]);
-  const costoTotalDisplay = costoTotalRecord !== null ? costoTotalRecord : costoTotalPreview;
-
-  useEffect(() => {
-    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [onClose]);
-
-  const save = useCallback((fieldId: string, value: unknown) => {
-    updateRecord({ recordId: record.id, fields: { [fieldId]: value } })
-      .then(() => onSaved())
-      .catch((err) => console.error('Error al guardar campo elemento:', err));
-  }, [updateRecord, record.id, onSaved]);
-
-  const lCls = 'text-sm text-gray-400 mb-2 block dark:text-gray-500';
-  const iCls = 'bg-[#F7F2F2] w-full border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-900 outline-none focus:border-rose-600 focus:ring-1 focus:ring-rose-200 transition-colors dark:bg-[#1B1517] dark:border-[#382C2E] dark:text-gray-100 dark:placeholder-gray-600';
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-5" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
-      onClick={(e: any) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-white rounded-2xl w-full max-w-[580px] shadow-2xl p-5 dark:bg-[#251D1F]" onClick={(e: any) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-5">
-          <span className="font-bold text-lg text-gray-900 dark:text-[#F5F3EF]">Editar Elemento</span>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button type="button" onClick={() => setShowDeleteConfirm(true)} aria-label="Eliminar elemento"
-              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors dark:text-gray-500 dark:hover:text-rose-600 dark:hover:bg-rose-600/10"><TrashIcon size={18} /></button>
-          </div>
-        </div>
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
-            onClick={(e: any) => { if (e.target === e.currentTarget) setShowDeleteConfirm(false); }}>
-            <div className="bg-white rounded-2xl w-full max-w-[360px] shadow-2xl p-5 dark:bg-[#251D1F]" onClick={(e: any) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-[#F5F3EF]">¿Eliminar elemento?</h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Esta acción no se puede deshacer.</p>
-              <div className="mt-5 flex justify-end gap-2">
-                <button type="button" onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-base font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:text-gray-200 dark:border-[#382C2E] dark:hover:bg-white/5">Cancelar</button>
-                <button type="button" onClick={handleDelete} className="px-4 py-2 text-base font-medium text-white rounded-lg bg-rose-600 hover:bg-rose-700 transition-colors">Confirmar</button>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="mb-4">
-          <div className={`grid gap-3 ${showPastelFields ? 'grid-cols-3' : 'grid-cols-1'}`}>
-            <CatalogDropdown label="Nombre" value={nombre} options={catalogoProductos} placeholder="Seleccionar producto..." required
-              error={nombre ? '' : 'Elige un producto; el elemento no puede quedar sin producto.'}
-              showOpen={showNombreDropdown} onToggle={() => setShowNombreDropdown((o) => !o)}
-              onSelect={(r) => { setSelectedProductoId(r.id); setNombre(r.name); setShowNombreDropdown(false); save(FIELD_IDS.EL_PRODUCTO, [r.id]); }}
-              onClear={() => { setNombre(''); setShowNombreDropdown(true); }} />
-            {showPastelFields && (
-              <CatalogDropdown label="Pan" value={pan} options={catalogoPanes} placeholder="Tipo de pan..."
-                showOpen={showPanDropdown} onToggle={() => setShowPanDropdown((o) => !o)}
-                onSelect={(r) => { setPan(r.name); setShowPanDropdown(false); save(FIELD_IDS.EL_PAN, [r.id]); }}
-                onClear={() => { setPan(''); save(FIELD_IDS.EL_PAN, []); }} />
-            )}
-            {showPastelFields && (
-              <CatalogDropdown label="Relleno" value={relleno} options={catalogoRellenos} placeholder="Tipo de relleno..."
-                showOpen={showRellenoDropdown} onToggle={() => setShowRellenoDropdown((o) => !o)}
-                onSelect={(r) => { setRelleno(r.name); setShowRellenoDropdown(false); save(FIELD_IDS.EL_RELLENO, [r.id]); }}
-                onClear={() => { setRelleno(''); save(FIELD_IDS.EL_RELLENO, []); }} />
-            )}
-          </div>
-        </div>
-        <div className="mb-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <span className={lCls}>Cantidad</span>
-              <input type="number" min="0" value={cantidad} onChange={(e: any) => setCantidad(e.target.value)} onBlur={() => save(FIELD_IDS.EL_CANTIDAD, parseFloat(cantidad) || null)} placeholder="0"
-                className={`${iCls} [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`} style={{ MozAppearance: 'textfield' } as any} />
-            </div>
-            <div>
-              <span className={lCls}><span className="sm:hidden">Costo U.</span><span className="hidden sm:inline">Costo unitario</span></span>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-gray-400 pointer-events-none dark:text-gray-600">$</span>
-                <input type="number" min="0" step="0.01" value={costoUnit} onChange={(e: any) => setCostoUnit(e.target.value)} onBlur={() => save(FIELD_IDS.EL_COSTO_UNITARIO, parseFloat(costoUnit) || null)} placeholder="0.00"
-                  className={`${iCls} pl-7 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`} style={{ MozAppearance: 'textfield' } as any} />
-              </div>
-            </div>
-            <div>
-              <span className={lCls}>Total</span>
-              <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-base font-semibold tabular-nums bg-gray-50 dark:bg-white/5 dark:border-[#382C2E] dark:text-gray-300 text-gray-700">{formatCurrency(costoTotalDisplay)}</div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <span className={lCls}>Descripción</span>
-          <textarea value={descrip} onChange={(e: any) => setDescrip(e.target.value)} onBlur={() => save(FIELD_IDS.EL_DESCRIPCION, descrip.trim() || null)} placeholder="Descripción del elemento..." rows={8} className={`${iCls} resize-none`} />
         </div>
       </div>
     </div>

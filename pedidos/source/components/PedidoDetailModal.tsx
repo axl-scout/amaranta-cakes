@@ -1,15 +1,18 @@
+import { useUrlParam } from '../lib/useUrlParam';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEscClose } from '../lib/escStack';
 import { Calendar as CalendarIcon, Plus as PlusIcon, Trash as TrashIcon, DownloadSimple as DownloadIcon } from '@phosphor-icons/react';
 import { useUpdateRecord, type AirtableRecord, type Table } from '../lib/airtable-hooks';
 import { FIELD_IDS, formatCurrency, formatFriendlyDate, formatDateForComparison, parseTypedDate, toTitleCase, readSelect, readLinked, buildDateTime, cv, cvs } from '../utils';
 import { ReceiptDocument, type ReceiptData, type ReceiptVariant } from './ReceiptDocument';
 import { ContactoPill, EstatusPill, EstatusDot } from './Pills';
 import { toneStyle, useIsDark } from './airtableColors';
+import { useSemaforo, semaforoStyle } from '../produccion/semaforo';
 import { PagosSection } from '../finanzas/PagosSection';
 import { MiniCalendar } from './Calendar';
 import { CustomTimePicker } from './TimePicker';
 import { type CatalogOption } from './Dropdowns';
-import { NuevoElementoModal, EditElementoModal } from './ElementoModals';
+import { NuevoElementoModal } from './ElementoModals';
 import { ElementoDetalle } from '../produccion/ElementoDetalle';
 import { PedidoTareasSection } from '../produccion/PedidoTareasSection';
 import { CakeTopperDetailModal, NuevoCakeTopperModal } from './CakeTopperModals';
@@ -75,6 +78,7 @@ export function PedidoDetailModal({
   const [estatus, setEstatus] = useState(readSelect(cv(record, pedidosTable, FIELD_IDS.ESTATUS)));
   const [showEstatusDropdown, setShowEstatusDropdown] = useState(false);
   const estatusRef = useRef<any>(null);
+  const semaforo = useSemaforo();
 
   const [impreso, setImpreso] = useState(Boolean(cv(record, pedidosTable, FIELD_IDS.IMPRESO)));
 
@@ -84,8 +88,7 @@ export function PedidoDetailModal({
     return linkedElementos.map((link) => elementoRecords.find((r) => r.id === link.id)).filter((r): r is AirtableRecord => r !== undefined && !hiddenElementoIds.has(r.id));
   }, [linkedElementos, elementoRecords, hiddenElementoIds]);
 
-  const [editElementoRecord, setEditElementoRecord] = useState<AirtableRecord | null>(null);
-  const [detailElementoId, setDetailElementoId] = useState<string | null>(null);
+  const [detailElementoId, setDetailElementoId] = useUrlParam('elemento');
 
   const linkedCakeToppers = readLinked(cv(record, pedidosTable, FIELD_IDS.CAKE_TOPPER));
   const matchedCakeTopper = useMemo(() => {
@@ -97,11 +100,7 @@ export function PedidoDetailModal({
   const [showNuevoCakeTopper, setShowNuevoCakeTopper] = useState(false);
   const [showNuevoElemento, setShowNuevoElemento] = useState(false);
 
-  useEffect(() => {
-    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector('[role="dialog"]')) onClose(); }; // nested pop-ups close first
-    document.addEventListener('keydown', handle);
-    return () => document.removeEventListener('keydown', handle);
-  }, [onClose]);
+  useEscClose(onClose);
 
   useEffect(() => {
     const handle = (e: MouseEvent) => { if (estatusRef.current && !estatusRef.current.contains(e.target as Node)) setShowEstatusDropdown(false); };
@@ -326,17 +325,17 @@ export function PedidoDetailModal({
           <div className="mb-5">
             <span className={labelClasses}>Elementos</span>
             <div className="w-full rounded-xl border border-[#E5E1DA] overflow-x-auto dark:border-[#382C2E] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <table className="w-full min-w-[480px]">
+              <table className="w-full min-w-[560px]">
                 <thead className="bg-gray-50 border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
                   <tr>
-                    {['Nombre', 'Descripción', 'Cantidad', 'Costo Unit.', 'Total'].map((h) => (
+                    {['Nombre', 'Etapa', 'Descripción', 'Cantidad', 'Costo Unit.', 'Total'].map((h) => (
                       <th key={h} className="px-3 py-2 text-sm font-semibold text-gray-700 text-left dark:text-gray-300">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {matchedElementos.length === 0
-                    ? <tr><td colSpan={5} className="px-3 py-3 text-sm text-gray-400 text-center dark:text-gray-600">Sin elementos.</td></tr>
+                    ? <tr><td colSpan={6} className="px-3 py-3 text-sm text-gray-400 text-center dark:text-gray-600">Sin elementos.</td></tr>
                     : matchedElementos.map((el) => {
                         const elNombre = cvs(el, elementosTable, FIELD_IDS.EL_NOMBRE);
                         const descripcion = cvs(el, elementosTable, FIELD_IDS.EL_DESCRIPCION);
@@ -347,6 +346,10 @@ export function PedidoDetailModal({
                           <tr key={el.id} onClick={() => setDetailElementoId(el.id)}
                             className="border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-rose-50 transition-colors dark:border-white/5 dark:hover:bg-white/5" title="Clic para ver detalle">
                             <td className="px-3 py-2 text-base text-gray-700 dark:text-gray-300">{elNombre}</td>
+                            <td className="px-3 py-2 text-base text-gray-700 whitespace-nowrap dark:text-gray-300">{(() => {
+                              const sem = semaforo.elemento(el.id, estatus);
+                              return sem ? <span className="inline-flex items-center gap-2"><span aria-hidden className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: semaforoStyle(sem.nivel, 'fuerte', isDarkMode).backgroundColor }} />{sem.etapa}</span> : <span className="text-gray-300 dark:text-gray-700">—</span>;
+                            })()}</td>
                             <td className="px-3 py-2 text-base text-gray-700 max-w-[160px] dark:text-gray-300"><span className="line-clamp-2">{descripcion || '—'}</span></td>
                             <td className="px-3 py-2 text-base text-gray-700 tabular-nums dark:text-gray-300">{cantidad ?? '—'}</td>
                             <td className="px-3 py-2 text-base text-gray-700 tabular-nums dark:text-gray-300">{costoUnit !== null ? formatCurrency(costoUnit) : '—'}</td>
@@ -370,7 +373,7 @@ export function PedidoDetailModal({
           <hr className="mb-5 border-0 border-t border-[#E9D9D9] dark:border-[#382C2E]" />
           <div className="mb-5">
             <span className={labelClasses}>Producción</span>
-            <PedidoTareasSection pedidoId={record.id} pedidoLabel={toTitleCase(pedidoId)} />
+            <PedidoTareasSection pedidoId={record.id} pedidoLabel={toTitleCase(pedidoId)} elementIds={matchedElementos.map((x) => x.id)} />
           </div>
         </div>
         <button type="button" onClick={() => setShowDeleteConfirm(true)} aria-label="Eliminar pedido"
@@ -408,17 +411,16 @@ export function PedidoDetailModal({
           catalogoProductos={catalogoProductos} catalogoPanes={catalogoPanes} catalogoRellenos={catalogoRellenos}
           onClose={() => setShowNuevoElemento(false)} onSaved={onDataChange} />
       )}
-      {detailElementoId && (
-        <ElementoDetalle elementoId={detailElementoId} reloadToken={matchedElementos}
-          onClose={() => setDetailElementoId(null)}
-          onEdit={() => { const r = matchedElementos.find((x) => x.id === detailElementoId); if (r) setEditElementoRecord(r); }} />
-      )}
-      {editElementoRecord && elementosTable && (
-        <EditElementoModal record={editElementoRecord} elementosTable={elementosTable}
-          catalogoProductos={catalogoProductos} catalogoPanes={catalogoPanes} catalogoRellenos={catalogoRellenos}
-          onDelete={(id) => onDeleteElemento(id)}
-          onClose={() => setEditElementoRecord(null)} onSaved={onDataChange} />
-      )}
+      {detailElementoId && elementosTable && (() => {
+        const rec = matchedElementos.find((x) => x.id === detailElementoId);
+        return rec ? (
+          <ElementoDetalle record={rec} elementosTable={elementosTable} reloadToken={matchedElementos}
+            catalogoProductos={catalogoProductos} catalogoPanes={catalogoPanes} catalogoRellenos={catalogoRellenos}
+            onSaved={onDataChange}
+            onClose={() => setDetailElementoId(null)}
+            onDelete={(id) => { setDetailElementoId(null); onDeleteElemento(id); }} />
+        ) : null;
+      })()}
     </div>
   );
 }

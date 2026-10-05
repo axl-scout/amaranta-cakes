@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useEscClose } from '../lib/escStack';
 import { Trash as TrashIcon, Scissors as ScissorsIcon } from '@phosphor-icons/react';
 import { useCreateRecord, useUpdateRecord, type Table } from '../lib/airtable-hooks';
 import { TAREAS, ETAPAS, ESTATUS_TAREA, type Etapa, fmtInt, toKey } from './constants';
 import type { Emp, Order, OrderStats, Task } from './useProduccionData';
 import { DateField } from '../components/DateField';
+import { DateRangeScope, RangeTrigger, PAST_DUE_MSG } from '../components/DateRange';
 import { InfoTip } from '../components/InfoTip';
 import { FieldSelect } from '../components/Dropdowns';
 import { taskPace, PacePill } from './pace';
+import { prevEnd, cascade, type SeqItem } from './seqDates';
 import { useDraft, clearDraft } from '../components/useDraft';
 
 export type TaskModalMode =
@@ -29,12 +32,14 @@ function autoStatus(estatus: string, asignada: number, completada: number): stri
   return estatus;
 }
 
-export function TaskModal({ mode, orders, emps, rateFor, tareasT, stats, lockPedido = false, etapas, dueKeyFor, onClose, onSaved, onDelete }: {
+export function TaskModal({ mode, orders, emps, rateFor, tareasT, stats, lockPedido = false, etapas, siblings, dueKeyFor, onClose, onSaved, onDelete }: {
   mode: TaskModalMode;
   /** Hide the order picker (the task is being added from that order's own page). */
   lockPedido?: boolean;
   /** Stages offered in the picker (defaults to the cookie stages). */
   etapas?: Etapa[];
+  /** Other tasks of the same element (edit mode): dates stay sequential between stages. */
+  siblings?: Task[];
   /** Production delivery day (YYYY-MM-DD) of an order: tasks can't start or end after it. */
   dueKeyFor?: (pedidoId: string) => string;
   /** Per-order progress, to suggest the next stage when a previous one is already complete. */
@@ -87,11 +92,7 @@ export function TaskModal({ mode, orders, emps, rateFor, tareasT, stats, lockPed
   // Last persisted numbers, to revert invalid edits on blur.
   const saved = useRef({ asignada: t?.asignada ?? 0, completada: t?.completada ?? 0, notas: t?.notas ?? '' });
 
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, [onClose]);
+  useEscClose(onClose);
 
   const order = orders.find((o) => o.id === pedidoId) ?? null;
   const pace = t ? taskPace({ fecha, fechaFin, asignada: parseInt(asignada, 10) || 0, completada: parseInt(completada, 10) || 0, estatus }, new Date()) : null;
@@ -101,12 +102,30 @@ export function TaskModal({ mode, orders, emps, rateFor, tareasT, stats, lockPed
 
   // Date bounds: start can't be before the task was created (today for a new one) nor after the order's production delivery.
   const maxKey = (order && dueKeyFor ? dueKeyFor(order.id) : '') || (order?.due ? toKey(order.due) : '');
-  const minKey = t ? (t.creada || '') : toKey(new Date());
+  const baseMin = t ? (t.creada || '') : toKey(new Date());
+  const seqItems: SeqItem[] = (t && t.elementoId && siblings ? siblings.filter((x) => x.id !== t.id && x.elementoId === t.elementoId) : [])
+    .map((x) => ({ id: x.id, etapa: x.etapa, ini: x.fecha, fin: x.fechaFin }));
+  const seqMin = t && seqItems.length && t.etapa ? prevEnd(seqItems, ETAPAS_OPC, t.etapa, maxKey) : '';
+  const minKey = seqMin && seqMin > baseMin ? seqMin : baseMin;
   const inBounds = (d: string) => (!minKey || d >= minKey) && (!maxKey || d <= maxKey);
 
   const titleFor = (pid: string, et: Etapa | '', qty: number) => `${orders.find((o) => o.id === pid)?.label ?? t?.pedidoName ?? 'Pedido'} · ${et} · ${qty}`;
 
   // ── Edit mode: every change is saved immediately (optimistic) ──
+  // Dates of an edited task + sequential adjustment of the later stages of the same element.
+  const persistDates = async (ini: string, fin: string) => {
+    if (!t) return;
+    setSaveState('saving');
+    try {
+      const mine: SeqItem = { id: t.id, etapa: t.etapa, ini, fin };
+      const before = [...seqItems, mine];
+      const after = t.etapa && seqItems.length ? cascade(before, ETAPAS_OPC, t.etapa, maxKey) : before;
+      const writes = after.filter((a, i) => a.id !== t.id && (a.ini !== before[i]!.ini || a.fin !== before[i]!.fin))
+        .map((a) => update({ recordId: a.id, fields: { [TAREAS.FECHA]: a.ini, [TAREAS.FECHA_FIN]: a.fin || a.ini } }));
+      await Promise.all([update({ recordId: t.id, fields: { [TAREAS.FECHA]: ini || null, [TAREAS.FECHA_FIN]: fin || null } }), ...writes]);
+      setSaveState('saved'); onSaved();
+    } catch (e) { console.error(e); setSaveState('error'); }
+  };
   const persist = async (fields: Record<string, unknown>) => {
     if (!t) return;
     setSaveState('saving');
@@ -133,13 +152,19 @@ export function TaskModal({ mode, orders, emps, rateFor, tareasT, stats, lockPed
     setFecha(d);
     const fin = !fechaFin || fechaFin < d ? d : fechaFin;
     setFechaFin(fin);
-    if (t) persist({ [TAREAS.FECHA]: d, [TAREAS.FECHA_FIN]: fin });
+    if (t) persistDates(d, fin);
   };
   const onFechaFin = (d: string) => {
     if (!d || (maxKey && d > maxKey)) return;
-    const ini = fecha && d < fecha ? d : fecha;
+    const ini = fecha && d < fecha ? (inBounds(d) ? d : fecha) : fecha;
+    if (d < ini) return;
     setFechaFin(d); setFecha(ini);
-    if (t) persist({ [TAREAS.FECHA_FIN]: d, ...(ini !== fecha ? { [TAREAS.FECHA]: ini } : {}) });
+    if (t) persistDates(ini, d);
+  };
+  const clearFecha = (w: 'start' | 'end') => {
+    if (w === 'start') { setFecha(''); return; }
+    setFechaFin('');
+    if (t) persist({ [TAREAS.FECHA_FIN]: null });
   };
   const onEstatus = (s: string) => { setEstatus(s); if (t) persist({ [TAREAS.ESTATUS]: s }); };
 
@@ -190,7 +215,7 @@ export function TaskModal({ mode, orders, emps, rateFor, tareasT, stats, lockPed
     if (!etapa) { setError('Elige la etapa.'); return; }
     if (asig <= 0) { setError('Las galletas asignadas deben ser más de 0.'); return; }
     if (!fecha) { setError('Elige la fecha de inicio.'); return; }
-    if (!inBounds(fecha)) { setError(maxKey && fecha > maxKey ? 'La fecha de inicio no puede ser después de la entrega de producción.' : 'La fecha de inicio no puede ser anterior a hoy.'); return; }
+    if (!inBounds(fecha)) { setError(minKey && maxKey && maxKey < minKey ? PAST_DUE_MSG : maxKey && fecha > maxKey ? 'La fecha de inicio no puede ser después de la entrega de producción.' : 'La fecha de inicio no puede ser anterior a hoy.'); return; }
     if (fechaFin && maxKey && fechaFin > maxKey) { setError('La fecha de fin no puede ser después de la entrega de producción.'); return; }
     if (draft) {
       if (K) clearDraft(K);
@@ -276,22 +301,25 @@ export function TaskModal({ mode, orders, emps, rateFor, tareasT, stats, lockPed
                     options={(t?.etapa && !ETAPAS_OPC.includes(t.etapa as Etapa) ? [t.etapa as Etapa, ...ETAPAS_OPC] : ETAPAS_OPC).map((e) => ({ value: e, label: e }))} />
                 </div>
               </div>
+              <DateRangeScope start={fecha} end={fechaFin} min={minKey || undefined} max={maxKey || undefined} onStart={onFecha} onEnd={onFechaFin}
+                onClear={clearFecha} canClear={(w) => w === 'end' || !t}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className={lblRow}>
                     <label className="text-sm text-gray-500 dark:text-gray-400" htmlFor="tm-fecha">Fecha de inicio</label>
                     <InfoTip text="Día en que debe empezar. La tarea aparece ese día en Producción." />
                   </div>
-                  <DateField id="tm-fecha" value={fecha} onChange={onFecha} className={inp} min={minKey} max={maxKey || undefined} />
+                  <RangeTrigger which="start" id="tm-fecha" format="long" placeholder="Elegir día" className={inp} />
                 </div>
                 <div>
                   <div className={lblRow}>
                     <label className="text-sm text-gray-500 dark:text-gray-400" htmlFor="tm-fecha-fin">Fecha de fin</label>
                     <InfoTip text="Día en que se espera terminarla. Con esto se calcula si va a tiempo, retrasada o adelantada." />
                   </div>
-                  <DateField id="tm-fecha-fin" value={fechaFin} onChange={onFechaFin} className={inp} min={minKey} max={maxKey || undefined} />
+                  <RangeTrigger which="end" id="tm-fecha-fin" format="long" placeholder="Elegir día" className={inp} />
                 </div>
               </div>
+              </DateRangeScope>
               {t && pace && pace.detail && (
                 <p className="text-sm text-gray-500 dark:text-gray-400">{pace.detail}</p>
               )}

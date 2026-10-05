@@ -5139,3 +5139,758 @@ Ya está el detalle del elemento y el componente de tareas. Validé y compilé l
 - Los datos de capacidad siguen guardados, solo están ocultos.
 
 Subí la versión a 1.5.0.
+
+---
+
+### User — Oct 4, 2026, 8:32 PM CST
+
+Cuando el buscador muestra solamente un resultado, el ancho de la fila debe ser igual que si mostrara varios.
+Habilita navegación con flechas
+
+*1 attachment*
+
+---
+
+### Assistant — Oct 4, 2026, 8:33 PM CST
+
+Los resultados del buscador de pedidos ahora tienen siempre el mismo ancho, ya sea que haya uno o varios. Corrí la validación y la compilación sin errores, pero no probé el buscador en pantalla.
+
+Con el cursor en el buscador puedes usar:
+- **Flecha abajo / flecha arriba:** mueves la fila resaltada. La lista da la vuelta al llegar al final o al principio.
+- **Enter:** abre el pedido resaltado.
+- **Escape:** cierra la lista.
+
+Pasar el mouse sobre una fila también la resalta, y la lista se desplaza para mantener visible la fila activa.
+
+Agregué la versión 1.5.1 al historial de cambios.
+
+---
+
+### User — Oct 4, 2026, 9:10 PM CST
+
+Implementa un search bar en producción para buscar los pedidos. Tiene que ser el mismo que utilizamos en pedidos. Y reemplaza el search bar de empleados para que mejor sea un drop down que sea un filtro mejor.
+
+---
+
+### Assistant — Oct 4, 2026, 9:11 PM CST
+
+Producción ahora tiene el buscador de pedidos y un filtro de empleados desplegable. Validé y compilé sin errores, pero no lo vi funcionando en pantalla.
+
+- **Buscador de pedidos:** tiene el mismo aspecto que el de Pedidos. Los resultados tienen ancho constante, se navegan con flechas, Enter y Escape, y al elegir uno se abre el detalle de producción de ese pedido. En Producción busca por nombre del pedido, cliente y fecha de entrega. No busca por teléfono ni número de nota, porque esos datos no están cargados en esa pantalla.
+- **Filtro de empleados:** reemplazó la caja de búsqueda por empleado. Es un desplegable de selección múltiple, visible también en la vista Día. Al elegir empleados, el tablero y la vista Día muestran solo sus tareas.
+
+Agregué la versión 1.6.0 al historial de cambios.
+
+---
+
+### User — Oct 4, 2026, 9:51 PM CST
+
+# Canvas Prompt 2/4 — Corrección
+
+## Modo
+Edición de un proyecto existente de Canvas: la app de Amaranta Cakes (versión actual 1.6.0). No reconstruyas nada; aplica SOLO los puntos de abajo. Base: Producción (appSQk87nF0WpH2gi), sin Sandbox. Usa siempre IDs de tablas y campos, nunca nombres. No crees ni cambies tablas, campos ni automatizaciones. Las escrituras siguen siendo solo sobre Tareas de producción (tblESlAFi4WqHlJtk) y la creación de Elementos (tblis88Izkhbi3SIG).
+
+## Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla. Aplica también a: Prompts 3 y 4.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable. Aplica también a: Prompts 3 y 4.
+- C3. Una tarea está completa cuando su Estatus es Terminado y su cantidad completada es igual a la asignada. Aplica también a: Prompts 3 y 4.
+
+## Qué corregir
+
+### Datos y refresco
+1. El detalle del pedido no se actualiza tras cambios hechos desde el detalle del elemento.
+   - La tabla de tareas y la línea "Etapa actual del elemento más atrasado" del detalle del pedido (PedidoTareasSection) usan su propia carga de datos y no se actualizan cuando, desde el detalle del elemento, se completa una etapa, se crea una tarea o se crea un elemento con "Agregar elemento".
+   - Haz que en esos tres casos el detalle del pedido se actualice sin recargar la página y sin cerrar ninguna ventana.
+2. Aviso claro cuando falla una escritura a mitad de la secuencia "Sí".
+   - El aviso debe decir qué etapas sí se guardaron, por ejemplo: "No se pudo completar la etapa. Se guardaron: Horneado, Embetunado. Inténtalo de nuevo.", y el tracker debe mostrar el estado real tras refrescar.
+   - No borres tareas ni hagas rollback.
+3. Una etapa con tareas completas se ve completa.
+   - Una etapa se considera completa según C3. En el tracker, una etapa completa se muestra completa aunque falten tareas en etapas anteriores, y las etapas anteriores también se muestran completas.
+   - Es solo visual: no crees ni modifiques registros. Aplica también a la línea "Etapa actual del elemento más atrasado" del detalle del pedido.
+
+### Teclado y ventanas
+4. Esc cierra solo la capa superior.
+   - Con "Editar elemento" abierto sobre el detalle del elemento, Esc cierra solo el modal de edición (hoy cierra ambos).
+   - La ventana "¿Completar tarea?" también se cierra con Esc, sin escribir nada y sin cerrar el detalle.
+5. Eliminar un elemento desde "Editar" con su detalle abierto: cierra también el detalle del elemento (hoy queda un esqueleto de carga permanente).
+6. Navegación con teclado en TODOS los dropdowns de la app (selector de Empleado de las tablas y formularios, Estatus, Etapa, filtros y demás): flecha arriba/abajo mueve la opción resaltada (con vuelta al llegar al final o al inicio), Enter elige la resaltada y Escape cierra. El resaltado también sigue al mouse y la lista se desplaza para mantener visible la opción activa. Usa el mismo comportamiento que ya tiene el buscador de pedidos. Esto cambia solo el comportamiento de los dropdowns, no el diseño del tablero semanal ni de la vista Día.
+
+### Detalle del elemento
+7. "¿Completar tarea?" como mini pop-up anclado a la etapa.
+   - Al hacer clic en una etapa del tracker, aparece un contenedor pequeño junto a esa etapa (no un modal a media pantalla ni con fondo oscuro), con la pregunta "¿Completar tarea?" y los botones "Sí" y "No" del mismo ancho.
+   - Debajo de la pregunta, un texto corto: "Sí: completa esta etapa y las anteriores. No: solo crea la tarea, sin completar."
+   - Sin foco automático en "Sí". Se cierra con clic afuera o con Esc, sin escribir nada.
+   - No cambies la lógica de "Sí" y "No" ya aprobada.
+8. Orden de tareas en el detalle del pedido: ordena las tareas de cada elemento según las etapas de su propio tipo de producto, tomadas de la función única del Prompt 1 (C1) y sin duplicar la regla: Horneado, Embetunado, Decorado, Empacado para pastel y cupcakes; Horneado, Glaseado, Decorado, Empacado para galletas. Hoy "Embetunado" queda antes de "Horneado" porque se usa la lista fija de galletas.
+
+### Formulario de nuevo elemento
+9. Tabla "Tareas de producción" del formulario "Agregar Elemento".
+   - Muestra solo cuatro columnas: Etapa, Empleado, Inicio y Fin.
+   - La etapa se muestra como un chip con el color de esa etapa (el mismo color que usa el tracker y el resto de la app), no como texto en negritas.
+   - Quita de la vista las columnas Título, Cant. y Estatus. Esos valores siguen prellenados y se guardan exactamente igual: título con el formato "[pedido_id] · Etapa · cantidad", cantidad asignada = cantidad del elemento (se actualiza si cambia), cantidad completada = 0, Estatus = Pendiente, Origen = Manual, Pedido = el del elemento.
+   - La tabla no debe quedar cortada ni con scroll horizontal cuando hay fechas elegidas.
+
+### Selectores de fecha
+10. Un solo calendario de rango para Inicio y Fin. Aplica a la tabla del formulario de nuevo elemento y al formulario de la tarea ("Fecha de inicio" y "Fecha de fin").
+   - Al tocar el campo de Inicio se abre el calendario. Al elegir la fecha de inicio, el calendario NO se cierra y la siguiente selección es la fecha de fin.
+   - Al tocar el campo de Fin se abre el mismo calendario, listo para elegir la fecha de fin.
+   - Las dos fechas se muestran como un periodo resaltado en el calendario.
+   - Se conservan las reglas ya aprobadas: límites por creación de la tarea (u hoy en la creación) y entrega de producción, días fuera de límite deshabilitados, y el ajuste automático de la otra fecha cuando son incongruentes (manda la última fecha elegida; el mismo día es válido).
+11. Botón para limpiar la fecha elegida en cada selector de fecha (Inicio y Fin), con el mismo patrón de la "X" que ya usan los filtros. Dejar las fechas vacías sigue siendo válido en la creación.
+12. Fechas con entrega de producción ya pasada: si todos los días del selector quedan deshabilitados porque la entrega de producción es anterior al límite inferior, muestra "La entrega de producción de este pedido ya pasó. Cambia esa fecha en el pedido para poder fechar la tarea." en lugar de "La fecha de inicio no puede ser anterior a hoy.". No habilites días fuera de rango.
+
+## Tablas y campos involucrados
+- Tareas de producción (tblESlAFi4WqHlJtk), Elementos (tblis88Izkhbi3SIG), Pedidos (tbl4izLZNlOcem1SC). No se agregan escrituras nuevas.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- El tablero semanal y la vista Día de Producción, y el indicador de riesgo.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+## Criterios de aceptación
+- Completar una etapa, crear una tarea o crear un elemento con tareas desde el detalle del elemento actualiza, sin recargar, la tabla y la línea del detalle del pedido que está debajo.
+- Si falla una escritura en la secuencia "Sí", el aviso lista las etapas guardadas y el tracker refleja el estado real.
+- Un elemento con solo la etapa Empacado completa (según C3) muestra las 4 etapas completas, sin que se creen registros.
+- Un solo Esc cierra solo la capa superior; "¿Completar tarea?" se cierra con Esc sin escribir.
+- Eliminar un elemento desde "Editar" deja el detalle del pedido visible, sin esqueletos.
+- Todos los dropdowns se pueden recorrer con flechas, elegir con Enter y cerrar con Escape.
+- "¿Completar tarea?" aparece como mini pop-up junto a la etapa, con el texto que explica "Sí" y "No", y sin foco automático en "Sí".
+- Un elemento Pastel muestra sus tareas en el orden Horneado, Embetunado, Decorado, Empacado.
+- La tabla del formulario de nuevo elemento muestra solo Etapa (chip de color), Empleado, Inicio y Fin; al guardar, las tareas llevan título, cantidad, estatus, origen y pedido como antes.
+- Inicio y Fin se eligen en un mismo calendario que no se cierra tras elegir el inicio y resalta el periodo; cada fecha se puede limpiar con una "X".
+- Con entrega de producción pasada aparece el aviso del punto 12.
+- El mini pop-up, el calendario de rango y los dropdowns se ven y funcionan bien en modo claro, oscuro y en celular.
+- Nada más cambia: el buscador de pedidos y el filtro de empleados de Producción, el detalle del pedido y el resto de la app se ven y funcionan igual que antes.
+
+## Entrega
+Al terminar, envíame un reporte (qué cambió y qué no pudiste probar) y un export completo (ZIP, README y transcript) con la versión subida a 1.7.0.
+
+---
+
+### Assistant — Oct 4, 2026, 9:56 PM CST
+
+Los 12 puntos están aplicados y la app compila sin errores. No pude probarla con clics reales ni con escrituras en Airtable, y no pude generar el ZIP de exportación (README y transcript). La versión quedó en 1.7.0 con su entrada en el historial de cambios.
+
+**Qué cambió**
+- **Refresco (1):** el detalle del pedido se actualiza solo, sin recargar ni cerrar ventanas, cuando desde el detalle del elemento completas una etapa, creas una tarea o agregas un elemento.
+- **Fallo a medias (2):** si algo falla durante el "Sí", aparece un aviso como "No se pudo completar la etapa. Se guardaron: Horneado, Embetunado. Inténtalo de nuevo." No se borra nada y el seguimiento muestra el estado real.
+- **Etapas completas (3):** una etapa con tareas completas (Terminado y completada igual a asignada) se ve completa junto con las anteriores, aunque estas no tengan tareas. Es solo visual y también aplica a la línea del "elemento más atrasado".
+- **Escape (4):** cierra solo la capa de arriba. "¿Completar tarea?" también se cierra con Escape sin escribir nada y sin cerrar el detalle.
+- **Borrar elemento (5):** al borrarlo desde "Editar", también se cierra su detalle, así que ya no queda el esqueleto de carga.
+- **Desplegables (6):** flechas arriba y abajo mueven el resaltado (da la vuelta), Enter elige y Escape cierra. El resaltado sigue al mouse y la lista se desplaza para mantener visible la opción activa.
+- **"¿Completar tarea?" (7):** ahora es un globo pequeño junto a la etapa, sin fondo oscuro ni enfoque automático. Tiene "Sí" y "No" del mismo ancho y el texto explicativo. Se cierra al hacer clic afuera o con Escape. La lógica de Sí/No no cambió.
+- **Orden de tareas (8):** en el detalle del pedido, las tareas de cada elemento siguen las etapas de su propio tipo de producto, tomadas de la misma función de siempre.
+- **Nuevo elemento (9):** la tabla tiene solo Etapa (con el chip de color de la etapa), Empleado, Inicio y Fin, sin scroll horizontal. Se siguen guardando los mismos valores de antes (título, cantidad asignada, completada 0, Pendiente, Manual y el pedido).
+- **Fechas (10 y 11):** un solo calendario de rango para Inicio y Fin, tanto en la tabla del nuevo elemento como en el formulario de tarea.
+  - Elegir el inicio no lo cierra; lo siguiente que eliges es el fin. Tocar Fin lo abre listo para elegir el fin, y el periodo se ve resaltado.
+  - Cada fecha tiene su botón X. Se mantienen los límites y el ajuste automático de la otra fecha.
+  - En la tabla de nuevo elemento las fechas vacías siguen siendo válidas. En el formulario de una tarea ya creada no se puede quitar el Inicio, solo el Fin.
+- **Entrega ya pasada (12):** el calendario muestra "La entrega de producción de este pedido ya pasó. Cambia esa fecha en el pedido para poder fechar la tarea." Los días fuera de rango siguen deshabilitados.
+
+**Qué no pude probar**
+- Clics reales en modo claro, oscuro y móvil, sobre todo la posición del globo y del calendario.
+- La secuencia "Sí" con un fallo real de escritura en Airtable.
+- La captura de pantalla de verificación visual.
+
+El resto de la app (Finanzas, tablero semanal, vista Día, indicador de riesgo, buscadores) no se tocó.
+
+Falta el ZIP de exportación completo con README y transcript. Pídemelo y lo genero.
+
+---
+
+### User — Oct 4, 2026, 10:58 PM CST
+
+# Canvas Prompt 2/4 — Corrección v1.8.0
+
+## Modo
+Edición de un proyecto existente de Canvas: la app de Amaranta Cakes (versión actual 1.7.0). No reconstruyas nada; aplica SOLO los puntos de abajo. Base: Producción (appSQk87nF0WpH2gi), sin Sandbox. Usa siempre IDs de tablas y campos, nunca nombres. No crees ni cambies tablas, campos ni automatizaciones. Las escrituras siguen siendo solo sobre Tareas de producción (tblESlAFi4WqHlJtk) y Elementos (tblis88Izkhbi3SIG).
+
+## Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla. Aplica también a: Prompts 3 y 4.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable. Aplica también a: Prompts 3 y 4.
+- C3. Una tarea está completa cuando su Estatus es Terminado y su cantidad completada es igual a la asignada. Aplica también a: Prompts 3 y 4.
+
+## Qué corregir
+
+### Globo "¿Completar tarea?"
+1. Quita el texto explicativo del globo. Debe mostrar solo la pregunta "¿Completar tarea?" y los botones "Sí" y "No" (del mismo ancho, sin foco automático en "Sí", cerrable con clic afuera y con Esc, sin escribir nada).
+2. Respuesta inmediata al pulsar "Sí" o "No". Hoy tarda un poco. El tracker y la tabla de tareas se actualizan al instante, sin esperar a Airtable (actualización optimista). Si la escritura falla, vuelve al estado real y muestra el aviso ya aprobado con las etapas que sí se guardaron. No cambies la lógica de "Sí" y "No" ya aprobada.
+
+### Detalle del elemento
+3. Edición en línea, sin botón "Editar" ni modal.
+   - Quita el botón "Editar" y el modal "Editar Elemento".
+   - Los campos del detalle son editables directamente en su lugar: producto, pan y relleno (solo pastel y cupcakes), cantidad, costo unitario y descripción. "Nombre" y "Pedido" son de solo lectura.
+   - Los cambios se guardan solos, con un indicador pequeño ("Cambios guardados") como el del formulario de la tarea. El producto sigue siendo obligatorio: no se puede dejar vacío.
+   - El borrado del elemento pasa a un icono de basura en el encabezado del detalle, con la misma confirmación "¿Eliminar elemento?" que ya existe. Al borrar, se cierra el detalle.
+   - No cambies el resto del detalle (tracker y tabla de tareas del elemento).
+
+### Detalle del pedido
+4. Una tabla de tareas por elemento. En la sección "Producción" del detalle del pedido, en lugar de una sola tabla con todas las filas y la columna "Elemento", muestra una tabla por elemento, cada una con un subtítulo arriba con el nombre del elemento. Cada tabla lleva las columnas Etapa, Empleado, Inicio, Fin, Avance y Ritmo, ordenadas por las etapas de su tipo de producto (C1). Los elementos sin tareas muestran su subtítulo con "Sin tareas.". La línea "Etapa actual del elemento más atrasado" se queda arriba de las tablas. Sigue permitiendo abrir y editar cada tarea con clic en su fila.
+
+### Fechas
+5. Fechas secuenciales entre las etapas de un mismo elemento.
+   - Aplica a la tabla "Tareas de producción" del formulario "Agregar Elemento" y al formulario de la tarea.
+   - Cada etapa posterior solo puede elegir una fecha de inicio igual o posterior al fin de la etapa anterior que tenga fechas (o a su inicio si no tiene fin). Los días anteriores salen deshabilitados en el calendario. Ejemplo: si Horneado va del 5 al 7 oct, Embetunado solo puede iniciar desde el 7 oct; Decorado respecto a Embetunado y Empacado respecto a Decorado, igual.
+   - Si se mueve una etapa anterior más allá de las fechas de las siguientes, las fechas de las etapas siguientes se ajustan solas para quedar congruentes (el inicio pasa al nuevo mínimo y el fin queda igual o posterior al inicio). En tareas ya creadas el ajuste se guarda en las tareas del mismo elemento.
+   - Se conservan las reglas ya aprobadas (límite por creación de la tarea u hoy, entrega de producción, calendario de rango, "X" para limpiar, fechas vacías válidas).
+6. Aviso de entrega de producción ya pasada. Cambia el texto del aviso a "No se puede editar: la entrega de producción ya pasó." (hoy es más largo). Los días siguen deshabilitados y no se habilitan días fuera de rango.
+
+## Tablas y campos involucrados
+- Tareas de producción (tblESlAFi4WqHlJtk), Elementos (tblis88Izkhbi3SIG), Pedidos (tbl4izLZNlOcem1SC). No se agregan escrituras nuevas.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- El tablero semanal y la vista Día de Producción, y el indicador de riesgo.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+## Criterios de aceptación
+- El globo "¿Completar tarea?" solo muestra la pregunta y los botones "Sí" y "No".
+- Al pulsar "Sí" o "No" el tracker y la tabla cambian al instante; si la escritura falla, vuelven al estado real con el aviso de etapas guardadas.
+- En el detalle del elemento no existe el botón "Editar"; producto, cantidad, costo unitario, descripción (y pan y relleno cuando aplican) se editan ahí mismo y se guardan solos; el producto no puede quedar vacío.
+- El detalle del elemento tiene un icono de basura con confirmación; al confirmar se borra el elemento y se cierra el detalle.
+- El detalle del pedido muestra una tabla de tareas por elemento, con el nombre del elemento como subtítulo y las etapas en el orden de su tipo de producto.
+- Con Horneado del 5 al 7 oct, Embetunado solo permite elegir inicio desde el 7 oct, tanto en "Agregar Elemento" como en el formulario de la tarea.
+- Al mover el fin de Horneado más allá de las fechas de Embetunado, las fechas de Embetunado (y de las etapas siguientes) se ajustan solas.
+- Con entrega de producción pasada aparece "No se puede editar: la entrega de producción ya pasó."
+- Nada más cambia: el buscador de pedidos, el filtro de empleados, el tablero semanal, la vista Día y el resto de la app se ven y funcionan igual que antes.
+
+## Entrega
+Al terminar, envíame un reporte (qué cambió y qué no pudiste probar) y un export completo (ZIP, README y transcript) con la versión subida a 1.8.0.
+
+---
+
+### Assistant — Oct 4, 2026, 11:02 PM CST
+
+La versión 1.8.0 está lista y compila sin errores. No pude probarla con clics reales ni contra la base real.
+
+## Qué cambió
+1. **Globo "¿Completar tarea?"**: muestra solo la pregunta y los botones Sí/No, del mismo ancho. No tiene foco automático en "Sí". Se cierra al hacer clic afuera o con Esc, y esos cierres no escriben nada.
+   - **Respuesta instantánea**: el seguimiento y la tabla de tareas cambian al momento. Si falla el guardado, vuelven al estado real y se muestra el aviso aprobado con las etapas guardadas. La lógica de Sí/No no se tocó.
+2. **Detalle del elemento**: se edita en el mismo lugar y se guarda solo, con el indicador "Cambios guardados".
+   - **Editables**: producto, pan y relleno (solo pastel y cupcakes), cantidad, costo unitario y descripción.
+   - **Solo lectura**: nombre y pedido.
+   - **Producto** es obligatorio y no se puede dejar vacío.
+   - **Botones**: ya no existen el botón "Editar" ni el modal "Editar Elemento".
+   - **Eliminar**: la basura está en el encabezado, con la confirmación "¿Eliminar elemento?". Al eliminar, el detalle se cierra.
+3. **Detalle del pedido, sección Producción**: una tabla de tareas por elemento, con el nombre del elemento como subtítulo.
+   - **Columnas**: Etapa, Empleado, Inicio, Fin, Avance y Ritmo, en el orden de etapas de su tipo de producto.
+   - **Elementos sin tareas**: muestran "Sin tareas.".
+   - **Línea de etapa**: la línea "Etapa actual del elemento más atrasado" sigue arriba. Al hacer clic en una fila se abre la tarea, como antes.
+4. **Fechas secuenciales**: una etapa solo puede empezar desde el fin de la etapa anterior que tenga fechas, o desde su inicio si esa no tiene fin. Los días anteriores aparecen deshabilitados. Esto aplica en "Agregar Elemento" y en el formulario de la tarea.
+   - **Ajuste automático**: si una etapa anterior se mueve más allá de las fechas de las siguientes, estas se ajustan solas. En tareas existentes, el ajuste se guarda en las tareas del mismo elemento.
+   - **Reglas aprobadas**: se mantienen los límites por creación y entrega, el calendario de rango, la "X" para limpiar y las fechas vacías válidas.
+5. **Aviso de entrega pasada**: ahora dice "No se puede editar: la entrega de producción ya pasó.". Los días siguen deshabilitados.
+
+No cambié tablas, campos, opciones ni automatizaciones, ni nada de lo que listaste como intocable. Solo escribo en Tareas de producción y Elementos.
+
+## Qué no pude probar
+- Clics reales en modo claro, oscuro y móvil.
+- El fallo real de escritura en Airtable, que es lo que dispara la vuelta al estado anterior del globo.
+- Las escrituras del ajuste automático sobre tareas existentes en la base real.
+- El guardado automático del detalle del elemento en la base real.
+- No tomé captura de pantalla de esta versión.
+
+## Export
+No hay botón de descarga que pueda pulsar yo desde aquí, así que armé los archivos directamente en la carpeta `exports/` del proyecto:
+- `exports/amaranta-v1.8.0.zip`: código fuente de la versión 1.8.0. Incluye el README, que sale del historial de versiones. Excluye `node_modules`, los bundles compilados y la carpeta de configuración.
+- `exports/transcript.jsonl`: transcript completo de la conversación, de unos 48 MB.
+
+Estos archivos viven solo en el espacio de trabajo. Desde la app, el menú de descarga genera el mismo ZIP y el README.
+
+---
+
+### User — Oct 4, 2026, 11:15 PM CST
+
+# Canvas Prompt 2/4 — Corrección v1.8.1
+
+## Modo
+Edición de un proyecto existente de Canvas: la app de Amaranta Cakes (versión actual 1.8.0). No reconstruyas nada; aplica SOLO los puntos de abajo. Base: Producción (appSQk87nF0WpH2gi), sin Sandbox. Usa siempre IDs de tablas y campos, nunca nombres. No crees ni cambies tablas, campos ni automatizaciones. Las escrituras siguen siendo solo sobre Tareas de producción (tblESlAFi4WqHlJtk) y Elementos (tblis88Izkhbi3SIG).
+
+## Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla. Aplica también a: Prompts 3 y 4.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable. Aplica también a: Prompts 3 y 4.
+- C3. Una tarea está completa cuando su Estatus es Terminado y su cantidad completada es igual a la asignada. Aplica también a: Prompts 3 y 4.
+
+## Qué corregir
+
+### Regresión de la v1.8.0
+1. Restaura la actualización automática de datos de la v1.4.0, que desapareció en la v1.8.0 al regenerarse lib/airtable-hooks.tsx.
+   - Los datos se actualizan solos cada 30 segundos y al volver a la pestaña si ya pasaron más de 30 segundos desde la última carga.
+   - La actualización es silenciosa (sin esqueletos de carga) y la pantalla solo cambia si hubo cambios. No se actualiza mientras hay un formulario abierto, un campo en edición o la pestaña está en segundo plano.
+   - Conserva lo que agregó la plataforma en ese archivo (la importación de ./upload-attachment-messages); no lo quites.
+2. Revisa las dependencias. En la v1.8.0 el package.json perdió @phosphor-icons/react, html2canvas-pro, jspdf, jszip y react-router-dom. Restáuralas si hacen falta y confirma que la app compila, que los íconos y la navegación entre páginas funcionan y que el menú de descarga genera source.zip, source.pdf, readme.md y readme.pdf.
+
+### Detalle del elemento
+3. Quita el campo "Nombre" (repite al Producto). La primera fila de datos muestra "Pedido" y luego "Producto" (editable). El resto de los campos editables en línea no cambia.
+4. Quita la "X" de cerrar del encabezado del detalle del elemento. El encabezado queda solo con el título y el icono de basura. El detalle se cierra con Esc y con clic afuera, como ya funciona.
+
+### Tablas de tareas
+5. Tareas editables directamente desde las tablas, en el detalle del pedido y en el detalle del elemento.
+   - Solo tres columnas son editables en la celda: Empleado (selector con búsqueda y la opción "Sin asignar"), Inicio y Fin (con el calendario de rango, la "X" para limpiar y las reglas ya aprobadas: límites por creación y entrega de producción, fechas secuenciales entre etapas y ajuste automático de las siguientes).
+   - Los cambios se guardan solos. Si la entrega de producción ya pasó, Inicio y Fin no se pueden editar y se muestra "No se puede editar: la entrega de producción ya pasó."
+   - Clic en las demás celdas de la fila (Etapa, Avance, Ritmo) sigue abriendo el formulario de la tarea, donde están Avance, Estatus, Notas y Dividir. Clic en una celda editable no abre el formulario.
+   - Los dropdowns de las celdas usan la navegación con teclado ya aprobada.
+6. En el detalle del pedido, los subtítulos de las tablas por elemento siguen el mismo orden que la tabla Elementos del pedido (por ejemplo: Pastel 50 pax, Cupcakes, Galletas), no un orden distinto.
+
+## Tablas y campos involucrados
+- Tareas de producción (tblESlAFi4WqHlJtk), Elementos (tblis88Izkhbi3SIG), Pedidos (tbl4izLZNlOcem1SC). No se agregan escrituras nuevas.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- El tablero semanal y la vista Día de Producción, y el indicador de riesgo.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+## Criterios de aceptación
+- Los datos se actualizan solos cada 30 segundos y al volver a la pestaña, sin esqueletos de carga y sin refrescar mientras hay un formulario abierto o un campo en edición.
+- La app compila con sus dependencias; íconos, navegación y menú de descarga funcionan.
+- El detalle del elemento no muestra "Nombre"; muestra "Pedido" y luego "Producto"; el encabezado tiene solo el título y el icono de basura, sin "X".
+- En las tablas de tareas se pueden editar Empleado, Inicio y Fin en la propia celda, con guardado automático y las reglas de fechas aprobadas; clic en las demás celdas abre el formulario de la tarea.
+- Con la entrega de producción pasada, Inicio y Fin de la tabla no se editan y aparece el aviso "No se puede editar: la entrega de producción ya pasó."
+- Los subtítulos del detalle del pedido van en el mismo orden que la tabla Elementos.
+- Nada más cambia: el buscador de pedidos, el filtro de empleados, el tablero semanal, la vista Día y el resto de la app se ven y funcionan igual que antes.
+
+## Entrega
+Al terminar, envíame un reporte (qué cambió y qué no pudiste probar) y un export completo (ZIP, README y transcript) con la versión subida a 1.8.1.
+
+---
+
+### Assistant — Oct 4, 2026, 11:18 PM CST
+
+La versión 1.8.1 compila y la pantalla de inicio carga con sus íconos. No pude probar el resto con clics reales ni contra Airtable.
+
+## Qué cambió
+1. **Actualización automática**: los datos se actualizan solos cada 30 segundos y al volver a la pestaña si pasaron más de 30 segundos.
+   - **Silenciosa**: no muestra esqueletos de carga, y la pantalla solo cambia si hubo cambios en los datos.
+   - **Cuándo no actualiza**: no lo hace con la pestaña en segundo plano, ni con una ventana o formulario abierto, ni con un campo en edición.
+   - **Archivo restaurado**: conservé la importación de `./upload-attachment-messages` en `lib/airtable-hooks.tsx`.
+2. **Dependencias**: restauré en `package.json` `@phosphor-icons/react`, `html2canvas-pro`, `jspdf`, `jszip` y `react-router-dom`. La app compila y los íconos se ven.
+3. **Detalle del elemento**: quité el campo "Nombre". La primera fila muestra "Pedido" y luego "Producto" editable, y pan y relleno quedan debajo. El encabezado tiene solo el título y la basura, sin la "X". Se sigue cerrando con Esc y con clic afuera.
+4. **Tablas de tareas**, en el detalle del pedido y en el del elemento:
+   - **Empleado**: selector con búsqueda y la opción "Sin asignar".
+   - **Inicio y Fin**: calendario de rango con la "X" para limpiar, límites por creación y entrega, fechas secuenciales y ajuste automático de las siguientes.
+   - **Guardado**: los cambios se guardan solos.
+   - **Entrega ya pasada**: Inicio y Fin no se editan. Al hacer clic en esas fechas aparece "No se puede editar: la entrega de producción ya pasó."
+   - **Resto de la fila**: clic en Etapa, Avance o Ritmo abre el formulario de la tarea. Clic en una celda editable no lo abre.
+5. **Orden de los elementos**: los subtítulos del detalle del pedido siguen el orden de la tabla Elementos del pedido.
+
+Subí la versión a 1.8.1 en el historial de cambios. No toqué tablas, campos ni automatizaciones, y las escrituras siguen solo en Tareas de producción y Elementos.
+
+## Qué no pude probar
+- **Actualización automática**: no vi los ciclos de 30 segundos ni el regreso a la pestaña, ni comprobé que se pausa con un formulario abierto o un campo en edición.
+- **Menú de descarga**: no generé `source.zip`, `source.pdf`, `readme.md` ni `readme.pdf`. Solo confirmé que las librerías están declaradas y que la app compila.
+- **Edición en celdas**: no probé el guardado real ni el ajuste automático de fechas sobre tareas existentes.
+- **Aviso de entrega pasada**: no lo vi en pantalla.
+- **Teclado**: no probé la navegación con teclado en los selectores de las celdas.
+- **Pantallas**: no revisé modo claro, oscuro ni móvil. La captura fue solo de la pantalla de inicio.
+
+## Export
+Los archivos están en la carpeta `exports/` del proyecto:
+- `amaranta-v1.8.1.zip`: código fuente de la 1.8.1, con el README incluido.
+- `transcript.jsonl`: transcript completo de la conversación.
+
+---
+
+### User — Oct 4, 2026, 11:22 PM CST
+
+Al abrir el detalle de página, el record id debe aparecer en la URL (por ejemplo ?task=recXXXX). Si abro esa URL directamente o recargo la página, debe abrirse el mismo detalle. Al cerrarlo, el parámetro se quita de la URL.
+También debe haber un id para cada página.
+
+---
+
+### Assistant — Oct 4, 2026, 11:24 PM CST
+
+Ahora los detalles ponen su id en la URL, se reabren al cargar o recargar, y el parámetro se quita al cerrarlos. Validé y compilé sin errores, pero no abrí ninguna URL ni recargué en el navegador.
+
+- **Pedido:** `?pedido=recXXXX` en Pedidos, Producción y Finanzas.
+- **Elemento:** `?elemento=recXXXX` dentro del detalle del pedido.
+- **Tarea:** `?task=recXXXX`. Solo las tareas existentes llevan id; el formulario de tarea nueva no.
+- **Pago:** `?pago=recXXXX`.
+- **Empleado del día:** `?empleado=recXXXX`.
+- **Al cargar:** si el id aún no ha cargado, el detalle se abre cuando llegan los datos. Si el id no existe, no se abre nada.
+- **Ids de página:** `pagina-pedidos`, `pagina-produccion`, `pagina-finanzas` y `pagina-inicio`.
+
+Cerrar un detalle quita solo su parámetro. Si cierras el pedido con un elemento abierto, el parámetro `elemento` puede quedar en la URL, pero no abre nada.
+
+Subí la versión a 1.8.2 en el historial de cambios. No regeneré el ZIP ni la transcripción de exportación; dime si los quieres.
+
+---
+
+### User — Oct 4, 2026, 11:40 PM CST
+
+Corrección v1.8.2 — Desplegable cortado al fondo de la ventana
+
+Contexto: en la v1.8.1, al abrir el desplegable de "Empleado" de la última fila de la tabla de tareas (en el detalle del elemento y en la sección "Producción" del pop-up del pedido), la lista se corta por debajo del borde de la ventana: se ve solo el buscador "Buscar empleado…" y la primera opción "Sin asignar", y no se pueden ver ni elegir los demás empleados.
+
+Qué hacer:
+1. Los desplegables que se abren dentro de las tablas de tareas y de los pop-ups deben verse completos dentro de la ventana. Si no hay espacio suficiente debajo del campo, la lista se abre hacia arriba. Si no cabe completa ni arriba ni abajo, abre hacia el lado con más espacio y limita su altura con scroll interno.
+2. Esto aplica a todos los desplegables de la app que se abren dentro de tablas o pop-ups: Empleado, Etapa y los selectores de fecha de las tablas de tareas.
+3. La posición se calcula al abrir y se recalcula si la ventana cambia de tamaño o si el pop-up tiene scroll.
+4. Debe seguir funcionando la navegación con teclado: flechas arriba y abajo, Enter para elegir y Escape para cerrar solo la lista (sin cerrar el pop-up).
+5. El desplegable no debe quedar recortado por el contenedor del pop-up (overflow hidden). Si es necesario, muéstralo en una capa superior fuera del contenedor.
+
+Cómo debe verse:
+- Abrir "Empleado" en la fila "Empacado" del detalle del elemento muestra la lista completa (Sin asignar, Mariana, Ale, Lalo, Rach, Sofía, Jacky, Fátima) sin cortarse, abriendo hacia arriba.
+- Abrir "Empleado" en la primera fila sigue abriendo hacia abajo.
+- Lo mismo en la tabla de "Producción" del pop-up del pedido, en la última fila.
+
+No tocar y contratos: [PEGAR AQUÍ: No tocar y contratos C1-C3]
+
+Al terminar:
+- Sube la versión a v1.8.2 con su entrada en el changelog (una línea sobre el desplegable) y ejecuta node scripts/gen-source.mjs.
+- Confirma que lib/airtable-hooks.tsx y package.json no cambiaron y que la actualización automática cada 30 segundos y las dependencias siguen presentes.
+
+---
+
+### Assistant — Oct 4, 2026, 11:41 PM CST
+
+Los desplegables ahora se ven completos dentro de la ventana; validé y compilé sin errores, pero no lo probé abriéndolos en el navegador.
+
+- **Empleado:** abre hacia abajo si cabe. Si no, abre hacia arriba, de modo que en la última fila se ve toda la lista. Si no cabe ni arriba ni abajo, usa el lado con más espacio y la lista tiene scroll interno. El buscador queda fijo arriba mientras se desplaza la lista.
+- **Etapa y fechas:** los desplegables de Etapa y los selectores de fecha usan la misma regla. En los de fecha no cambié nada más.
+- **Recálculo:** la posición se calcula al abrir y se recalcula si cambia el tamaño de la ventana, si hay scroll o si cambia la altura de la lista.
+- **Teclado:** no toqué la navegación con teclado (flechas, Enter y Escape, que cierra solo la lista).
+- **Capa superior:** la lista sigue flotando por encima del pop-up (posición fija) y no la recorta su contenedor. No la moví a otra capa porque no hizo falta para esto.
+
+El "No tocar y contratos" llegó con el marcador sin reemplazar ("[PEGAR AQUÍ…]"), así que apliqué las reglas que ya teníamos.
+
+En el changelog, la 1.8.2 ya existía con lo de las URL, así que agregué ahí la línea del desplegable en lugar de crear otra versión. Corrí `node scripts/gen-source.mjs`.
+
+`lib/airtable-hooks.tsx` y `package.json` no se modificaron en esta corrección. La actualización automática cada 30 segundos sigue en el código y las dependencias siguen listadas.
+
+---
+
+### User — Oct 4, 2026, 11:48 PM CST
+
+Corrección v1.8.2 — Tracker de etapas sin actualizar y desplegable cortado
+
+Defecto 1: el tracker de etapas no se actualiza al completar una etapa.
+Contexto: en el detalle del elemento, al hacer clic en una etapa (por ejemplo "Decorado") y pulsar "Sí" en el globo "¿Completar tarea?", la tabla de tareas sí cambia al instante (Horneado, Embetunado y Decorado pasan a "Terminada" con avance completo), pero el tracker de etapas de arriba no cambia: sigue mostrando Horneado como etapa actual y ninguna palomita.
+
+Qué hacer:
+1. El tracker debe actualizarse en el mismo momento que la tabla, con la misma actualización inmediata, sin esperar a recargar ni al refresco automático.
+2. Después de completar "Decorado": Horneado, Embetunado y Decorado con palomita, y Empacado como etapa actual.
+3. El tracker y la tabla deben salir del mismo dato. Una etapa se ve completa cuando todas sus tareas están completas, según el contrato C3.
+4. Si la escritura en Airtable falla, la pantalla vuelve al estado real y avisa cuáles etapas se guardaron.
+5. Aplica igual en el pop-up del pedido: la línea "Etapa actual del elemento más atrasado" también debe reflejar el cambio sin reabrir.
+
+Defecto 2: el desplegable se corta al fondo de la ventana.
+Contexto: al abrir el desplegable de "Empleado" de la última fila de las tablas de tareas (detalle del elemento y sección "Producción" del pop-up del pedido), la lista puede quedar cortada por debajo del borde de la ventana y no se ven los demás empleados.
+
+Qué hacer:
+1. Los desplegables dentro de tablas y pop-ups deben verse completos dentro de la ventana. Si no hay espacio debajo, se abren hacia arriba. Si no caben completos arriba ni abajo, se abren hacia el lado con más espacio y limitan su altura con scroll interno.
+2. Aplica a todos los desplegables que se abren dentro de tablas o pop-ups: Empleado, Etapa y los selectores de fecha de las tablas de tareas.
+3. La posición se recalcula al abrir y al cambiar el tamaño de la ventana o el scroll del pop-up.
+4. Sigue funcionando el teclado: flechas, Enter para elegir y Escape para cerrar solo la lista.
+5. La lista no debe quedar recortada por el contenedor del pop-up; si hace falta, se muestra en una capa superior.
+
+Cómo debe verse:
+- Completar "Decorado" en un elemento nuevo: el tracker muestra 3 palomitas y Empacado como etapa actual en el mismo instante en que la tabla marca las tres tareas como Terminada.
+- Abrir "Empleado" en la fila "Empacado" muestra la lista completa sin cortarse; en la primera fila se sigue abriendo hacia abajo.
+
+No tocar y contratos: [PEGAR AQUÍ: No tocar y contratos C1-C3]
+
+Al terminar:
+- Sube la versión a v1.8.2 con su entrada en el changelog (una línea por defecto) y ejecuta node scripts/gen-source.mjs.
+- Confirma que lib/airtable-hooks.tsx y package.json no cambiaron y que la actualización automática cada 30 segundos y las dependencias siguen presentes.
+
+---
+
+### Assistant — Oct 4, 2026, 11:50 PM CST
+
+Corregí los dos defectos. Validé y compilé sin errores, pero no completé una etapa ni abrí el desplegable en el navegador.
+
+**Defecto 1: el seguimiento de etapas**
+- El seguimiento y la tabla ahora salen del mismo dato, así que cambian en el mismo instante. Al completar "Decorado" deberías ver Horneado, Embetunado y Decorado con palomita y Empacado como etapa actual.
+- Una etapa se ve completa cuando todas sus tareas están terminadas y con avance completo (C3). Antes también exigía que las tareas sumaran la cantidad del elemento. Eso explica por qué no salían las palomitas aunque la tabla marcara Terminada.
+- La línea "Etapa actual del elemento más atrasado" del pop-up del pedido cambia en el mismo momento, sin reabrir.
+- La pantalla mantiene el resultado esperado hasta que llegan los datos reales de Airtable; antes volvía atrás un instante.
+- Si falla la escritura, la pantalla vuelve al estado real y avisa qué etapas sí se guardaron.
+
+**Defecto 2: el desplegable cortado**
+Esto ya estaba resuelto en la corrección anterior. Empleado, Etapa y los selectores de fecha abren hacia arriba si no hay espacio abajo, o limitan su altura con scroll interno. La navegación con teclado no cambió.
+
+El texto de "No tocar y contratos" volvió a llegar con el marcador sin reemplazar, así que seguí con las reglas que ya teníamos.
+
+En el changelog agregué la línea del defecto 1 a la entrada de la v1.8.2 y corrí `node scripts/gen-source.mjs`. `lib/airtable-hooks.tsx` y `package.json` no se tocaron. La actualización automática cada 30 segundos y las dependencias siguen en su lugar.
+
+---
+
+### User — Oct 5, 2026, 12:00 AM CST
+
+Corrección v1.8.3 — Eliminar un elemento debe eliminar sus tareas de producción
+
+Contexto: en el detalle del elemento, al pulsar el icono de basura y confirmar "¿Eliminar elemento?", el elemento se borra y el detalle se cierra, pero sus tareas de producción (Horneado, Embetunado, Decorado, Empacado) quedan en Airtable ligadas al pedido y sin elemento. Siguen apareciendo en el pedido y en Producción.
+
+Qué hacer:
+1. Al confirmar "¿Eliminar elemento?", elimina también todas las tareas de producción ligadas a ese elemento, y después el elemento.
+2. El orden es: primero las tareas, después el elemento. Si falla el borrado de alguna tarea, no borres el elemento y avisa cuáles tareas se eliminaron y cuáles no, para que el estado en pantalla sea el real.
+3. La pantalla se actualiza al instante: la tabla de tareas del pedido, el tracker, la línea "Etapa actual del elemento más atrasado" y el tablero de Producción dejan de mostrar esas tareas sin recargar.
+4. El aviso "Elemento eliminado" con "Deshacer" sigue funcionando. Si se pulsa "Deshacer", se restauran el elemento y sus tareas con los mismos datos (etapa, empleado, fechas, estatus, cantidades asignadas y completadas) y su ligas al pedido y al elemento.
+5. Solo se borran las tareas ligadas al elemento eliminado. Las tareas sin elemento de otros pedidos no se tocan.
+6. La confirmación "¿Eliminar elemento?" mantiene su texto actual.
+
+Cómo debe verse:
+- Un elemento con 4 tareas: al eliminarlo, el detalle se cierra, desaparece su tabla en el pop-up del pedido y en Airtable no queda ninguna de sus tareas.
+- Un elemento sin tareas: se elimina igual que antes.
+- Al pulsar "Deshacer" vuelve el elemento con sus 4 tareas y los mismos valores.
+
+No tocar y contratos: [PEGAR AQUÍ: No tocar y contratos C1-C3]
+
+Al terminar:
+- Sube la versión a v1.8.3 con su entrada en el changelog y ejecuta node scripts/gen-source.mjs.
+- Confirma que lib/airtable-hooks.tsx y package.json no cambiaron y que la actualización automática cada 30 segundos y las dependencias siguen presentes.
+
+---
+
+### Assistant — Oct 5, 2026, 12:03 AM CST
+
+Versión 1.8.3 lista: al confirmar "¿Eliminar elemento?" se borran primero las tareas de producción ligadas a ese elemento y después el elemento. Compila y valida sin errores, pero no lo probé con borrados reales en Airtable.
+
+- **Solo sus tareas:** se borran únicamente las ligadas a ese elemento. Un elemento sin tareas se elimina como antes.
+- **Pantalla al instante:** la tabla del pedido, el seguimiento de etapas, la línea "Etapa actual del elemento más atrasado" y el tablero de Producción se actualizan en cuanto confirmas. Esa línea ahora también respeta los elementos que se están mostrando.
+- **Deshacer:** "Elemento eliminado" con "Deshacer" sigue funcionando, y el borrado real ocurre a los 10 s. Si deshaces antes, el elemento y sus tareas vuelven tal como estaban.
+- **Si falla una tarea:** el elemento no se elimina y aparece un aviso con las tareas que sí se eliminaron y las que no. En ese caso el elemento vuelve a mostrarse.
+- **Desde Finanzas:** el borrado desde el detalle del pedido hace lo mismo, pero ahí no hay "Deshacer", como antes.
+
+Quedó la versión 1.8.3 en el historial de cambios y se regeneró el código fuente. `lib/airtable-hooks.tsx` y `package.json` no cambiaron; siguen la actualización automática cada 30 s y las dependencias.
+
+Sin probar con datos reales: el borrado de un elemento con 4 tareas, el deshacer y el aviso de fallo. En el deshacer queda una duda: si pasan los 10 s mientras se está borrando, ya no se puede deshacer.
+
+---
+
+### User — Oct 5, 2026, 12:14 AM CST
+
+Corrección v1.8.4 — Al eliminar un elemento no se están borrando sus tareas, y texto de la confirmación
+
+Defecto 1: al eliminar un elemento no se borran sus tareas.
+Contexto: en la v1.8.3, al confirmar "¿Eliminar elemento?" en el detalle de un elemento con 4 tareas de producción (Horneado, Embetunado, Decorado, Empacado) y dejar pasar el aviso "Elemento eliminado", ocurre esto:
+- En Airtable el elemento se elimina, pero sus 4 tareas NO se eliminan: quedan ligadas al pedido y con el campo Elemento vacío.
+- Mientras el aviso está visible, la sección "Producción" del pop-up del pedido muestra esas 4 tareas en un grupo "Sin elemento", en vez de ocultarlas.
+(Con "Deshacer" antes de que termine el aviso todo funciona bien: vuelven el elemento y sus tareas.)
+
+Qué hacer:
+1. Al ejecutar el borrado real del elemento, localiza sus tareas leyendo la tabla Tareas de producción directamente desde Airtable en ese momento (no desde datos ya cargados en pantalla, que pueden estar vacíos o desactualizados). Una tarea pertenece al elemento si su campo Elemento lo contiene.
+2. Elimina esas tareas y, antes de eliminar el elemento, vuelve a leer la tabla y confirma que ya no queda ninguna ligada a él. Si queda alguna, no elimines el elemento y avisa cuáles tareas se eliminaron y cuáles no.
+3. Si el elemento no tiene tareas, se elimina igual que antes.
+4. Mientras el aviso "Elemento eliminado" está visible, las tareas del elemento no deben mostrarse en ningún lado: ni en su tabla, ni en el grupo "Sin elemento" del pop-up del pedido, ni en el tablero de Producción. Ese grupo solo debe mostrar tareas que de verdad no tengan elemento.
+5. "Deshacer" sigue restaurando el elemento y sus tareas con los mismos datos.
+6. Solo se borran las tareas ligadas al elemento eliminado. No se borran las tareas sin elemento de otros pedidos ni las del grupo "Sin elemento" que ya existían antes.
+7. Antes de corregir, encuentra por qué la v1.8.3 no localizó las tareas (por ejemplo, que la lista de tareas estuviera vacía o desactualizada al momento del borrado) y corrige esa causa.
+
+Defecto 2: el texto de la confirmación contradice el aviso "Deshacer".
+Contexto: la confirmación "¿Eliminar elemento?" dice "Esta acción no se puede deshacer.", pero después de confirmar aparece el aviso con "Deshacer".
+Qué hacer: cambia solo el texto de apoyo de la confirmación a "Se eliminarán también sus tareas de producción." El título "¿Eliminar elemento?" y los botones "Cancelar" y "Confirmar" no cambian.
+
+Cómo debe verse:
+- Elemento con 4 tareas: al confirmar, desaparecen su tabla y sus tareas del pop-up del pedido y del tablero de Producción, sin aparecer un grupo "Sin elemento". Pasados ~10 s, en Airtable no quedan ni el elemento ni sus tareas.
+- Elemento sin tareas: igual que antes.
+- "Deshacer": vuelve todo igual.
+- La confirmación muestra el texto nuevo.
+
+No tocar y contratos:
+Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable.
+- C3. Una tarea está completa cuando su Estatus es Terminado y su cantidad completada es igual a la asignada.
+No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- El tablero semanal y la vista Día de Producción, y el indicador de riesgo.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+Al terminar:
+- Sube la versión a v1.8.4 con su entrada en el changelog y ejecuta node scripts/gen-source.mjs.
+- Confirma que lib/airtable-hooks.tsx y package.json no cambiaron y que la actualización automática cada 30 segundos y las dependencias siguen presentes.
+
+---
+
+### Assistant — Oct 5, 2026, 12:16 AM CST
+
+Versión 1.8.4 lista: corregí que al eliminar un elemento quedaran sus tareas, y cambié el texto de la confirmación. Compila y valida sin errores, pero no lo probé borrando datos reales en Airtable.
+
+**Defecto 1 (tareas sin borrar)**
+- **Causa 1:** la 1.8.3 buscaba las tareas en la lista que ya estaba cargada en pantalla, que podía ir vacía o desactualizada, así que no encontraba ninguna y borraba solo el elemento.
+- **Causa 2:** el borrado no avisaba cuando Airtable lo rechazaba, así que un fallo pasaba como si hubiera salido bien.
+- **Ahora, al terminar el aviso:**
+  1. Lee las tareas directamente de Airtable en ese momento. Una tarea cuenta si su campo Elemento lo contiene.
+  2. Elimina cada una y comprueba que Airtable lo confirme.
+  3. Vuelve a leer la tabla y solo elimina el elemento si ya no queda ninguna ligada a él. Si queda alguna, el elemento no se elimina y se avisa cuáles tareas se eliminaron y cuáles no.
+  4. Un elemento sin tareas se elimina igual que antes.
+- **Mientras el aviso está visible:** las tareas del elemento ya no aparecen en ningún lado, ni en su tabla, ni en el tablero de Producción, ni en "Sin elemento". Ese grupo antes mostraba las tareas del elemento oculto; ahora solo muestra tareas que de verdad no tienen elemento.
+- **Solo tareas ligadas:** se borran solo las tareas ligadas al elemento eliminado, no las que ya estaban sin elemento.
+- **Deshacer:** sigue restaurando el elemento y sus tareas tal cual.
+
+**Defecto 2 (texto)**
+- La confirmación "¿Eliminar elemento?" ahora dice "Se eliminarán también sus tareas de producción.". El título y los botones no cambiaron.
+
+Quedó la versión 1.8.4 en el historial de cambios y se regeneró el código fuente. `lib/airtable-hooks.tsx` y `package.json` no cambiaron, y siguen la actualización automática cada 30 s y las dependencias.
+
+Sin probar con datos reales: el borrado de un elemento con 4 tareas hasta que desaparezcan de Airtable, y el aviso cuando alguna no se puede borrar.
+
+---
+
+### User — Oct 5, 2026, 12:47 AM CST
+
+# Canvas Prompt 3/4 — Semáforo de avance y etiquetas de etapa en Pedidos
+
+Arma el plan para poder ejecutar los cambios o las actualizaciones que te describo aquí abajo.
+
+## Parte A: Cambios a aplicar
+1. Estado de avance de cada elemento (se calcula, no se guarda).
+   - Una etapa está completa cuando su tarea tiene Estatus = Terminado.
+   - El estado del elemento es la última etapa completada. Si el Estatus del pedido es "Entregado", todos sus elementos están en Entregado.
+   - Solo cuentan los elementos cuyo tipo de producto es Pastel, Plancha de cupcakes o Galletas. Un pedido sin ninguno de ellos no muestra semáforo ni etapa.
+2. Escala de color (6 estados).
+   - No iniciado: morado (ninguna etapa completada). Usa #7c3aed en modo claro y #a78bfa en oscuro.
+   - Horneado listo: rojo. #ef4444 y #f87171.
+   - Embetunado o Glaseado listo: naranja. #f97316 y #fb923c.
+   - Decorado listo: amarillo. #eab308 y #facc15.
+   - Empacado listo: verde lima. #84cc16 y #a3e635.
+   - Entregado: verde. #22c55e y #4ade80.
+   - Define estos colores como tokens propios del semáforo; no reutilices los colores por etapa que ya existen en Producción.
+   - El color nunca va solo: siempre se acompaña del nombre de la etapa, para que no dependa únicamente del color.
+3. Dónde se muestra.
+   - Elemento: en la tabla de Elementos del detalle del pedido, una columna "Etapa" con un punto del color del semáforo y el nombre de la etapa; y el mismo punto y nombre en el encabezado del detalle del elemento.
+   - Pedido, en la vista de lista (las filas de la vista Día en escritorio): la etapa aparece como etiqueta (badge) con el color del semáforo, en la fila de cada pedido.
+   - Pedido, en las tarjetas (card) de las vistas Semana y Mes y en la vista Día en celular: solo el texto del nombre de la etapa, sin etiqueta.
+   - Cuando el pedido tiene varios elementos, la etapa y el color que se muestran son los del elemento más atrasado (el de menor avance).
+   - Fondo y borde de la tarjeta del pedido: el color del elemento más atrasado, en tono suave. Reemplaza el color de fondo actual que depende del Estatus del pedido.
+   - En el detalle del pedido, la línea del Prompt 2 con el estado del elemento más atrasado pasa a mostrar su punto de color.
+4. Colores existentes.
+   - El indicador de riesgo (A tiempo, En riesgo, Retrasado) queda solo en la página de Producción; no lo muestres en Pedidos.
+   - El Estatus del pedido sigue existiendo como dato, pero ya no define el color de las tarjetas.
+
+## Tables & fields involved
+- Tareas de producción (tblESlAFi4WqHlJtk): Etapa (fldXHZrKduKmnqBca), Estatus (fldc4Zj0xoAB8JR3H), cantidad asignada (fld4G5m56kFAa8FjG), cantidad completada (fldwWD5uEpyESCR5g), Elemento (fldrSmQZzC0rA9wVs), Pedido (fldUxrDmIoHee1nIM).
+- Elementos (tblis88Izkhbi3SIG): Nombre (flddTGNiG8RFSqniA), Producto (fldhyj9TEbD8ABnBK), Pedido (fldyBFdIC1QVZJrnl).
+- Catálogo (tbllPBYdLexX7ZetM): Nombre del producto (flduxPtM9vWcE8x9n); el tipo de producto se deduce con la regla del Prompt 1.
+- Pedidos (tbl4izLZNlOcem1SC): Estatus (fldxy88bESBs57F9r), ID del pedido (fldczBetjpB774xkR).
+
+## Behaviors
+- Solo lectura: no escribas en Airtable ni cambies tablas, campos o automatizaciones. Todo se calcula en la app a partir de las tareas y del Estatus del pedido.
+- El semáforo se recalcula cuando cambian las tareas: al completar una etapa en el detalle del elemento, la tarjeta y la fila del pedido cambian de color sin recargar.
+- Una tarea "completa" se define igual que en el Prompt 2: Estatus = Terminado.
+- Las etiquetas y colores se ven bien en modo claro y oscuro; verifica el contraste del texto sobre cada color.
+
+## Fuera de alcance
+- Vista Todos, tablero por etapas y selector de periodo (Prompt 4).
+- Leyenda de colores.
+- Cálculo de capacidad y riesgo para pasteles y cupcakes.
+- Cake toppers.
+
+## Criterios de aceptación
+- Un elemento sin tareas completas se ve morado; con Horneado completo, rojo; con la segunda etapa, naranja; con Decorado, amarillo; con Empacado, verde lima.
+- Un pedido con estatus Entregado se ve verde.
+- Un pedido con un pastel decorado y cupcakes sin iniciar se ve morado, y muestra la etapa de los cupcakes.
+- En la lista aparece la etapa como etiqueta; en las tarjetas, solo texto.
+- Ya no hay colores de tarjeta basados en el Estatus del pedido.
+
+## Parte B: Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla. Aplica también a: Prompt 4.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable. Aplica también a: Prompt 4.
+- C3. Una tarea está completa cuando su Estatus es Terminado. Aplica también a: Prompt 4.
+- C4. El color y la etapa de un pedido se calculan siempre con la misma función del semáforo, en todas las vistas, incluida la del Prompt 4. Aplica también a: Prompt 4.
+
+## No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular.
+- Finanzas, cake toppers y recibos.
+- La página de Producción, incluido el indicador de riesgo y los colores por etapa que ya tiene.
+- El detalle del elemento y sus flujos del Prompt 2, salvo el punto de color y la etapa que se piden aquí.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+## Al terminar
+Reporta, en este orden:
+1. Cada punto de este prompt como hecho o no hecho.
+2. Cada tabla, campo, opción de select o automatización que hayas creado o cambiado (se espera: ninguna).
+3. Lo que no pudiste hacer o lo que asumiste.
+4. Un export COMPLETO del proyecto, confirmando que MANIFEST.json lista todos los archivos importados (en especial los nuevos o movidos) y cuántos archivos son.
+
+---
+
+### Assistant — Oct 5, 2026, 12:47 AM CST
+
+Presented a plan for review.
+
+---
+
+### User — Oct 5, 2026, 1:00 AM CST
+
+Ajusta el plan con estos dos cambios antes de construir:
+
+1. El cálculo del semáforo (etapa y color de elementos y pedidos) se hace solo en el frontend, en una sola función. No lo implementes como campo de fórmula, rollup ni ningún campo calculado en las tablas de Airtable, y no crees ni modifiques campos para esto.
+
+2. Los colores del semáforo salen de la paleta de colores de opciones select de Airtable, para que el campo final de Airtable que tendrá este semáforo se vea igual. Usa: No iniciado "purple", Horneado listo "red", Embetunado o Glaseado listo "orange", Decorado listo "yellow", Empacado listo "greenLight1", Entregado "green". Define un solo mapa en el frontend (estado, nombre de color de Airtable, valor para modo claro y oscuro) y haz que todas las vistas lean los colores de ahí; no pongas colores sueltos en los componentes. Sigue sin reutilizar los colores por etapa de Producción.
+
+Todo lo demás del plan queda igual. Envíamelo actualizado.
+
+---
+
+### Assistant — Oct 5, 2026, 1:01 AM CST
+
+Presented a plan for review.
+
+---
+
+### User — Oct 5, 2026, 1:01 AM CST
+
+Build it
+
+---
+
+### Assistant — Oct 5, 2026, 1:05 AM CST
+
+Listo: el semáforo de avance ya está en Pedidos (versión 1.9.0). Compila y valida sin errores. No pude ver la pantalla de Pedidos con datos, porque la captura solo mostró el inicio. Falta probarlo a mano en el navegador.
+
+**1. Puntos del prompt**
+- **Cálculo único, solo en el frontend:** hecho. Una sola función calcula el estado de cada elemento y el del pedido, y lo usan todas las vistas. Cuenta una etapa como completa cuando su tarea está en Terminado. Solo se consideran Pastel, Plancha de cupcakes y Galletas.
+- **Escala de 6 estados:** hecha. Un solo mapa define estado, color de Airtable y valores para modo claro y oscuro. Ninguna vista tiene colores sueltos y no se reutilizan los de Producción. Las etapas se leen de la misma regla de productos y las tareas ya existentes.
+
+| Estado | Color de Airtable |
+|---|---|
+| No iniciado | `purple` |
+| Horneado listo | `red` |
+| Embetunado o Glaseado listo | `orange` |
+| Decorado listo | `yellow` |
+| Empacado listo | `greenLight1` |
+| Entregado | `green` |
+
+- **Pedido Entregado:** todos sus elementos quedan en Entregado.
+- **Elemento más atrasado:** se muestra su etapa y su color. Un pedido sin Pastel, Cupcakes ni Galletas no muestra semáforo.
+- **Lista del Día:** nueva columna "Etapa" con la etapa en un chip de color.
+- **Tarjetas de Día, Semana y Mes:** solo el texto de la etapa. El fondo y el borde usan el tono suave del color y ya no dependen del Estatus del pedido. En Mes, el texto de la etapa no aparece en celular.
+- **Detalle del pedido:** columna "Etapa" con punto de color en la tabla de Elementos, y punto de color en "Etapa actual del elemento más atrasado".
+- **Encabezado del elemento:** punto y nombre de la etapa.
+- **Recálculo en vivo:** hecho. Cambia con las tareas, sin recargar.
+- **Sin escrituras en Airtable y sin indicador de riesgo en Pedidos:** cumplido.
+- **Contraste:** los colores salen de la paleta de Airtable en claro y oscuro, con textos oscuros o blancos según el tono. No lo medí, tampoco con la captura.
+
+**2. Cambios en Airtable:** ninguno. No se creó ni cambió ninguna tabla, campo, opción de selección ni automatización.
+
+**3. Supuestos y pendientes**
+- Los nombres de color de Airtable `purple`, `red`, `orange`, `yellow` y `green` no existen tal cual en la paleta de la app. Usé su tono "Bright" y `greenLight1` para Empacado. El fondo suave de las tarjetas es un tono más claro del mismo color.
+- Nueva columna "Etapa" en la lista del Día. Dejé el Estatus del pedido visible como dato en esa lista.
+- No pude comprobar en pantalla los colores ni las etiquetas. Falta revisar a mano en claro y oscuro.
+
+**4. Exportación completa**
+- Es la descarga "Código fuente" de la app (`source.zip`), que se genera en el navegador. No la descargué yo.
+- El código fuente está regenerado con 63 archivos, e incluye el archivo nuevo del semáforo (`produccion/semaforo.ts`).
+- No existe un `MANIFEST.json`. Solo hay un `manifest.json` interno con la fecha de creación, y el zip no incluye lista de archivos. No lo creé, así que no puedo confirmar el manifiesto con todos los archivos importados.
+- Confirmado sin cambios: `lib/airtable-hooks.tsx` y `package.json`, con el refresco automático cada 30 s y las dependencias presentes.

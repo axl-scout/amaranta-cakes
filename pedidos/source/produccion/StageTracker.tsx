@@ -11,12 +11,18 @@ export type StageState = 'done' | 'current' | 'pending';
  */
 export function stageStates(qty: number, tasks: Task[], etapas: Etapa[] = ETAPAS): Record<Etapa, StageState> {
   const res = {} as Record<Etapa, StageState>;
-  let currentSet = false;
-  etapas.forEach((e) => {
+  // C3: a task is complete when Estatus = Terminado AND completada >= asignada.
+  const raw = etapas.map((e) => {
     const mine = tasks.filter((t) => t.etapa === e);
-    const doneQty = mine.reduce((s, t) => s + (t.estatus === 'Terminado' ? t.asignada : Math.min(t.completada, t.asignada)), 0);
-    const done = qty > 0 ? doneQty >= qty : mine.length > 0 && mine.every((t) => t.estatus === 'Terminado');
-    if (done && !currentSet) res[e] = 'done';
+    if (mine.length === 0) return false;
+    const complete = mine.filter((t) => t.estatus === 'Terminado' && t.completada >= t.asignada);
+    return complete.length === mine.length;
+  });
+  // A stage also shows complete when any later stage is complete (visual only).
+  const done = etapas.map((_, i) => raw.slice(i).some(Boolean));
+  let currentSet = false;
+  etapas.forEach((e, i) => {
+    if (done[i]) res[e] = 'done';
     else if (!currentSet) { res[e] = 'current'; currentSet = true; }
     else res[e] = 'pending';
   });
@@ -24,10 +30,10 @@ export function stageStates(qty: number, tasks: Task[], etapas: Etapa[] = ETAPAS
 }
 
 /** One stage: circle + small label under it. */
-export function Stage({ etapa, state, onClick }: { etapa: Etapa; state: StageState; onClick?: () => void }): React.ReactElement {
+export function Stage({ etapa, state, onClick }: { etapa: Etapa; state: StageState; onClick?: (anchor: HTMLElement) => void }): React.ReactElement {
   const { hex, text } = ETAPA_STYLE[etapa];
   const Wrap: any = onClick && state !== 'done' ? 'button' : 'div';
-  const wrapProps: any = onClick && state !== 'done' ? { type: 'button', onClick, title: `Completar ${etapa}`, 'aria-label': `Completar ${etapa}` } : {};
+  const wrapProps: any = onClick && state !== 'done' ? { type: 'button', onClick: (ev: any) => onClick(ev.currentTarget), title: `Completar ${etapa}`, 'aria-label': `Completar ${etapa}` } : {};
   return (
     <Wrap {...wrapProps} className={`relative flex-shrink-0 ${onClick && state !== 'done' ? 'cursor-pointer rounded-full hover:scale-110 transition-transform' : ''}`}>
       {state === 'done' ? (
@@ -49,7 +55,7 @@ export function Stage({ etapa, state, onClick }: { etapa: Etapa; state: StageSta
 }
 
 /** Read-only horizontal tracker of the four production stages. */
-export function StageTracker({ states, etapas = ETAPAS, onStageClick }: { states: Record<Etapa, StageState>; etapas?: Etapa[]; onStageClick?: (e: Etapa) => void }): React.ReactElement {
+export function StageTracker({ states, etapas = ETAPAS, onStageClick }: { states: Record<Etapa, StageState>; etapas?: Etapa[]; onStageClick?: (e: Etapa, anchor: HTMLElement) => void }): React.ReactElement {
   return (
     <div className="flex items-center px-6 pb-6" aria-label={etapas.map((e) => `${e}: ${states[e] === 'done' ? 'completado' : states[e] === 'current' ? 'en curso' : 'pendiente'}`).join(', ')}>
       {etapas.map((e, i) => {
@@ -63,7 +69,7 @@ export function StageTracker({ states, etapas = ETAPAS, onStageClick }: { states
         }
         return (
           <React.Fragment key={e}>
-            <Stage etapa={e} state={states[e]} onClick={onStageClick ? () => onStageClick(e) : undefined} />
+            <Stage etapa={e} state={states[e]} onClick={onStageClick ? (a) => onStageClick(e, a) : undefined} />
             {next && <span className={`flex-1 h-0.5 mx-1.5 rounded-full ${line ? '' : 'bg-gray-200 dark:bg-white/10'}`} style={line ?? undefined} />}
           </React.Fragment>
         );

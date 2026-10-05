@@ -1,3 +1,6 @@
+import { useUrlParam } from './lib/useUrlParam';
+import { useSemaforo, semaforoStyle } from './produccion/semaforo';
+import { useElementoDelete } from './produccion/deleteElemento';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -5,7 +8,7 @@ import { PageToolbar, SideRail } from './components/SideMenu';
 import { LandingPage } from './components/LandingPage';
 import { FinanzasPage } from './finanzas/FinanzasPage';
 import { useThemeMode } from './components/ThemeToggle';
-import { estatusStyle, setEstatusChoices, toneStyle, useIsDark } from './components/airtableColors';
+import { setEstatusChoices, toneStyle, useIsDark } from './components/airtableColors';
 import { PedidosContentSkeleton } from './components/Skeletons';
 import { ProduccionPage } from './produccion/ProduccionPage';
 import {
@@ -56,9 +59,10 @@ function PedidosApp(): React.ReactElement {
 
   // ── Soft delete with undo (10s) ──────────────────────────────────────────────
   const { mutate: deletePedidoApi } = useDeleteRecord(pedidosTable);
-  const { mutate: deleteElementoApi } = useDeleteRecord(elementosTable);
   const [pendingDeletes, setPendingDeletes] = useState<Array<{ key: string; type: 'pedido' | 'elemento'; recordId: string }>>([]);
   const deleteTimers = useRef<Record<string, any>>({});
+  const elDel = useElementoDelete();
+  const semaforo = useSemaforo();
 
   const hiddenPedidoIds = useMemo(() => new Set(pendingDeletes.filter((p) => p.type === 'pedido').map((p) => p.recordId)), [pendingDeletes]);
   const hiddenElementoIds = useMemo(() => new Set(pendingDeletes.filter((p) => p.type === 'elemento').map((p) => p.recordId)), [pendingDeletes]);
@@ -66,22 +70,29 @@ function PedidosApp(): React.ReactElement {
   const finalizeDelete = useCallback((pd: { key: string; type: 'pedido' | 'elemento'; recordId: string }) => {
     delete deleteTimers.current[pd.key];
     setPendingDeletes((prev) => prev.filter((x) => x.key !== pd.key));
-    const run = pd.type === 'pedido' ? deletePedidoApi : deleteElementoApi;
-    Promise.resolve(run(pd.recordId)).then(() => onDataChange()).catch((e) => console.error('Error al eliminar definitivamente:', e));
-  }, [deletePedidoApi, deleteElementoApi, onDataChange]);
+    if (pd.type === 'elemento') {
+      // Tasks first, then the element; if a task fails the element stays.
+      elDel.run(pd.recordId).then(() => onDataChange()).catch((e) => console.error('Error al eliminar definitivamente:', e));
+      return;
+    }
+    Promise.resolve(deletePedidoApi(pd.recordId)).then(() => onDataChange()).catch((e) => console.error('Error al eliminar definitivamente:', e));
+  }, [deletePedidoApi, elDel, onDataChange]);
 
   const requestDelete = useCallback((type: 'pedido' | 'elemento', recordId: string) => {
     const key = `${type}-${recordId}-${Date.now()}`;
     const pd = { key, type, recordId };
+    if (type === 'elemento') elDel.hide(recordId);
     setPendingDeletes((prev) => [...prev, pd]);
     deleteTimers.current[key] = setTimeout(() => finalizeDelete(pd), 10000);
-  }, [finalizeDelete]);
+  }, [finalizeDelete, elDel]);
 
   const undoDelete = useCallback((key: string) => {
     const t = deleteTimers.current[key];
     if (t) { clearTimeout(t); delete deleteTimers.current[key]; }
+    const pd = pendingDeletes.find((x) => x.key === key);
+    if (pd?.type === 'elemento') elDel.restore(pd.recordId);
     setPendingDeletes((prev) => prev.filter((x) => x.key !== key));
-  }, []);
+  }, [pendingDeletes, elDel]);
 
   useEffect(() => () => { Object.values(deleteTimers.current).forEach((t) => clearTimeout(t)); }, []);
 
@@ -96,8 +107,9 @@ function PedidosApp(): React.ReactElement {
   });
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  const [selectedRecordId, setSelectedRecordId] = useUrlParam('pedido');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchIdx, setActiveSearchIdx] = useState(0);
   const [searchResults, setSearchResults] = useState<AirtableRecord[]>([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [selectedEstatus, setSelectedEstatus] = useState<string[]>(() => {
@@ -195,6 +207,7 @@ function PedidosApp(): React.ReactElement {
       })
       .slice(0, 10);
     setSearchResults(matches);
+    setActiveSearchIdx(0);
     setShowSearchDropdown(matches.length > 0);
   }, [searchQuery, pedidoRecords, pedidosTable, selectedEstatus, hiddenPedidoIds]);
 
@@ -254,14 +267,15 @@ function PedidosApp(): React.ReactElement {
   const navBtnCls = 'h-10 w-10 flex-shrink-0 rounded-xl border border-gray-300 dark:border-[#2E352C] bg-white dark:bg-[#251D1F] hover:bg-gray-50 dark:hover:bg-white/10 text-gray-500 transition-colors flex items-center justify-center';
 
   const searchDropdown = showSearchDropdown && searchResults.length > 0 ? (
-    <div className="absolute top-full left-0 right-0 sm:right-auto mt-1 z-50 bg-white border border-[#E9D9D9] rounded-lg shadow-lg overflow-hidden sm:min-w-[280px] max-h-[300px] overflow-y-auto dark:bg-[#251D1F] dark:border-[#382C2E]">
-      {searchResults.map((r) => {
+    <div className="absolute top-full left-0 right-0 sm:right-auto mt-1 z-50 bg-white border border-[#E9D9D9] rounded-lg shadow-lg overflow-hidden sm:w-[380px] sm:max-w-[90vw] max-h-[300px] overflow-y-auto dark:bg-[#251D1F] dark:border-[#382C2E]">
+      {searchResults.map((r, idx) => {
         const pid = cvs(r, pedidosTable, FIELD_IDS.PEDIDO_ID) || 'Sin ID';
         const telefono = cvs(r, pedidosTable, FIELD_IDS.NUMERO_TELEFONO);
         const fecha = cv(r, pedidosTable, FIELD_IDS.FECHA_ENTREGA) as string | null;
         return (
-          <button key={r.id} type="button" onClick={() => { setSelectedRecordId(r.id); setShowSearchDropdown(false); setSearchQuery(''); setMobileSearchOpen(false); }}
-            className="w-full text-left px-4 py-2 hover:bg-rose-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer dark:hover:bg-white/5 dark:border-white/5">
+          <button key={r.id} type="button" ref={(el: any) => { if (el && idx === activeSearchIdx) el.scrollIntoView?.({ block: 'nearest' }); }} onMouseEnter={() => setActiveSearchIdx(idx)} onClick={() => { setSelectedRecordId(r.id); setShowSearchDropdown(false); setSearchQuery(''); setMobileSearchOpen(false); }}
+            className={`w-full text-left px-4 py-2 hover:bg-rose-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer dark:hover:bg-white/5 dark:border-white/5 ${idx === activeSearchIdx ? 'bg-rose-50 dark:bg-white/5' : ''}`}
+            >
             <div className="font-medium text-base text-gray-900 dark:text-gray-100">{toTitleCase(pid)}</div>
             {telefono && <div className="text-sm text-gray-600 dark:text-gray-400">{telefono}</div>}
             <div className="text-sm text-gray-500 dark:text-gray-500">{formatFriendlyDateTime(fecha)}</div>
@@ -284,6 +298,13 @@ function PedidosApp(): React.ReactElement {
             <MagnifyingGlassIcon size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none" />
             <input ref={searchInputRef} type="text" value={searchQuery} onChange={(e: any) => setSearchQuery(e.target.value)}
               onFocus={() => { if (searchResults.length > 0) setShowSearchDropdown(true); }}
+              onKeyDown={(e: any) => {
+                if (e.key === 'Escape') { setShowSearchDropdown(false); return; }
+                if (!showSearchDropdown || searchResults.length === 0) { if (e.key === 'ArrowDown' && searchResults.length > 0) { e.preventDefault(); setShowSearchDropdown(true); } return; }
+                if (e.key === 'ArrowDown') { e.preventDefault(); setActiveSearchIdx((i) => (i + 1) % searchResults.length); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveSearchIdx((i) => (i - 1 + searchResults.length) % searchResults.length); }
+                else if (e.key === 'Enter') { e.preventDefault(); const r = searchResults[activeSearchIdx]; if (r) { setSelectedRecordId(r.id); setShowSearchDropdown(false); setSearchQuery(''); setMobileSearchOpen(false); } }
+              }}
               placeholder="Buscar pedido..." aria-label="Buscar pedido"
               className="pl-8 pr-3 h-10 w-full text-base bg-white border border-gray-300 rounded-xl text-gray-800 focus:outline-none focus:ring-1 focus:ring-rose-600 focus:border-rose-600 dark:bg-[#251D1F] dark:border-[#382C2E] dark:text-gray-200 dark:placeholder-gray-600" />
             {searchDropdown}
@@ -368,11 +389,14 @@ function PedidosApp(): React.ReactElement {
                   const telefono = cvs(r, pedidosTable, FIELD_IDS.NUMERO_TELEFONO);
                   const total = cv(r, pedidosTable, FIELD_IDS.COSTO_TOTAL) as number | null;
                   const estatus = readSelect(cv(r, pedidosTable, FIELD_IDS.ESTATUS));
+                  const sem = semaforo.pedido(r.id, estatus);
+                  const semStyle = sem ? semaforoStyle(sem.nivel, 'suave', isDark) : null;
                   return (
                     <div key={r.id} onClick={() => setSelectedRecordId(r.id)}
-                      style={estatusStyle(estatus, isDark) ?? undefined}
-                      className={`min-w-[220px] max-w-[240px] rounded-xl p-4 cursor-pointer flex-shrink-0 transition-all hover:shadow-md hover:-translate-y-0.5 ${estatusStyle(estatus, isDark) ? '' : 'bg-white text-gray-900 dark:bg-[#251D1F] dark:text-gray-100'}`}>
+                      style={semStyle ?? undefined}
+                      className={`min-w-[220px] max-w-[240px] rounded-xl p-4 cursor-pointer flex-shrink-0 transition-all hover:shadow-md hover:-translate-y-0.5 ${semStyle ? '' : 'bg-white text-gray-900 dark:bg-[#251D1F] dark:text-gray-100'}`}>
                       <div className="font-bold text-base">{toTitleCase(pid)}</div>
+                      {sem && <div className="text-sm font-medium mt-0.5 opacity-90">{sem.etapa}</div>}
                       <div className="flex items-center gap-2 mt-2">
                         <ContactoPill value={metodo} />
                         <span className="text-sm opacity-75">{telefono || '—'}</span>
@@ -385,17 +409,17 @@ function PedidosApp(): React.ReactElement {
           <div className="flex-1 min-h-0 px-4 sm:px-7 pb-5 flex flex-col overflow-hidden">
             <div className="max-h-full bg-white border border-[#E5E1DA] rounded-xl flex flex-col overflow-hidden dark:bg-[#251D1F] dark:border-[#382C2E]">
               <div tabIndex={0} className="overflow-auto flex-1 min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <table className="w-full border-collapse min-w-[900px]">
+                <table className="w-full border-collapse min-w-[1000px]">
                   <thead className="bg-gray-100 border-b border-gray-200 sticky top-0 z-10 dark:bg-[#2C2325] dark:border-white/10">
                     <tr>
-                      {['Pedido', 'Estatus', 'Impreso', 'Cake Topper', 'Total', 'Restante', 'Contacto', 'Teléfono'].map((h) => (
+                      {['Pedido', 'Estatus', 'Etapa', 'Impreso', 'Cake Topper', 'Total', 'Restante', 'Contacto', 'Teléfono'].map((h) => (
                         <th key={h} className="text-left px-3 py-2 text-base font-semibold text-gray-700 whitespace-nowrap bg-gray-100 dark:bg-[#2C2325] dark:text-gray-300">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredPedidosDia.length === 0
-                      ? <tr><td colSpan={8} className="px-8 py-8 text-center text-gray-400 text-base dark:text-gray-600">No hay pedidos para {dateLabel}.</td></tr>
+                      ? <tr><td colSpan={9} className="px-8 py-8 text-center text-gray-400 text-base dark:text-gray-600">No hay pedidos para {dateLabel}.</td></tr>
                       : filteredPedidosDia.map((r) => {
                                   const pid = cvs(r, pedidosTable, FIELD_IDS.PEDIDO_ID) || 'Sin ID';
                           const metodo = readSelect(cv(r, pedidosTable, FIELD_IDS.METODO_CONTACTO));
@@ -411,6 +435,10 @@ function PedidosApp(): React.ReactElement {
                               className={`border-b border-gray-100 cursor-pointer transition-colors hover:bg-rose-50 dark:border-white/5 dark:hover:bg-white/5 ${isSelected ? 'bg-rose-50 dark:bg-rose-600/10' : ''}`}>
                               <td className="px-3 py-3 text-base font-medium text-gray-900 dark:text-gray-100">{toTitleCase(pid)}</td>
                               <td className="px-3 py-3"><EstatusPill value={estatusV} /></td>
+                              <td className="px-3 py-3">{(() => {
+                                const sem = semaforo.pedido(r.id, estatusV);
+                                return sem ? <span style={semaforoStyle(sem.nivel, 'fuerte', isDark)} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium whitespace-nowrap">{sem.etapa}</span> : <span className="text-gray-300 dark:text-gray-700">—</span>;
+                              })()}</td>
                               <td className="px-3 py-3"><ImpresoPill value={impresoV} /></td>
                               <td className="px-3 py-3 text-base text-center">
                                 {hasCakeTopper
@@ -444,6 +472,7 @@ function PedidosApp(): React.ReactElement {
           elementosTable={elementosTable}
           elementoRecords={elementoRecords}
           isSemana={view === 'semana'}
+          semaforo={semaforo}
         />
       )}
       </div>
@@ -472,6 +501,12 @@ function PedidosApp(): React.ReactElement {
         <NuevoPedidoModal pedidosTable={pedidosTable} onClose={(newRecordId) => { setShowNuevoPedido(false); if (newRecordId) { refetchPedidos(); refetchElementos(); setSelectedRecordId(newRecordId); } }} />
       )}
 
+      {elDel.notice && (
+        <div role="alert" className="fixed bottom-4 right-4 z-[130] w-80 max-w-[85vw] bg-white border border-rose-300 rounded-lg shadow-xl px-4 py-3 text-sm text-gray-800 dark:bg-[#251D1F] dark:border-rose-700 dark:text-gray-100 flex items-start gap-3">
+          <span className="flex-1">{elDel.notice}</span>
+          <button type="button" onClick={elDel.clearNotice} className="font-semibold text-rose-600 hover:underline">Cerrar</button>
+        </div>
+      )}
       {pendingDeletes.length > 0 && (
         <div className="fixed bottom-4 left-4 z-[120] flex flex-col gap-2">
           {pendingDeletes.map((pd) => (
@@ -507,10 +542,10 @@ function AnimatedRoutes(): React.ReactElement {
   return (
     <div key={page} className="anim-page">
       <Routes location={location}>
-        <Route path="/pedidos" element={<PedidosApp />} />
-        <Route path="/produccion" element={<ProduccionPage />} />
-        <Route path="/finanzas" element={<FinanzasPage />} />
-        <Route path="*" element={<LandingPage />} />
+        <Route path="/pedidos" element={<div id="pagina-pedidos" data-page-id="pagina-pedidos"><PedidosApp /></div>} />
+        <Route path="/produccion" element={<div id="pagina-produccion" data-page-id="pagina-produccion"><ProduccionPage /></div>} />
+        <Route path="/finanzas" element={<div id="pagina-finanzas" data-page-id="pagina-finanzas"><FinanzasPage /></div>} />
+        <Route path="*" element={<div id="pagina-inicio" data-page-id="pagina-inicio"><LandingPage /></div>} />
       </Routes>
     </div>
   );

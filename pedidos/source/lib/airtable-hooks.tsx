@@ -24,7 +24,7 @@
  *   CLEAR:     { Milestone: [] }
  */
 
-import React, { useState, useEffect, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useLayoutEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   DATA_INSPECT_ENABLED,
@@ -43,6 +43,7 @@ import {
   type DerivedDataSource,
   type JsonValue,
 } from './data-inspector';
+import { MAX_UPLOAD_ATTACHMENT_BYTES, UPLOAD_ATTACHMENT_MESSAGES } from './upload-attachment-messages';
 
 // Configuration injected at generation time
 const BASE_ID = 'appSQk87nF0WpH2gi';
@@ -759,15 +760,6 @@ export function useBase(baseId: string = BASE_ID): UseBaseResult {
   return { base, loading, error };
 }
 
-const AUTO_REFRESH_MS = 30_000;
-
-/** True while a modal/form is open or a field has focus: background refreshes are skipped so nothing the user is typing is lost. */
-function isUserEditing(): boolean {
-  if (document.querySelector('[role="dialog"], .fixed.inset-0[style*="background"]')) return true;
-  const a = document.activeElement as HTMLElement | null;
-  return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable);
-}
-
 /**
  * Hook to load records from a table
  */
@@ -783,15 +775,17 @@ export function useRecords(
   const tableId = typeof tableOrId === 'string' ? tableOrId : tableOrId?.id;
   const table = typeof tableOrId === 'object' ? tableOrId : null;
 
-  const lastRaw = useRef<string>('');
-  const lastFetchAt = useRef<number>(0);
+  const lastSig = React.useRef<string>('');
+  const lastLoad = React.useRef<number>(0);
+  const inFlight = React.useRef<boolean>(false);
 
-  /** `silent` = background refresh: no loading state, no error state, and no re-render when nothing changed. */
-  const doFetch = useCallback(async (silent: boolean) => {
+  const fetchRecords = useCallback(async (silent: boolean = false) => {
     if (!baseId || !tableId) {
       setLoading(false);
       return;
     }
+    if (silent && inFlight.current) return;
+    inFlight.current = true;
 
     if (!silent) {
       setLoading(true);
@@ -809,10 +803,10 @@ export function useRecords(
         throw await proxyResponseError(response, 'Failed to fetch records');
       }
       const data = await response.json();
-      lastFetchAt.current = Date.now();
-      const raw = JSON.stringify(data.records || []);
-      if (silent && raw === lastRaw.current) return;
-      lastRaw.current = raw;
+      lastLoad.current = Date.now();
+      const sig = JSON.stringify(data.records || []);
+      if (silent && sig === lastSig.current) return;
+      lastSig.current = sig;
       const sourceContext = buildSourceContext(baseId, tableId, table);
       const enhancedRecords = (data.records || []).map((r: any) =>
         enhanceRecord(r, table || undefined, sourceContext)
@@ -821,30 +815,36 @@ export function useRecords(
     } catch (err) {
       if (!silent) setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
+      inFlight.current = false;
       if (!silent) setLoading(false);
     }
   }, [baseId, tableId, options?.fields?.join(','), table]);
-
-  const fetchRecords = useCallback(() => doFetch(false), [doFetch]);
 
   useEffect(() => {
     fetchRecords();
   }, [fetchRecords]);
 
-  // Auto-refresh every 30s (and when returning to the tab), never while the user is filling a form.
+  // Silent auto-refresh: every 30 s and when returning to the tab after 30 s.
+  // Skipped while the tab is hidden, a modal/form is open or a field is being edited.
   useEffect(() => {
     if (!baseId || !tableId) return;
-    const tick = () => {
-      if (document.hidden || isUserEditing()) return;
-      doFetch(true);
+    const busy = () => {
+      if (typeof document === 'undefined') return true;
+      if (document.hidden) return true;
+      if (document.querySelector('.fixed.inset-0, [role="dialog"][aria-modal="true"]')) return true;
+      const a = document.activeElement as HTMLElement | null;
+      if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable)) return true;
+      return false;
     };
-    const id = window.setInterval(tick, AUTO_REFRESH_MS);
-    const onVisible = () => { if (!document.hidden && Date.now() - lastFetchAt.current >= AUTO_REFRESH_MS) tick(); };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', onVisible); };
-  }, [doFetch, baseId, tableId]);
+    const tick = () => { if (!busy() && Date.now() - lastLoad.current >= 29000) fetchRecords(true); };
+    const id = window.setInterval(tick, 30000);
+    const onVis = () => { if (!document.hidden && Date.now() - lastLoad.current > 30000 && !busy()) fetchRecords(true); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', onVis); };
+  }, [fetchRecords, baseId, tableId]);
 
-  return { records, loading, error, refetch: fetchRecords };
+  const refetch = useCallback(() => fetchRecords(), [fetchRecords]);
+  return { records, loading, error, refetch };
 }
 
 /**
@@ -1004,7 +1004,8 @@ export function useDeleteRecord(
 }
 
 /**
- * Hook to upload an attachment to a record's attachment field
+ * Hook to upload an attachment to a record's attachment field. Files over 5 MB
+ * are rejected before upload with a user-facing error.
  */
 export function useUploadAttachment(
   tableOrId: Table | string | null | undefined,
@@ -1021,6 +1022,11 @@ export function useUploadAttachment(
     async (data: { recordId: string; fieldIdOrName: string; file: File }): Promise<AirtableRecord | null> => {
       if (!baseId || !tableId) {
         setError(new Error('Table not configured'));
+        return null;
+      }
+
+      if (data.file.size > MAX_UPLOAD_ATTACHMENT_BYTES) {
+        setError(new Error(UPLOAD_ATTACHMENT_MESSAGES.tooLarge));
         return null;
       }
 
@@ -1050,7 +1056,12 @@ export function useUploadAttachment(
         );
 
         if (!response.ok) {
-          throw new Error(`Failed to upload attachment: ${response.statusText}`);
+          // A 500 is an unexpected Canvas failure with a generic body; every
+          // Airtable rejection arrives with its own user-facing message.
+          if (response.status === 500) {
+            throw new Error(UPLOAD_ATTACHMENT_MESSAGES.failed);
+          }
+          throw await proxyResponseError(response, 'Failed to upload attachment');
         }
 
         const result = await response.json();

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useEscClose } from '../lib/escStack';
 import { useCreateRecord, useUpdateRecord, type Table } from '../lib/airtable-hooks';
 import { CAPACIDAD, EMPLEADOS, ETAPAS, DEFAULT_RATE, ETAPA_STYLE, type Etapa } from './constants';
 import type { Emp } from './useProduccionData';
@@ -30,11 +31,7 @@ export function CapacityModal({ emps, capacity, capT, empT, onClose, onSaved, on
   });
   const [savingKey, setSavingKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, [onClose]);
+  useEscClose(onClose);
 
   const persist = async (emp: Emp, etapa: Etapa) => {
     const key = `${emp.id}|${etapa}`;

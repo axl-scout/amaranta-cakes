@@ -1,3 +1,4 @@
+import { useUrlParam } from '../lib/useUrlParam';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CaretLeft as CaretLeftIcon, CaretRight as CaretRightIcon, Plus as PlusIcon, CheckCircle as CheckCircleIcon,
@@ -100,7 +101,7 @@ export function FinanzasPage(): React.ReactElement {
   const [pagoFor, setPagoFor] = useState<string | null | undefined>(undefined); // undefined = closed, null = no preset
   const [payMenu, setPayMenu] = useState<string | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useUrlParam('pedido');
   const [openTile, setOpenTile] = useState<number | null>(null);
   // Order names in "Por cobrar" have priority: if they don't fit, the page's side margins shrink (1), then disappear (2).
   // Only if they still don't fit are names truncated.

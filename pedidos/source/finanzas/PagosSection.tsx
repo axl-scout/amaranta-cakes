@@ -1,3 +1,4 @@
+import { useUrlParam } from '../lib/useUrlParam';
 import React, { useMemo, useState } from 'react';
 import { Plus as PlusIcon, Money as MoneyIcon, CreditCard as CardIcon, Question as QuestionIcon } from '@phosphor-icons/react';
 import { useBase, useRecords, type AirtableRecord, type Table } from '../lib/airtable-hooks';
@@ -14,10 +15,13 @@ export function PagosSection({ record, pedidosTable, onDataChange }: {
   const pagosT = base?.getTableById(PAGOS.TABLE) ?? null;
   const pagR = useRecords(pagosT);
   const [open, setOpen] = useState(false);
-  const [detail, setDetail] = useState<Pago | null>(null);
+  
 
   const info = readPedidoInfo(record, pedidosTable);
   const all = useMemo(() => pagR.records.map((r) => readPago(r, pagosT)), [pagR.records, pagosT]);
+  const [pagoId, setPagoId] = useUrlParam('pago');
+  const detail = pagoId ? all.find((x) => x.id === pagoId && x.pedidoId === record.id) ?? null : null;
+  const setDetail = (p: Pago | null) => setPagoId(p ? p.id : null);
   const mine = useMemo(() => all.filter((p) => p.pedidoId === record.id).sort((a, b) => a.fecha.localeCompare(b.fecha)), [all, record.id]);
   const pagado = pagadoDe(info, mine);
   const restante = Math.max(0, info.total - pagado);
