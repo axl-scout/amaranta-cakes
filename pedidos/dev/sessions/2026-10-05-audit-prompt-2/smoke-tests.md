@@ -1,7 +1,7 @@
 # Smoke tests — Prompt 2/4 (detalle del elemento y tareas)
 
 Export probado: v1.5.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`).
-Estado: pendientes las pruebas 41 a 46 (solo lectura) y 39, 40, 47, 48, 49 y 50 (escriben datos) de la v1.8.0. Las pruebas 1 a 38 están cerradas (38 omitida) y están al final del archivo. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
+Estado: pendientes la prueba 46 (solo lectura), 39, 40, 47, 48, 49 y 50 (escriben datos) de la v1.8.0 y 51 a 53 (tras la próxima corrección). Las pruebas 1 a 38 y 41 a 45 están cerradas y están al final del archivo. Fecha de hoy en las pruebas: domingo 4 oct 2026 (hora local de Axel).
 Versión: las pruebas 1 a 11 se hicieron con v1.5.0; desde la prueba 12 la app publicada es v1.6.0, donde el buscador por empleado se reemplazó por el filtro "Todo el equipo" y Producción tiene un buscador de pedidos.
 
 Reglas
@@ -10,21 +10,20 @@ Reglas
 - Selector de vista en Producción (arriba a la derecha): Día, Todos (vista semanal), Grandes, Regulares.
 - "Pop-up del pedido" = ventana que se abre al hacer clic en un pedido en Pedidos. "Detalle del elemento" = segundo pop-up que se abre al hacer clic en una fila de la tabla Elementos.
 
-## v1.8.0 — [4128] Sara (solo lectura)
-
-| # | Record | Prueba | Expected | Estado |
-|---|---|---|---|---|
-| 41 | [4128] Sara | Página Pedidos > abre [4128] Sara (1 oct) > fila "Galletas" (detalle del elemento). No cambies ningún campo. | No existe el botón "Editar". Los campos Producto, Cantidad, Costo unitario y Descripción se ven editables en su lugar; "Nombre" y "Pedido" son de solo lectura. Hay un icono de basura en el encabezado. | Pendiente |
-| 42 | [4128] Sara | En el mismo detalle del elemento haz clic en el círculo "Glaseado". Ciérralo con clic afuera y con Esc. | El globo muestra solo "¿Completar tarea?" y los botones "Sí" y "No", sin texto explicativo. Cierra con clic afuera y con Esc sin escribir; siguen 4 tareas. | Pendiente |
-| 43 | [4128] Sara | Cierra el detalle del elemento y revisa la sección "Producción" del pop-up del pedido. | Una sola tabla, con el subtítulo "Galletas" arriba; columnas Etapa, Empleado, Inicio, Fin, Avance y Ritmo (sin columna "Elemento"); filas Horneado, Glaseado, Decorado, Empacado. La línea "Etapa actual del elemento más atrasado" sigue arriba. | Pendiente |
-| 44 | [4128] Sara | En esa tabla clic en la fila Horneado (formulario de la tarea) > abre "Fecha de inicio". No cambies nada. | Aparece "No se puede editar: la entrega de producción ya pasó." y todos los días siguen deshabilitados. | Pendiente |
-
 ## v1.8.0 — [3413] Rosaura Avila (solo lectura)
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
-| 45 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Tres subtítulos ("Pastel 50 pax", "Cupcakes", "Galletas"), cada uno con su tabla y el texto "Sin tareas.". | Pendiente |
+| 45 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Tres subtítulos ("Pastel 50 pax", "Cupcakes", "Galletas"), cada uno con su tabla y el texto "Sin tareas.". | OK (nota: los subtítulos salen Galletas, Cupcakes, Pastel 50 pax; deberían seguir el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas) |
 | 46 | [3413] Rosaura Avila | Abre el detalle de "Galletas", pulsa el icono de basura del encabezado y luego "Cancelar" en la confirmación. | Aparece la confirmación "¿Eliminar elemento?"; al cancelar no se borra nada y el detalle sigue abierto. | Pendiente |
+
+## Para la próxima versión (después del prompt v1.8.1) — [3413] Rosaura Avila
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 51 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > fila "Galletas" (detalle del elemento). | La primera fila de datos muestra "Pedido" y luego "Producto" (editable); ya no aparece el campo "Nombre". | Pendiente (tras la corrección) |
+| 52 | [3413] Rosaura Avila (ESCRIBE) | Con el elemento de prueba con tareas: en la tabla de tareas del detalle del elemento y en la del pop-up del pedido cambia directamente el "Empleado", el "Inicio" y el "Fin" de una fila. | Los tres campos se editan en la misma celda de la tabla y se guardan solos; las demás celdas siguen abriendo el formulario de la tarea. Se aplican las reglas de fechas (secuenciales, rango, entrega pasada con "No se puede editar: la entrega de producción ya pasó."). Verifica en Airtable. | Pendiente (tras la corrección) |
+| 53 | [3413] Rosaura Avila | Página Pedidos > abre [3413] Rosaura Avila (15 oct) > sección "Producción" del pop-up. | Los subtítulos siguen el orden de la tabla Elementos: Pastel 50 pax, Cupcakes, Galletas. | Pendiente (tras la corrección) |
 
 ## v1.8.0 — [3413] Rosaura Avila (ESCRIBEN datos, en este orden)
 
@@ -125,3 +124,12 @@ Limpieza después de las pruebas 24 a 28: borra las tareas creadas (icono de bas
 Limpieza hecha (autorizada por Axel): se borraron las 11 tareas de prueba y el elemento Galletas nuevo (`rec4y37pNvUupXVWj`) de [3413] Rosaura Avila. Estado final verificado en Airtable: 0 tareas y 3 elementos. Para las pruebas 39 y 40 habrá que crear tareas con fechas de nuevo.
 
 Limpieza de la prueba 40 hecha (autorizada por Axel): se borraron el elemento "Pastel 5 pax" nuevo (`rechgYrJvTX7AjMnx`) y sus 4 tareas. Estado final verificado en Airtable: [3413] Rosaura Avila con 3 elementos y 0 tareas. Observación: ese elemento se creó sin cantidad, por eso las tareas salieron con cantidad asignada 0 y título "· 0".
+
+## v1.8.0 — [4128] Sara (solo lectura)
+
+| # | Record | Prueba | Expected | Estado |
+|---|---|---|---|---|
+| 41 | [4128] Sara | Página Pedidos > abre [4128] Sara (1 oct) > fila "Galletas" (detalle del elemento). No cambies ningún campo. | No existe el botón "Editar". Los campos Producto, Cantidad, Costo unitario y Descripción se ven editables en su lugar; "Nombre" y "Pedido" son de solo lectura. Hay un icono de basura en el encabezado. | OK (cambio pedido: quitar el campo "Nombre" y mostrar primero "Pedido" y luego "Producto") |
+| 42 | [4128] Sara | En el mismo detalle del elemento haz clic en el círculo "Glaseado". Ciérralo con clic afuera y con Esc. | El globo muestra solo "¿Completar tarea?" y los botones "Sí" y "No", sin texto explicativo. Cierra con clic afuera y con Esc sin escribir; siguen 4 tareas. | OK |
+| 43 | [4128] Sara | Cierra el detalle del elemento y revisa la sección "Producción" del pop-up del pedido. | Una sola tabla, con el subtítulo "Galletas" arriba; columnas Etapa, Empleado, Inicio, Fin, Avance y Ritmo (sin columna "Elemento"); filas Horneado, Glaseado, Decorado, Empacado. La línea "Etapa actual del elemento más atrasado" sigue arriba. | OK |
+| 44 | [4128] Sara | En esa tabla clic en la fila Horneado (formulario de la tarea) > abre "Fecha de inicio". No cambies nada. | Aparece "No se puede editar: la entrega de producción ya pasó." y todos los días siguen deshabilitados. | OK (aviso correcto; cambio pedido: poder editar Empleado, Inicio y Fin directamente en la tabla de tareas) |

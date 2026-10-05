@@ -57,3 +57,6 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Quitar el texto explicativo del globo "¿Completar tarea?" (confirmado otra vez al probar con Cupcakes).
 - Sección "Producción" del detalle del pedido: una tabla por elemento, con un subtítulo arriba de cada tabla con el nombre del elemento (en lugar de una sola tabla con todas las filas y la columna "Elemento"). Va al prompt de corrección.
 - Al recibir un export nuevo, comparar siempre contra la versión anterior los archivos que la plataforma puede pisar: lib/airtable-hooks.tsx (la v1.8.0 perdió la actualización automática cada 30 s de la v1.4.0) y package.json (la v1.8.0 perdió dependencias). Avisar de cualquier regresión antes de dar por buena la versión.
+- Detalle del elemento: quitar el campo "Nombre" (repite al Producto) y mostrar primero "Pedido" y luego "Producto".
+- Tareas editables desde las tablas (detalle del pedido y detalle del elemento): solo "Empleado", "Inicio" y "Fin", directamente en la celda y con guardado automático; con las mismas reglas de fechas (rango, secuenciales, entrega pasada). Clic en las demás celdas sigue abriendo el formulario de la tarea (Avance, Estatus, Notas, Dividir).
+- Detalle del pedido, tablas por elemento: los subtítulos van en el mismo orden que la tabla Elementos del pedido.
