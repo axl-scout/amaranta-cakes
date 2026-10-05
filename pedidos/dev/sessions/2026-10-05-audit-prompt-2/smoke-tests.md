@@ -25,7 +25,7 @@ Records: [4148] Blanca Valdes (`recVNjMyWhvzgnU5t`), [4128] Sara (`recZCPIvYm7J7
 | 35 | [3413] Rosaura Avila | En "Agregar elemento" elige "Pastel 5 pax", cantidad 30 y elige fechas en dos filas. | La tabla muestra solo Etapa (chip con el color de la etapa), Empleado, Inicio y Fin; no hay Título, Cant. ni Estatus. No hay scroll horizontal ni columnas cortadas con fechas elegidas. | Pendiente |
 | 36 | [3413] Rosaura Avila | En esa tabla haz clic en "Inicio" de una fila, elige el 8 oct, luego elige el 10 oct; abre "Fin" de la misma fila; usa la "X" de Inicio y de Fin. | Un solo calendario: elegir el inicio no lo cierra y la siguiente selección es el fin; el periodo 8-10 oct queda resaltado. Tocar "Fin" abre el mismo calendario. Cada "X" limpia su fecha. Solo se pueden elegir días del 4 al 15 oct. Dejar fechas vacías es válido. | Pendiente |
 | 37 | [3413] Rosaura Avila | Regresión de Esc: abre el cake topper del pedido y pulsa Esc; en Pedidos abre "Nuevo pedido" y pulsa Esc; en Producción vista "Día" abre el detalle de un pedido y pulsa Esc. | Cada Esc cierra solo la capa superior y no se guarda nada. | Pendiente |
-| 38 | [4128] Sara | Repite las pruebas 30 y 36 en modo claro, en modo oscuro y con la ventana angosta (celular). | El globo, el calendario de rango y los dropdowns se ven bien y se pueden usar en los tres casos. | Pendiente |
+| 38 | [3413] Rosaura Avila | Repite las pruebas 30 y 36 en modo claro, en modo oscuro y con la ventana angosta (celular). | El globo, el calendario de rango y los dropdowns se ven bien y se pueden usar en los tres casos. | Pendiente |
 
 ## [3413] Rosaura Avila (`rec3OES0NemnxyyzY`) — ESCRIBEN datos en Producción
 
