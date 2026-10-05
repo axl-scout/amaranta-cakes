@@ -138,4 +138,4 @@ Limpieza de la prueba 40 hecha (autorizada por Axel): se borraron el elemento "P
 
 Auditoría del export v1.8.2: `lib/airtable-hooks.tsx` y `package.json` sin cambios respecto a v1.8.1. Cambios: URL con id del detalle (`?pedido=`, `?elemento=`, `?task=`, `?pago=`, `?empleado=`, pedido por Axel), ids de página, desplegables con apertura hacia arriba (Dropdowns, useFloating, EmpleadoSelect) y tracker sincronizado (StageTracker, PedidoTareasSection, useProduccionData). Observación: Axel pegó los prompts a Canvas con el marcador "[PEGAR AQUÍ: No tocar y contratos C1-C3]" sin reemplazar; Canvas aplicó las reglas previas.
 
-Tareas huérfanas tras la prueba 49 (pendientes de borrar con autorización): `rec84New4oMm9JSRx`, `recxsaJp6DAhhCinf`, `receSXQ202evif7ZB`, `recqFfkqLLdl1x2sb`.
+Limpieza hecha (autorizada por Axel): se borraron las 4 tareas huérfanas tras la prueba 49: `rec84New4oMm9JSRx`, `recxsaJp6DAhhCinf`, `receSXQ202evif7ZB`, `recqFfkqLLdl1x2sb`. Estado final verificado en Airtable: [3413] Rosaura Avila con 3 elementos y 0 tareas.

@@ -62,3 +62,5 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Detalle del pedido, tablas por elemento: los subtítulos van en el mismo orden que la tabla Elementos del pedido.
 
 - Desplegables dentro de tablas y pop-ups (p. ej. Empleado en la última fila del detalle del elemento): no deben cortarse al fondo de la ventana; abren hacia arriba o se desplazan para verse completos. Va al prompt de corrección v1.8.2.
+- Eliminar un elemento debe eliminar también sus tareas de producción (decidido por Axel tras la prueba 49: hoy quedan huérfanas). Va al prompt de corrección v1.8.3.
+- Antes de pegar un prompt en Canvas, reemplazar el marcador [PEGAR AQUÍ: No tocar y contratos C1-C3] con el texto de contracts-and-no-tocar.md; en la v1.8.2 se pegó sin reemplazar.
