@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { CaretDown as CaretDownIcon } from '@phosphor-icons/react';
 
 export type Periodo = 'dia' | 'semana' | 'mes' | 'todos';
 const OPCIONES: { v: Periodo; label: string }[] = [
@@ -10,7 +11,7 @@ const W = 5; // rem por opción
  * Interruptor de periodo: contraído muestra solo la opción elegida; al pasar el cursor (o con un toque / teclado)
  * se expande y muestra el interruptor completo; al elegir una vuelve a contraerse.
  */
-export function PeriodSelect({ value, onChange }: { value: Periodo; onChange: (v: Periodo) => void }) {
+function PeriodSwitch({ value, onChange }: { value: Periodo; onChange: (v: Periodo) => void }) {
   const [open, setOpen] = useState(false);
   const idx = Math.max(0, OPCIONES.findIndex((o) => o.v === value));
   const [active, setActive] = useState(idx);
@@ -53,5 +54,49 @@ export function PeriodSelect({ value, onChange }: { value: Periodo; onChange: (v
         </div>
       </div>
     </div>
+  );
+}
+
+/** Celular: lista desplegable que muestra solo la opción elegida con una flecha. */
+function PeriodDropdown({ value, onChange }: { value: Periodo; onChange: (v: Periodo) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<any>(null);
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: any) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('pointerdown', h);
+    return () => document.removeEventListener('pointerdown', h);
+  }, [open]);
+  const actual = OPCIONES.find((o) => o.v === value) ?? OPCIONES[0]!;
+  return (
+    <div ref={ref} className="relative h-10">
+      <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label="Periodo"
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e: any) => { if (e.key === 'Escape') setOpen(false); }}
+        className="h-10 px-3 flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 dark:bg-[#251D1F] dark:border-[#2E352C] dark:text-gray-200">
+        <span>{actual.label}</span>
+        <CaretDownIcon size={14} className={`text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div role="listbox" className="absolute left-0 top-full mt-1 z-50 min-w-full w-32 bg-white border border-[#E9D9D9] rounded-lg shadow-lg overflow-hidden dark:bg-[#251D1F] dark:border-[#382C2E]">
+          {OPCIONES.map((o) => (
+            <button key={o.v} type="button" role="option" aria-selected={o.v === value}
+              onClick={() => { onChange(o.v); setOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-sm border-b border-gray-100 last:border-b-0 dark:border-white/5 ${o.v === value ? 'bg-rose-600 text-white' : 'text-gray-700 hover:bg-rose-50 dark:text-gray-300 dark:hover:bg-white/5'}`}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function PeriodSelect({ value, onChange }: { value: Periodo; onChange: (v: Periodo) => void }) {
+  return (
+    <>
+      <div className="sm:hidden"><PeriodDropdown value={value} onChange={onChange} /></div>
+      <div className="hidden sm:block"><PeriodSwitch value={value} onChange={onChange} /></div>
+    </>
   );
 }

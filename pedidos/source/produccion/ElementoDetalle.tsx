@@ -30,7 +30,11 @@ export function ElementoDetalle({ record, elementosTable, catalogoProductos, cat
     return el ? calcSemaforoElemento(el, D.tasks.filter((t) => t.elementoId === elementoId), pedidoEstatus === 'Entregado') : null;
   }, [D.elementoById, D.tasks, elementoId, pedidoEstatus]);
   const nombreRec = cvs(record, elementosTable, FIELD_IDS.EL_NOMBRE);
-  const pedido = D.elementoById.get(elementoId)?.pedidoId ? D.pedidoInfo.get(D.elementoById.get(elementoId)!.pedidoId!)?.label : '';
+  // The order comes straight from the element's own link, so it shows at once even while the shared data is still arriving.
+  const pedidoLink = readLinked(cv(record, elementosTable, FIELD_IDS.EL_PEDIDOS))[0];
+  const pedidoIdEl = pedidoLink?.id ?? D.elementoById.get(elementoId)?.pedidoId ?? null;
+  const linkName = pedidoLink && pedidoLink.name && !/^rec[A-Za-z0-9]{14}$/.test(pedidoLink.name) ? pedidoLink.name : '';
+  const pedido = (pedidoIdEl ? D.pedidoInfo.get(pedidoIdEl)?.label : '') || linkName || '';
 
   const [producto, setProducto] = useState(readLinked(cv(record, elementosTable, FIELD_IDS.EL_PRODUCTO))[0]?.name ?? '');
   const [pan, setPan] = useState(readLinked(cv(record, elementosTable, FIELD_IDS.EL_PAN))[0]?.name ?? '');

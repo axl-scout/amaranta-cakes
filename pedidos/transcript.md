@@ -6249,3 +6249,182 @@ Al terminar reporta, en este orden:
 2. Cada tabla, campo, opción de select o automatización que hayas creado o cambiado (se espera: ninguna).
 3. Lo que no pudiste hacer o lo que asumiste.
 4. Un export COMPLETO del proyecto, confirmando que MANIFEST.json lista todos los archivos importados (en especial los nuevos o movidos) y cuántos archivos son (el número debe coincidir con el del ZIP).
+
+---
+
+### User — Oct 5, 2026, 5:11 AM CST
+
+Canvas, ajusta la página Pedidos (v1.11.0). Solo lectura: no escribas en Airtable ni cambies tablas, campos, opciones o automatizaciones. No cambies nada fuera de lo que se pide aquí.
+
+1. Selector de periodo en celular: en celular (pantallas pequeñas, con el mismo punto de corte que ya usa la app para ocultar el menú lateral) el interruptor expandible no cabe y se recorta. En celular, usa un dropdown: contraído muestra solo la opción elegida con una flecha; al tocarlo abre una lista vertical con las 4 opciones (Día, Semana, Mes, Todos); se cierra al elegir una o al tocar fuera. Misma altura que el resto de la barra y debe caber completo en la pantalla, también en la vista Día con el botón "Lista / Tablero". En tablet y escritorio queda exactamente como está hoy (interruptor que muestra solo la opción elegida y se expande con el cursor, un clic o el teclado). Conserva la opción elegida entre sesiones y el valor por defecto sigue siendo Día. En Todos siguen ocultas las flechas de fecha, el selector de fecha y el botón "Hoy".
+2. Detalle del elemento tras completar una etapa: con la vista Todos abierta, en el detalle del elemento de Pastel 20 pax de [3210] se completó "Horneado" con "Sí" (el tablero sí cambió la tarjeta de columna). Al volver a abrir el detalle para completar "Embetunado", el campo "Pedido" mostró "—" y la sección "Tareas de producción" se quedó varios minutos en una barra de carga, sin tabla ni seguimiento de etapas; después cargó, pero "Pedido" siguió en "—". El detalle del elemento debe abrir siempre y de inmediato completo (Pedido con el ID y nombre del pedido, Producto, tareas y seguimiento de etapas) y permitir completar la siguiente etapa, con la vista Todos abierta o no. Encuentra la causa (por ejemplo varias recargas simultáneas de tareas y elementos que se disparan a la vez en cada instancia de los datos, incluida la del tablero, y que fallan o dejan los elementos vacíos, o el nombre del pedido que no llega al detalle), corrígela sin quitar la actualización instantánea del tablero y repórtala.
+3. Buscador: la lista de coincidencias del buscador debe encontrar todos los pedidos, también los Entregados, sin importar el filtro de estatus (hoy, con el filtro en "Pendiente", no encuentra pedidos Entregados). El buscador sigue sin filtrar la página ni el tablero. El filtro de estatus sigue funcionando como hoy sobre las vistas Día, Semana, Mes y el tablero.
+
+Criterios de aceptación
+- En celular el selector es un dropdown que cabe en la pantalla y muestra solo la opción elegida; en escritorio no cambia.
+- Con la vista Todos abierta, completar "Horneado" y luego "Embetunado" del mismo elemento funciona sin recargar: el detalle abre completo cada vez (con "Pedido" y las tareas) y la tarjeta pasa de columna tras cada "Sí".
+- Con el filtro en "Pendiente", escribir "alice" en el buscador muestra [4160] Alice en la lista de coincidencias.
+
+Contratos
+- C1. El tipo de producto y sus etapas salen siempre de la función única del Prompt 1; no dupliques la regla.
+- C2. Los nombres de etapa son Horneado, Embetunado, Glaseado, Decorado y Empacado, tal cual están en Airtable.
+- C3. El color y la etapa de cada tarjeta salen de la misma función del semáforo del Prompt 3; no los recalcules aparte.
+- C4. Una tarea está completa cuando su Estatus es Terminado.
+- C5. Los colores de las tarjetas salen del mapa único de colores del Prompt 3 (basado en los colores de opciones select de Airtable) y la etapa se muestra con el componente EtapaChip del Prompt 3; no escribas colores sueltos ni dupliques el componente.
+- C6. Un valor derivado (etapa, color, columna del tablero) se calcula solo en el frontend, sin campos de fórmula, rollup ni calculados en Airtable, y conserva su último valor mientras los datos se recargan; nunca se muestra vacío.
+
+No tocar
+- La estructura de tablas, campos y opciones de select, y las automatizaciones existentes.
+- Los valores guardados en Airtable que lean otras automatizaciones o sistemas.
+- Los IDs de campos que ya están fijos en el código.
+- Modo claro y oscuro, y la versión para celular salvo el selector de periodo descrito arriba.
+- Finanzas, cake toppers y recibos.
+- La página de Producción.
+- Las vistas Semana y Mes y el detalle del pedido; del detalle del elemento solo lo descrito arriba.
+- La búsqueda y los filtros existentes, salvo que la lista de coincidencias encuentre todos los pedidos sin importar el filtro de estatus (punto 3).
+- El menú lateral y la hamburguesa del celular.
+- Cualquier texto de la interfaz que este prompt no mencione.
+
+Al terminar reporta, en este orden:
+1. Cada punto de este prompt como hecho o no hecho.
+2. Cada tabla, campo, opción de select o automatización que hayas creado o cambiado (se espera: ninguna).
+3. Lo que no pudiste hacer o lo que asumiste, incluida la causa del punto 2.
+4. Un export COMPLETO del proyecto, confirmando que MANIFEST.json lista todos los archivos importados (en especial los nuevos o movidos) y cuántos archivos son (el número debe coincidir con el del ZIP).
+
+---
+
+### Assistant — Oct 5, 2026, 5:13 AM CST
+
+Versión 1.11.1 lista. Valida y compila sin errores. La captura de pantalla solo muestra la página de inicio sin datos, y el error 403 de la consola es del entorno. Por eso no pude comprobar con pedidos reales ni el detalle del elemento ni el selector en celular. Esos puntos los verifiqué solo leyendo el código.
+
+## 1. Puntos
+1. **Selector en celular: hecho.** Bajo 640 px (el mismo corte que el menú lateral) es un dropdown. Contraído muestra la opción elegida con una flecha. Al tocarlo abre una lista vertical con Día, Semana, Mes y Todos. Se cierra al elegir o al tocar fuera. Mide h-10 y es compacto, para que quepa junto al botón «Lista / Tablero». Tablet y escritorio quedan igual. La opción se sigue guardando entre sesiones, por defecto es Día, y en Todos siguen ocultos flechas, selector de fecha y «Hoy».
+2. **Detalle del elemento: hecho.**
+   - El campo «Pedido» ahora sale del vínculo del propio elemento, así que aparece de inmediato.
+   - Producto, tareas y seguimiento de etapas ya no dependen de una carga nueva al abrir.
+   - La actualización instantánea del tablero se mantiene.
+3. **Buscador: hecho.** La lista de coincidencias encuentra todos los pedidos, también los Entregados, sin importar el filtro de estatus. Sigue sin filtrar la página ni el tablero, y el filtro de estatus funciona como antes en Día, Semana, Mes y el tablero. Con «Pendiente» activo, «alice» debería mostrar [4160].
+
+## 2. Cambios en Airtable
+Ninguno. No toqué tablas, campos, opciones ni automatizaciones, y no escribí datos.
+
+## 3. Causa del punto 2 y supuestos
+- **Causa:** cada vista que usa datos de producción (el tablero, el pedido y el detalle del elemento) descarga por su cuenta las siete tablas. Al completar una etapa, todas recargaban a la vez. El detalle, recién abierto, empezaba vacío. Mientras sus descargas no terminaban, o fallaban por exceso de peticiones simultáneas, no tenía elementos ni tareas. Por eso «Pedido» quedaba en «—» y las tareas en la barra de carga.
+- **Corrección:**
+  - Las vistas comparten el último dato bueno, así que una vista nueva abre completa.
+  - El campo «Pedido» sale del propio vínculo del elemento.
+  - Las recargas simultáneas se agrupan en una sola por vista.
+- **Supuesto:** no pude reproducir el caso con datos reales. La causa sale de leer el código.
+
+## 4. Exportación
+`exports/amaranta-v1.11.1.zip`. `MANIFEST.json` lista los 106 archivos y coincide con el ZIP, incluidos los modificados (`PeriodSelect.tsx`, `ElementoDetalle.tsx`, `useProduccionData.ts`, `index.tsx`). Incluye README y transcripción.
+
+---
+
+### User — Oct 5, 2026, 5:16 AM CST
+
+Me sale esto
+
+*1 attachment*
+
+---
+
+### Assistant — Oct 5, 2026, 5:16 AM CST
+
+Este error sale en la página de publicación de Airtable, no dentro de la app. En el entorno de vista previa la app carga y compila sin errores, así que no puedo reproducir el fallo desde aquí.
+
+Mi mejor hipótesis es el peso del paquete. La app compilada pesa unos 15,5 MB, casi todo por la copia del código fuente que alimenta el menú de descargas. Es solo una hipótesis: no he podido confirmarla.
+
+Qué puedes probar:
+1. Pulsa «Go home» y vuelve a abrir la app publicada, o recarga con Ctrl/Cmd+Shift+R. Estos fallos suelen ser momentáneos.
+2. Vuelve a publicar la última versión (1.11.1), por si la publicación anterior quedó a medias.
+3. Si sigue igual, dime si empezó justo con la 1.11.0 o la 1.11.1 y qué mensaje aparece en la consola del navegador (F12). Con eso puedo reducir el paquete o buscar el fallo concreto.
+
+---
+
+### User — Oct 5, 2026, 5:26 AM CST
+
+The app encountered a runtime error. Please fix it.
+
+Type: load_error
+Message: Failed to load the compiled bundle. Make sure you have compiled the code first.
+
+---
+
+### Assistant — Oct 5, 2026, 5:26 AM CST
+
+Los archivos compilados de la app habían desaparecido del proyecto, y por eso fallaba la carga. Ya volví a compilar la versión 1.11.1 y los archivos están de nuevo.
+
+Recarga la app con Ctrl/Cmd+Shift+R. Si la usas desde la página publicada, vuelve a publicar la 1.11.1.
+
+No cambié nada del código ni de Airtable. Si el error vuelve a aparecer, avísame.
+
+---
+
+### User — Oct 5, 2026, 5:30 AM CST
+
+sigue fallando, no se ve el preview
+
+*1 attachment*
+
+---
+
+### Assistant — Oct 5, 2026, 5:31 AM CST
+
+Ya volví a compilar y la app se ve bien en mi entorno: aparece la pantalla de inicio con Pedidos, Producción y Finanzas. No he encontrado la causa de que tu vista previa siga en blanco.
+
+La versión 1.11.1 pesa unos 15,5 MB; la 1.9.x pesaba unos 12,8 MB. Casi 11 MB de ese total son un mapa de depuración que añade el compilador automáticamente, y yo no puedo quitarlo. Puede que la vista previa tenga dificultad con un paquete así, pero es solo una sospecha.
+
+Prueba esto, en este orden:
+1. Pulsa el botón de recargar (la flecha circular junto a «Pedidos») en la barra superior.
+2. Si sigue en blanco, recarga la página completa con Ctrl/Cmd+Shift+R.
+3. Si sigue fallando, dime qué ves en la consola del navegador (F12) y, si puedes, si la versión 1.10.0 sí se veía. Con eso puedo ver si el problema vino con alguno de los últimos cambios.
+
+No toqué ningún archivo de la app en este paso.
+
+---
+
+### User — Oct 5, 2026, 5:32 AM CST
+
+se ve asi ahora
+
+*1 attachment*
+
+---
+
+### Assistant — Oct 5, 2026, 5:34 AM CST
+
+Acabo de reconstruir la aplicación y en mi lado se ve completa y con estilos: fondo rosado suave, tarjetas blancas de Pedidos, Producción y Finanzas, con sus iconos.
+
+Lo que ves en tu pantalla, sin colores ni tarjetas, es una carga incompleta de la vista previa. Los estilos no llegaron a tu navegador, aunque el archivo existe y está bien. No cambié ningún archivo ni nada en Airtable, así que sigue siendo la versión 1.11.1.
+
+Pasos a seguir:
+1. Pulsa el botón de recargar de la vista previa, junto a "Pedidos".
+2. Si sigue sin estilos, haz una recarga completa de la página (Ctrl+Shift+R, o Cmd+Shift+R en Mac).
+3. Si la publicada sigue fallando, vuelve a publicar ahora que la compilación está regenerada.
+
+Si después de esto sigue igual, avísame y reduzco el tamaño de la aplicación. Es mi sospecha, pero no la he podido confirmar: ahora pesa unos 15 MB y puede que tu vista previa se quede corta al cargarla.
+
+---
+
+### User — Oct 5, 2026, 5:35 AM CST
+
+Esta raro porque la app publicada se ve bien, pero el preview no, y necesito hacer una prueba en versión mobile
+
+*1 attachment*
+
+---
+
+### Assistant — Oct 5, 2026, 5:36 AM CST
+
+Ya se ve bien tu vista previa: aparecen los estilos y el tablero con sus cuatro columnas. No cambié nada, sigue la versión 1.11.1.
+
+Para probar la versión móvil, la vista previa no sirve porque ocupa toda la pantalla de tu computadora. La aplicación pasa a modo móvil cuando el ancho es menor de 640 px. Tienes tres opciones:
+
+1. **Desde tu celular:** abre el enlace de la app publicada. Es la prueba más fiel.
+2. **Desde la computadora:** abre la app publicada en una pestaña aparte y haz la ventana angosta, o usa las herramientas de desarrollador del navegador (F12) con el modo dispositivo móvil, que simula un teléfono.
+3. **Desde la vista previa:** solo si tu pantalla tiene un selector de tamaño de dispositivo. Yo no lo puedo comprobar desde aquí.
+
+En modo móvil debes ver el menú de hamburguesa en lugar de la barra lateral, y el selector de periodo como lista desplegable (Día / Semana / Mes / Todos).
+
+Si en la prueba ves algo que no cuadra, mándame una captura y lo ajusto.

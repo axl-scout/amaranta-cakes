@@ -1,6 +1,11 @@
 /** Version history of the app. Add a new entry (newest first) with every update; the README is built from it. */
 export interface ChangelogEntry { version: string; date: string; changes: string[] }
 export const CHANGELOG: ChangelogEntry[] = [
+  { version: '1.11.1', date: '2026-10-05', changes: [
+    'Pedidos: en celular el selector de periodo es una lista desplegable (Día, Semana, Mes, Todos) que cabe en la pantalla; tablet y escritorio sin cambios.',
+    'Detalle del elemento: abre siempre completo y de inmediato (Pedido, Producto, tareas y seguimiento de etapas), con la vista Todos abierta o no; las recargas simultáneas se agrupan.',
+    'Buscador: la lista de coincidencias encuentra todos los pedidos, también los Entregados, sin importar el filtro de estatus.',
+  ] },
   { version: '1.11.0', date: '2026-10-05', changes: [
     'Pedidos: el selector de periodo vuelve a ser el interruptor deslizante (Día, Semana, Mes, Todos); contraído muestra solo la opción elegida y se expande con el cursor, un toque o el teclado.',
     'Tablero: la columna de cada tarjeta sale de la misma función del semáforo que da su color y etapa (etapa siguiente a la última completada); se eliminó el cálculo duplicado. Un elemento con producto aún sin resolver ya no congela las tarjetas de todo el pedido, y al eliminar el último elemento sus tarjetas desaparecen.',

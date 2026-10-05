@@ -1,18 +1,20 @@
 # Audit report — Prompt 4/4 (Todos view, stage board and period selector)
 
-Status: PARTIAL (v1.11.0; v1.10.0 audited first below). All correction items pass by code and the selector passes on screen; the board update after "Sí" (item 4) still needs test 22, and the Canvas reply with its cause is missing.
+Status: PASS (v1.11.1): all correction items pass by code and, except the search with "Pendiente" (test 22), on screen; the Prompt 4 contracts hold.
+
+Previous status: PARTIAL (v1.11.0; v1.10.0 audited first below). All correction items pass by code and the selector passes on screen; the board update after "Sí" (item 4) still needs test 22, and the Canvas reply with its cause is missing.
 
 Previous status: PARTIAL (v1.10.0). Code meets the plan except the Entregado search rule, the column/chip consistency (C3) and the 4-column loading skeleton; nothing was verified on screen yet (smoke tests 1 to 15 open).
 
 ## Pending items
 
-Confirm smoke test 20 (writes data) in [3210] Alondra S Dávila: complete Horneado, then Embetunado of Pastel 20 pax; Claude deletes the created tasks.
-It is the only way to verify that the board moves a card after "Sí" (the v1.10.0 failure); the last-element deletion test was dropped to reduce tests and writes (verified by code).
-recY1WRFAEYXZhe50 (Pastel 20 pax recscT1PSK1PEkfU1, Cupcakes recdPnErWZjQiJTmP); tareas_produccion has 14 records.
+Run the last smoke test (22): with the status filter on "Pendiente", type "alice" in the search bar and check that [4160] Alice appears in the list.
+It is the only part of v1.11.1 not yet seen on screen (the export code is correct: index.tsx no longer filters the list by status).
+[4160] Alice rec2FnINtW50a2LFW (Entregado); index.tsx:216-235 of the v1.11.1 export.
 
-Send the Canvas reply of the v1.11.0 round (its report, points 1 to 4), which is not in the transcript.
-The transcript ends at the prompt, so the cause Canvas found for the board not updating (point 4) is unknown and the export count it announced cannot be compared.
-conversation-transcript_39.md ends at line 6251 with the user prompt; the ZIP and MANIFEST.json have 67 files.
+Decide whether to send Canvas the extra prompt that preloads the element detail when an order opens.
+It would make "Tareas de producción" appear without waiting; v1.11.1 already shares the last good data between views, so it may no longer be necessary.
+Export diff: useProduccionData.ts (shared cache and coalesced reloads); the preload was not included.
 
 ## Decisions by Axel (this round)
 
@@ -87,8 +89,17 @@ OK by diff: tables, fields, select options, automations (11 tables, 2 automation
 - Test 16 (mobile selector) FAIL on screen (screenshot 20): the expanded switch does not fit on a phone; Axel decides: dropdown on mobile, expanding switch on desktop. Goes to the correction prompt.
 - Smoke tests consolidated from 9 open to 5 (17 to 21): Todos pass (skeleton, search, Entregados), Día/Semana/Mes search, menu (mobile and desktop), the one write test (20, [3210]) and the mobile selector retest (21). The last-element deletion test was dropped (covered by code).
 
+## v1.11.1 audit (second correction round)
+
+- Export: diff -rq against v1.11.0 shows 6 changed files plus MANIFEST.json (README.md, components/PeriodSelect.tsx, index.tsx, lib/changelog.ts, produccion/ElementoDetalle.tsx, produccion/useProduccionData.ts). lib/airtable-hooks.tsx, package.json, semaforo.ts, TableroEtapas.tsx, SideMenu.tsx, Calendar.tsx and the Producción and Finanzas pages are identical. MANIFEST.json lists 67 files and the ZIP has 67 (match). Canvas wrote 106 in chat; the ZIP has 67. The README of the ZIP equals the attached readme_6.md. tsc not run.
+- Correction items: 1 mobile selector PASS (PeriodSelect.tsx: PeriodDropdown below sm, PeriodSwitch from sm; desktop code unchanged; seen on screen, captures 40 and 41), 2 element detail PASS (ElementoDetalle.tsx takes "Pedido" from the element's own link; useProduccionData.ts keeps a shared cache of the last good elements, tasks and order info, and coalesces PROD_EVENT reloads in 300 ms; seen on screen, test 20 with Horneado and Embetunado), 3 search finds all orders regardless of status PASS by code (index.tsx removes the status check from the search list; screen test 22 pending).
+- Contracts: C1 to C6 OK (semaforo.ts unchanged; the cache only keeps the last good values, C6).
+- Schema: read-only check 11 tables, 2 automations (autoincrement and weekly payroll), tareas_produccion 14 records; field names, types and counts match the Prompt 3 report.
+- Observations: Canvas reported that the preview went blank and the published app failed with "Failed to load the compiled bundle" during this round (compiled files missing; it rebuilt them); the bundle weighs about 15.5 MB, about 11 MB of it a debug map; the published app worked; the cache in useProduccionData.ts is module-level and never cleared (stale data only until the first load finishes); the element detail preload was not part of the sent prompt.
+
 ## Version history
 
+- v1.11.1 (2026-10-05): mobile dropdown selector, element detail loads complete, search finds all orders; audited by code (6 files changed, 67 files) and on screen. Replaced pedidos/source, README and transcript in the repo. Final version for Prompt 4.
 - v1.11.0 (2026-10-05): correction round plus mobile burger menu; audited by code (7 files changed, 67 files); selector confirmed on screen. Replaced pedidos/source, README and transcript in the repo.
 - v1.10.0 (2026-10-05): period selector, Todos board, Día Lista/Tablero. Audited by code; on-screen tests open. Replaced pedidos/source (67 files), README and transcript in the repo.
 

@@ -48,6 +48,18 @@ export function setTaskOverlay(elementoId: string, tasks: Task[] | null) {
   window.dispatchEvent(new Event(OVERLAY_EVENT));
 }
 
+/** Last good data, shared by every instance: a newly mounted view (e.g. the element detail) starts complete instead of empty. */
+const cache: { elementos: Elemento[] | null; pedidoInfo: Map<string, { label: string; dueKey: string }> | null; baseTasks: Task[] | null; loaded: boolean } =
+  { elementos: null, pedidoInfo: null, baseTasks: null, loaded: false };
+
+/** Coalesces bursts of reload requests into a single reload per instance. */
+function useCoalesced(fn: () => void, ms = 300) {
+  const t = useRef<any>(null);
+  const f = useRef(fn); f.current = fn;
+  useEffect(() => () => clearTimeout(t.current), []);
+  return useCallback(() => { clearTimeout(t.current); t.current = setTimeout(() => f.current(), ms); }, [ms]);
+}
+
 export function useProduccionData() {
   const { base, loading: baseLoading, error: baseError } = useBase();
   const pedidosT = base?.getTableById(TABLE_IDS.pedidos) ?? null;
@@ -76,9 +88,9 @@ export function useProduccionData() {
 
   // Only the first load shows the skeleton; later refetches (e.g. after creating a task) keep the page as is,
   // even when a table is still empty.
-  const firstLoadDone = useRef(false);
+  const firstLoadDone = useRef(cache.loaded);
   const stillLoading = baseLoading || pedidosR.loading || tareasR.loading || empR.loading;
-  if (!stillLoading && pedidosR.records.length > 0 && empR.records.length > 0) firstLoadDone.current = true;
+  if (!stillLoading && pedidosR.records.length > 0 && empR.records.length > 0) { firstLoadDone.current = true; cache.loaded = true; }
   const loading = !firstLoadDone.current && (stillLoading || pedidosR.records.length === 0 || empR.records.length === 0) && !pedidosR.error && !tareasR.error && !baseError;
   const error = baseError || tareasR.error || pedidosR.error || null;
 
@@ -174,7 +186,7 @@ export function useProduccionData() {
     return m;
   }, [pedidosR.records, elementosR.records, pedidosT, elementosT]);
 
-  const baseTasks: Task[] = useMemo(() => tareasR.records.map((r) => {
+  const baseTasksRaw: Task[] = useMemo(() => tareasR.records.map((r) => {
     const ped = readLinked(cv(r, tareasT, TAREAS.PEDIDO))[0];
     return {
       id: r.id,
@@ -194,6 +206,8 @@ export function useProduccionData() {
       creada: r.createdTime ? toKey(new Date(r.createdTime)) : '',
     };
   }), [tareasR.records, tareasT, orders]);
+  if (baseTasksRaw.length > 0 || taLoaded.current) cache.baseTasks = baseTasksRaw;
+  const baseTasks: Task[] = baseTasksRaw.length === 0 && !taLoaded.current && cache.baseTasks ? cache.baseTasks : baseTasksRaw;
   const [ovVer, setOvVer] = useState(0);
   useEffect(() => {
     const h = () => setOvVer((v) => v + 1);
@@ -208,7 +222,7 @@ export function useProduccionData() {
   }, [baseTasks, ovVer]); // eslint-disable-line
 
   /** Every element of every order, with the stages its product type goes through. */
-  const elementos: Elemento[] = useMemo(() => elementosR.records.map((el) => {
+  const elementosRaw: Elemento[] = useMemo(() => elementosR.records.map((el) => {
     const prod = readLinked(cv(el, elementosT, FIELD_IDS.EL_PRODUCTO))[0];
     // readLinked falls back to the id when the product name has not arrived: resolve it from the Catálogo instead.
     const looksId = !!prod && (!prod.name || prod.name === prod.id || /^rec[A-Za-z0-9]{14}$/.test(prod.name));
@@ -225,10 +239,12 @@ export function useProduccionData() {
       productoPendiente: !!prod && producto === '',
     };
   }), [elementosR.records, elementosT, catName]);
+  if (elementosRaw.length > 0 || elLoaded.current) cache.elementos = elementosRaw;
+  const elementos: Elemento[] = elementosRaw.length === 0 && !elLoaded.current && cache.elementos ? cache.elementos : elementosRaw;
   const elementoById = useMemo(() => new Map(elementos.map((e) => [e.id, e])), [elementos]);
 
   /** Order info for any order (not only cookies): ID text and production delivery day. */
-  const pedidoInfo = useMemo(() => {
+  const pedidoInfoRaw = useMemo(() => {
     const m = new Map<string, { label: string; dueKey: string }>();
     for (const p of pedidosR.records) {
       const raw = cv(p, pedidosT, FIELD_IDS.FECHA_ENTREGA) as string | null;
@@ -236,6 +252,9 @@ export function useProduccionData() {
     }
     return m;
   }, [pedidosR.records, pedidosT]);
+
+  if (pedidoInfoRaw.size > 0) cache.pedidoInfo = pedidoInfoRaw;
+  const pedidoInfo = pedidoInfoRaw.size === 0 && cache.pedidoInfo ? cache.pedidoInfo : pedidoInfoRaw;
 
   const today = startOfDay(new Date());
 
@@ -266,10 +285,11 @@ export function useProduccionData() {
     await Promise.all([tareasR.refetch(), elementosR.refetch()]);
     await new Promise((r) => setTimeout(r, 400)); // let other mounted views (order detail) finish loading too
   }, [tareasR.refetch, elementosR.refetch]);
+  const onProdEvent = useCoalesced(rawRefetch);
   useEffect(() => {
-    window.addEventListener(PROD_EVENT, rawRefetch);
-    return () => window.removeEventListener(PROD_EVENT, rawRefetch);
-  }, [rawRefetch]);
+    window.addEventListener(PROD_EVENT, onProdEvent);
+    return () => window.removeEventListener(PROD_EVENT, onProdEvent);
+  }, [onProdEvent]);
   const refetchCap = useCallback(() => { capR.refetch(); }, [capR.refetch]);
   const refetchEmps = useCallback(() => { empR.refetch(); }, [empR.refetch]);
 

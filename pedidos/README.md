@@ -1,6 +1,6 @@
 # Amaranta Cakes
 
-Versión 1.11.0 — 2026-10-05
+Versión 1.11.1 — 2026-10-05
 
 Sistema de gestión para la pastelería Amaranta Cakes. Interfaz en React con datos en una base de Airtable.
 
@@ -24,6 +24,11 @@ El botón de descarga ofrece: source.pdf, source.zip, readme.pdf y readme.md.
 Con cada actualización: agregar una entrada en `lib/changelog.ts` (versión y fecha) y ejecutar `node scripts/gen-source.mjs`.
 
 ## Historial de versiones
+### v1.11.1 — 2026-10-05
+- Pedidos: en celular el selector de periodo es una lista desplegable (Día, Semana, Mes, Todos) que cabe en la pantalla; tablet y escritorio sin cambios.
+- Detalle del elemento: abre siempre completo y de inmediato (Pedido, Producto, tareas y seguimiento de etapas), con la vista Todos abierta o no; las recargas simultáneas se agrupan.
+- Buscador: la lista de coincidencias encuentra todos los pedidos, también los Entregados, sin importar el filtro de estatus.
+
 ### v1.11.0 — 2026-10-05
 - Pedidos: el selector de periodo vuelve a ser el interruptor deslizante (Día, Semana, Mes, Todos); contraído muestra solo la opción elegida y se expande con el cursor, un toque o el teclado.
 - Tablero: la columna de cada tarjeta sale de la misma función del semáforo que da su color y etapa (etapa siguiente a la última completada); se eliminó el cálculo duplicado. Un elemento con producto aún sin resolver ya no congela las tarjetas de todo el pedido, y al eliminar el último elemento sus tarjetas desaparecen.

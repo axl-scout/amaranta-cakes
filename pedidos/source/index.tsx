@@ -215,7 +215,6 @@ function PedidosApp(): React.ReactElement {
         if (hiddenPedidoIds.has(r.id)) return false;
         const fecha = cv(r, pedidosTable, FIELD_IDS.FECHA_ENTREGA) as string | null;
         if (!fecha) return false;
-        if (selectedEstatus.length > 0 && !selectedEstatus.includes(readSelect(cv(r, pedidosTable, FIELD_IDS.ESTATUS)))) return false;
         const pedidoId = cvs(r, pedidosTable, FIELD_IDS.PEDIDO_ID).toLowerCase();
         const numeroNota = cvs(r, pedidosTable, FIELD_IDS.NUMERO_NOTA).toLowerCase();
         const cliente = cvs(r, pedidosTable, FIELD_IDS.CLIENTE).toLowerCase();
@@ -233,7 +232,7 @@ function PedidosApp(): React.ReactElement {
     setSearchResults(matches);
     setActiveSearchIdx(0);
     setShowSearchDropdown(matches.length > 0);
-  }, [searchQuery, pedidoRecords, pedidosTable, selectedEstatus, hiddenPedidoIds]);
+  }, [searchQuery, pedidoRecords, pedidosTable, hiddenPedidoIds]);
 
   const selectedRecord = useMemo(() => {
     if (!selectedRecordId) return null;
