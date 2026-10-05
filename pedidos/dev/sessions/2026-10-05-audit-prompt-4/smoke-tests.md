@@ -3,8 +3,7 @@
 Export a probar: v1.10.0 (2026-10-05). Base: Producción (`appSQk87nF0WpH2gi`). Hoy: lunes 5 oct 2026. Set de records: `pedidos/dev/test-records.md` (no se crean datos extra, salvo la prueba 13 con autorización).
 
 Pendientes
-1. Prueba 13 FALLA: espera 30 s (o recarga) y manda otra captura del tablero con "3210" en el buscador; la tarea `rechbrn8oPFAgZV9d` se borra después.
-2. Decidir dos solicitudes nuevas (ver Observaciones de Axel y reporte): búsqueda que filtre Día, Semana y Mes, y menú lateral con hamburguesa en celular.
+1. Enviar a Canvas el prompt de corrección y el prompt aparte del menú móvil (están en el mensaje de la auditoría); al llegar v1.10.1 se repiten las pruebas 1, 13 y las de búsqueda.
 
 Reglas
 - Filtro de estatus (junto al buscador): viene en "Pendiente". Para las pruebas de Entregado, ábrelo y marca "Entregado".
@@ -20,21 +19,11 @@ Reglas
 |---|---|---|---|---|
 | 1 | Selector, escritorio | Página Pedidos > selector de periodo. Pasa el cursor; elige "Semana"; vuelve a pasar el cursor; clic en el selector; con Tab enfoca el selector, ↓ ↑ Enter y Escape. | Muestra solo la opción elegida con flecha, misma altura que el buscador (40 px). Al pasar el cursor despliega Día, Semana, Mes, Todos y se cierra al elegir. Con teclado: ↓/↑ mueven, Enter elige, Escape cierra. Nota: si ya está abierto por el hover, el clic lo cierra. | FUNCIONA, pero Axel pide cambiar el diseño (ver Observaciones). |
 
-### Escritura (corre solo tras tu confirmación, pendiente 1)
-Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S Dávila (`recY1WRFAEYXZhe50`), abre el 8 oct 2026. Escribe datos: crea 1 tarea (Horneado, Terminado) y Claude la borra al final.
-
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-| 13 | Dos elementos en etapas distintas; actualización sin recargar | Abre "Todos" en una pestaña y deja visible. En Pedidos abre [3210] > fila Pastel 20 pax (detalle del elemento) > seguimiento de etapas > "Horneado" > "¿Completar tarea?" > "Sí". Regresa al tablero sin recargar. | [3210] aparece 2 veces: Pastel 20 pax en Embetunado / Glaseado (chip "Horneado listo", rojo) y Cupcakes en Horneado ("No iniciado", morado). El cambio ocurre sin recargar y ninguna tarjeta ni chip queda vacío. | FALLA en pantalla: captura 17 (tomada después del "Sí") muestra las 2 tarjetas de [3210] en Horneado con "No iniciado"; Pastel 20 pax debía pasar a Embetunado / Glaseado con "Horneado listo". Airtable sí tiene la tarea `rechbrn8oPFAgZV9d` (Horneado, Terminado, Manual, ligada a Pastel 20 pax `recscT1PSK1PEkfU1` y a [3210]), así que el dato está bien y el tablero no lo refleja. Pendiente saber si se corrige solo tras 30 s o al recargar. |
-
-### Transversales
-| # | Área | Pasos | Resultado esperado | Pass/Fail |
-|---|---|---|---|---|
-| 15 | Sin escrituras | Claude, al terminar: lista `tareas_produccion` y esquema. | 14 tareas (o las mismas que antes de la prueba 13), esquema sin cambios. | EN CURSO: 10:24 UTC, automatizaciones sin cambios (2); `tareas_produccion` tiene la tarea de la prueba 13 (15 registros); se verifica de nuevo al borrarla. |
-
-## Observaciones de Axel (ronda 3)
-- El buscador no filtra la página (Día, Semana, Mes): solo muestra opciones en su desplegable. En Todos sí filtra el tablero.
-- En celular, el menú lateral no debería ir al costado; debería usarse la hamburguesa.
+## Observaciones de Axel (ronda 3 y 4)
+- Buscador: Axel decide que en todas las vistas (Todos incluida) solo abra la lista de coincidencias y no filtre la página. Se elimina la regla de mostrar Entregados en el tablero al buscar.
+- Menú lateral en celular: debe ser la hamburguesa; va en un prompt aparte.
+- El tablero debe reflejar el "Sí" de una etapa (prueba 13 falla).
+- Esqueleto de 4 columnas en la primera carga: Axel pide incluirlo en la corrección.
 
 # Cerradas
 
@@ -48,6 +37,7 @@ Record: este record es el que vas a utilizar para esta prueba: [3210] Alondra S 
 
 | # | Record | Prueba | Expected | Estado |
 |---|---|---|---|---|
+| ~~13~~ | ~~[3210] Alondra S Dávila~~ | ~~[3210] (8 oct). **ESCRIBE.** Con "Todos" visible, abre [3210] > Pastel 20 pax > "Horneado" > "Sí" y regresa al tablero sin recargar.~~ | ~~[3210] aparece 2 veces: Pastel 20 pax en Embetunado / Glaseado ("Horneado listo") y Cupcakes en Horneado ("No iniciado"), sin recargar y sin vacíos.~~ | ~~FALLA en v1.10.0 (captura 17 y una segunda captura minutos después: las 2 tarjetas siguen en Horneado con "No iniciado"; Airtable sí tenía la tarea `rechbrn8oPFAgZV9d` ligada a Pastel 20 pax y a [3210], así que el tablero no refleja el cambio ni con el tiempo; va al prompt de corrección). Airtable: tarea `rechbrn8oPFAgZV9d` creada por Axel y borrada por Claude el 2026-10-05~~ |
 | ~~14~~ | ~~Sin record (refresco)~~ | ~~En "Todos" con tarjetas visibles, cambia de pestaña y regresa, y espera 30 s.~~ | ~~Las tarjetas y conteos no desaparecen ni parpadean a vacío.~~ | ~~OK (Axel: ok)~~ |
 | ~~12~~ | ~~[3210] Alondra S Dávila y [3413] Rosaura Avila~~ | ~~Selector > "Semana" (semana del 5 oct) y "Mes" (octubre), filtro Pendiente.~~ | ~~Tarjetas con nombre de etapa y fondo suave, igual que en v1.9.2; flechas y selector de fecha funcionan.~~ | ~~OK (capturas 14 y 15: Semana 5-11 oct y Mes octubre, filtro Pendiente, tarjetas con "No iniciado" como en v1.9.2; flechas y selector de fecha funcionan)~~ |
 | ~~11~~ | ~~Sin record (persistencia)~~ | ~~Deja Día + Tablero, recarga. Cambia a Todos, recarga.~~ | ~~Tras recargar abre en Día + Tablero; con Todos abre en Todos.~~ | ~~OK (Axel: funciona)~~ |

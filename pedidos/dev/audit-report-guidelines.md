@@ -69,7 +69,10 @@ Reglas que Axel fijó en la auditoría del Prompt 2. Leer antes de hacer cualqui
 - Cuando Axel pregunte por el marcador [PEGAR AQUÍ…], entregar el prompt con el texto de No tocar y contratos ya insertado.
 
 ## Decisiones vigentes del Prompt 4
-- Los Entregados que coinciden con la búsqueda aparecen en el tablero aunque el filtro de estatus sea "Pendiente" (Empacado, verde, "Entregado").
+- (Reemplazada) Los Entregados al buscar ya no aparecen en el tablero: el buscador solo abre la lista de coincidencias en todas las vistas y no filtra la página. Los Entregados nunca están en el tablero.
 - La columna del tablero sale de la misma función del chip: etapa siguiente a la última completada.
 - Selector de periodo: no es un dropdown; es el interruptor anterior (Día, Semana, Mes, Todos) que muestra solo la opción elegida en un contenedor y se expande con hover (toque en celular) para mostrar todas.
 - La prueba 13 (dos elementos en etapas distintas) corre en [3210] Alondra S Dávila y Claude borra la tarea al final.
+- El tablero debe actualizarse al completar una etapa (prueba 13 falló en v1.10.0); Canvas debe diagnosticar la causa.
+- El esqueleto de carga de la vista Todos y Día > Tablero debe tener las 4 columnas.
+- Menú lateral en celular: hamburguesa, en un prompt aparte del Prompt 4.
